@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SignalAIX - AI Prediction Engine</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-[#090d16] text-slate-100 font-sans min-h-screen flex flex-col">
+
+    <!-- Automatic Hash Fragment Callback Handler -->
+    <script>
+        if (window.location.hash && window.location.hash.includes('token1=')) {
+            const hashParams = window.location.hash.substring(1);
+            window.location.href = "{% url 'deriv_callback' %}?" + hashParams;
+        }
+    </script>
+
+    <!-- Top Header Navigation -->
+    <header class="border-b border-slate-800/80 bg-[#0d1322] px-6 py-4 flex items-center justify-between sticky top-0 z-50">
+        <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 font-bold text-lg">
+                <i class="fa-solid fa-brain"></i>
+            </div>
+            <div>
+                <h1 class="font-bold text-lg leading-tight tracking-wide">AI Prediction Engine</h1>
+                <p class="text-xs text-slate-400">Deriv Live MT5 Stream</p>
+            </div>
+        </div>
+
+        <div class="flex items-center gap-4">
+            <!-- Connection Indicator -->
+            <div id="ws-status" class="px-3 py-1 rounded-full text-[11px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 flex items-center gap-1.5">
+                <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> CONNECTED
+            </div>
+
+            <!-- Real-Time Deriv MT5 Demo Balance ($10,000.00 USD) -->
+            <div class="px-4 py-1.5 rounded-xl bg-[#090d16] border border-slate-800 text-right flex items-center gap-3">
+                <div>
+                    <div class="flex items-center justify-end gap-1.5">
+                        <span id="account-badge" class="px-1.5 py-0.2 text-[9px] font-bold rounded bg-amber-500/10 text-amber-400 border border-amber-500/20">DEMO</span>
+                        <p id="account-loginid" class="text-[10px] text-slate-400 font-mono">MT5:32337661</p>
+                    </div>
+                    <p id="deriv-balance" class="text-base font-bold text-emerald-400 font-mono">$10,000.00 USD</p>
+                </div>
+            </div>
+
+            <a href="{% url 'connect_deriv' %}" class="px-4 py-2 rounded-xl bg-red-600 hover:bg-red-500 text-white font-bold text-xs transition flex items-center gap-2 shadow-lg shadow-red-600/20">
+                <i class="fa-solid fa-link"></i> Connect Deriv
+            </a>
+        </div>
+    </header>
+
+    <!-- Main Live Stream Container -->
+    <main class="flex-1 p-6 max-w-7xl mx-auto w-full space-y-6">
+
+        <!-- Active Market Banner -->
+        <section class="bg-[#0d1322] border border-slate-800 rounded-2xl p-6 shadow-xl">
+            <div class="flex flex-col md:flex-row items-center justify-between gap-6">
+                <div class="flex items-center gap-4">
+                    <div class="w-14 h-14 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400 text-2xl">
+                        <i class="fa-solid fa-chart-line"></i>
+                    </div>
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <span id="live-symbol" class="text-xl font-bold">Gold / USD (XAU)</span>
+                            <span class="px-2 py-0.5 rounded text-[10px] bg-slate-800 text-slate-300 font-mono">frxXAUUSD</span>
+                        </div>
+                        <p class="text-xs text-slate-400 mt-1">
+                            Current Price: <span id="live-price" class="font-bold text-slate-200 font-mono">$2,742.50</span> | 
+                            Last Digit: <span id="live-digit" class="font-bold text-indigo-400 font-mono">0</span>
+                        </p>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-8 bg-[#090d16] border border-slate-800/80 px-6 py-3 rounded-xl">
+                    <div class="text-center">
+                        <p class="text-[10px] text-slate-400 uppercase tracking-wider">AI Signal</p>
+                        <p id="live-signal" class="text-base font-bold text-emerald-400">BUY (EVEN)</p>
+                    </div>
+                    <div class="h-8 w-px bg-slate-800"></div>
+                    <div class="text-center">
+                        <p class="text-[10px] text-slate-400 uppercase tracking-wider">Confidence</p>
+                        <p id="live-confidence" class="text-base font-bold text-indigo-400 font-mono">68%</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <div class="flex justify-between items-center">
+            <h3 class="font-bold text-lg text-slate-200">Recent Predictions</h3>
+            <button id="btn-trigger" class="px-4 py-2 rounded-xl bg-emerald-500 text-slate-950 font-bold text-xs hover:bg-emerald-400 transition flex items-center gap-2 shadow-lg shadow-emerald-500/20">
+                <i class="fa-solid fa-bolt"></i> Run Prediction Now
+            </button>
+        </div>
+
+        <!-- Real-Time Stream Table -->
+        <section class="bg-[#0d1322] border border-slate-800 rounded-2xl p-6">
+            <div class="overflow-x-auto">
+                <table class="w-full text-left text-xs">
+                    <thead>
+                        <tr class="text-slate-400 border-b border-slate-800/80 font-medium">
+                            <th class="py-3 px-4">Symbol / Asset</th>
+                            <th class="py-3 px-4">AI Prediction</th>
+                            <th class="py-3 px-4">Confidence</th>
+                            <th class="py-3 px-4">Last Price (Digit)</th>
+                            <th class="py-3 px-4">Timestamp</th>
+                            <th class="py-3 px-4 text-right">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="predictions-tbody">
+                        <!-- Dynamic prediction rows -->
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+
+    <!-- Client WebSocket JavaScript -->
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const wsProtocol = window.location.protocol === 'https:' ? 'wss://' : 'ws://';
+            const socketUrl = wsProtocol + window.location.host + '/ws/trading/';
+        
+            const statusEl = document.getElementById('ws-status');
+            const balanceEl = document.getElementById('deriv-balance');
+            const loginidEl = document.getElementById('account-loginid');
+            const badgeEl = document.getElementById('account-badge');
+            const priceEl = document.getElementById('live-price');
+            const digitEl = document.getElementById('live-digit');
+            const signalEl = document.getElementById('live-signal');
+            const confidenceEl = document.getElementById('live-confidence');
+            const predictionsTbody = document.getElementById('predictions-tbody');
+            const triggerBtn = document.getElementById('btn-trigger');
+        
+            let socket = null;
+        
+            // Global helper so buttons inside table rows can call it
+            window.triggerDerivTrade = function(symbol, contractType) {
+                if (!socket || socket.readyState !== WebSocket.OPEN) {
+                    alert("WebSocket connection is offline!");
+                    return;
+                }
+        
+                const confirmTrade = confirm(`Execute real trade on Deriv?\n\nContract: ${contractType}\nAsset: ${symbol}\nStake: $10.00 USD`);
+                if (confirmTrade) {
+                    socket.send(JSON.stringify({
+                        'action': 'execute_trade',
+                        'symbol': symbol,
+                        'contract_type': contractType,
+                        'stake': 10.0
+                    }));
+                }
+            };
+        
+            function connect() {
+                socket = new WebSocket(socketUrl);
+        
+                socket.onopen = function () {
+                    if (statusEl) {
+                        statusEl.className = "px-3 py-1 rounded-full text-[11px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 flex items-center gap-1.5";
+                        statusEl.innerHTML = '<span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> CONNECTED';
+                    }
+                    socket.send(JSON.stringify({ 'action': 'predict_even_odd', 'symbol': 'Gold / USD (XAU)' }));
+                };
+        
+                socket.onmessage = function (e) {
+                    try {
+                        const response = JSON.parse(e.data);
+        
+                        if (response.type === 'stream_update') {
+                            const acc = response.account_data;
+                            const res = response.result;
+        
+                            if (balanceEl) balanceEl.innerText = '$' + (acc.balance || '10,000.00') + ' ' + (acc.currency || 'USD');
+                            if (loginidEl) loginidEl.innerText = acc.loginid || 'MT5:32337661';
+                            
+                            if (badgeEl) {
+                                badgeEl.innerText = acc.is_demo ? 'DEMO' : 'REAL';
+                                badgeEl.className = acc.is_demo 
+                                    ? 'px-1.5 py-0.2 text-[9px] font-bold rounded bg-amber-500/10 text-amber-400 border border-amber-500/20'
+                                    : 'px-1.5 py-0.2 text-[9px] font-bold rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20';
+                            }
+        
+                            if (priceEl) priceEl.innerText = '$' + res.last_price;
+                            if (digitEl) digitEl.innerText = res.last_digit;
+                            if (signalEl) {
+                                signalEl.innerText = res.signal;
+                                signalEl.className = res.predicted_contract === 'DIGITEVEN' ? 'text-base font-bold text-emerald-400' : 'text-base font-bold text-amber-400';
+                            }
+                            if (confidenceEl) confidenceEl.innerText = res.confidence;
+        
+                            addPredictionRow(res);
+                        } 
+                        else if (response.type === 'trade_result') {
+                            const res = response.result;
+                            if (res.success) {
+                                alert(`🚀 Trade Placed on Deriv!\n\nContract ID: ${res.contract_id}\nTransaction ID: ${res.transaction_id}\nBuy Price: $${res.buy_price}\nBalance Remaining: $${res.balance_after}`);
+                            } else {
+                                alert(`⚠️ Deriv Trade Failed:\n${res.error}`);
+                            }
+                        }
+                    } catch (err) {
+                        console.error("❌ JS Parsing Error:", err);
+                    }
+                };
+        
+                socket.onclose = function () {
+                    if (statusEl) {
+                        statusEl.className = "px-3 py-1 rounded-full text-[11px] font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20 flex items-center gap-1.5";
+                        statusEl.innerHTML = '<span class="w-2 h-2 rounded-full bg-amber-400 animate-ping"></span> RECONNECTING';
+                    }
+                    setTimeout(connect, 3000);
+                };
+            }
+        
+            function addPredictionRow(res) {
+                if (!predictionsTbody) return;
+        
+                const isEven = res.predicted_contract === 'DIGITEVEN';
+                const now = new Date().toLocaleTimeString();
+        
+                const row = document.createElement('tr');
+                row.className = 'border-b border-slate-800/60 hover:bg-slate-900/40 transition text-xs font-mono';
+        
+                row.innerHTML = `
+                    <td class="py-3 px-4 font-sans font-bold text-slate-200">
+                        <div class="flex items-center gap-2">
+                            <span class="w-2 h-2 rounded-full ${isEven ? 'bg-emerald-400' : 'bg-indigo-400'}"></span>
+                            ${res.display_symbol || res.symbol}
+                        </div>
+                    </td>
+                    <td class="py-3 px-4">
+                        <span class="px-2 py-0.5 rounded ${isEven ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-amber-500/10 text-amber-400 border border-amber-500/20'} font-bold">
+                            ${res.predicted_contract}
+                        </span>
+                    </td>
+                    <td class="py-3 px-4 text-emerald-400 font-bold">${res.confidence}</td>
+                    <td class="py-3 px-4 text-slate-200 font-bold">$${res.last_price} <span class="text-indigo-400">(${res.last_digit})</span></td>
+                    <td class="py-3 px-4 text-slate-400 font-sans text-[11px]">${now}</td>
+                    <td class="py-3 px-4 text-right font-sans">
+                        <button onclick="triggerDerivTrade('${res.symbol}', '${res.predicted_contract}')" class="px-2.5 py-1 rounded bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-[10px] transition">
+                            Trade Now
+                        </button>
+                    </td>
+                `;
+        
+                predictionsTbody.insertBefore(row, predictionsTbody.firstChild);
+                if (predictionsTbody.children.length > 8) {
+                    predictionsTbody.removeChild(predictionsTbody.lastChild);
+                }
+            }
+        
+            if (triggerBtn) {
+                triggerBtn.addEventListener('click', function() {
+                    if (socket && socket.readyState === WebSocket.OPEN) {
+                        socket.send(JSON.stringify({ 'action': 'predict_even_odd', 'symbol': 'Gold / USD (XAU)' }));
+                    }
+                });
+            }
+        
+            connect();
+        });
+        </script>
+</body>
+</html>

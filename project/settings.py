@@ -1,0 +1,156 @@
+import os
+from pathlib import Path
+from dotenv import load_dotenv
+
+# Build paths inside the project like this: BASE_DIR / 'subdir'.
+BASE_DIR = Path(__file__).resolve().parent.parent
+
+# Load environment variables from .env file
+load_dotenv(os.path.join(BASE_DIR, '.env'))
+
+# =============================================
+# DERIV API CONFIGURATION
+# =============================================
+DERIV_APP_ID = os.getenv('DERIV_APP_ID', '1089')
+DERIV_API_TOKEN = os.getenv('DERIV_API_TOKEN', 'pat_4a7dc12692db94a04f868fd7fe6d75ba5fc71139778dab12d6c717d3b3111663')
+
+# =============================================
+# SECURITY & DEPLOYMENT
+# =============================================
+SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-ahw@(v2zyav9rjx$yqhgjer+qfa$xiv7k1d37!q$0w8ylwba3k')
+DEBUG = True
+ALLOWED_HOSTS = ['*']
+
+# =============================================
+# APPLICATION DEFINITION
+# =============================================
+INSTALLED_APPS = [
+    'daphne',  # ⚠️ Must be the very first item for WebSocket/ASGI support
+    'django.contrib.admin',
+    'django.contrib.auth',
+    'django.contrib.contenttypes',
+    'django.contrib.sessions',
+    'django.contrib.messages',
+    'django.contrib.staticfiles',
+    'store.apps.StoreConfig',
+    'channels',
+]
+
+ASGI_APPLICATION = 'project.asgi.application'
+WSGI_APPLICATION = 'project.wsgi.application'
+
+MIDDLEWARE = [
+    'django.middleware.security.SecurityMiddleware',
+    'django.contrib.sessions.middleware.SessionMiddleware',
+    'django.middleware.common.CommonMiddleware',
+    'django.middleware.csrf.CsrfViewMiddleware',
+    'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'django.contrib.messages.middleware.MessageMiddleware',
+    'django.middleware.clickjacking.XFrameOptionsMiddleware',
+]
+
+ROOT_URLCONF = 'project.urls'
+
+TEMPLATES = [
+    {
+        'BACKEND': 'django.template.backends.django.DjangoTemplates',
+        'DIRS': [],
+        'APP_DIRS': True,
+        'OPTIONS': {
+            'context_processors': [
+                'django.template.context_processors.request',
+                'django.contrib.auth.context_processors.auth',
+                'django.contrib.messages.context_processors.messages',
+            ],
+        },
+    },
+]
+
+# =============================================
+# CHANNELS & WEBSOCKET LAYER
+# =============================================
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels.layers.InMemoryChannelLayer',
+    },
+}
+
+# =============================================
+# DATABASE
+# =============================================
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
+    }
+}
+
+# =============================================
+# PASSWORD VALIDATION
+# =============================================
+AUTH_PASSWORD_VALIDATORS = [
+    {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
+    {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator'},
+    {'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator'},
+    {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
+]
+
+# =============================================
+# INTERNATIONALIZATION
+# =============================================
+LANGUAGE_CODE = 'en-us'
+TIME_ZONE = 'Africa/Nairobi'
+USE_I18N = True
+USE_TZ = True
+
+# =============================================
+# STATIC & MEDIA FILES
+# =============================================
+STATIC_URL = '/static/'
+STATICFILES_DIRS = [
+    BASE_DIR / "store" / "static",
+]
+
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'
+
+# =============================================
+# M-PESA CONFIGURATION
+# =============================================
+MPESA_CONSUMER_KEY = os.getenv('MPESA_CONSUMER_KEY', 'LFuAPkR8BWp3uQ4NAUdtRPi0umQVYT5sS8XTEbWOgNsgept2')
+MPESA_CONSUMER_SECRET = os.getenv('MPESA_CONSUMER_SECRET', 'UCf5kdz3nAe6Gakk2IJb69gBznmX6knNe1eA7MeQD1pzgmoI7PxaxXGWNLiLawtN')
+MPESA_PASSKEY = os.getenv('MPESA_PASSKEY', 'bfb279f9aa9bdbcf158e97dd71a467cd2e0c893059b10f78e6b72ada1ed2c919')
+MPESA_SHORTCODE = os.getenv('MPESA_SHORTCODE', '174379')
+MPESA_ENVIRONMENT = os.getenv('MPESA_ENVIRONMENT', 'sandbox')
+
+if MPESA_ENVIRONMENT == 'production':
+    MPESA_BASE_URL = 'https://api.safaricom.co.ke'
+else:
+    MPESA_BASE_URL = 'https://sandbox.safaricom.co.ke'
+
+MPESA_CALLBACK_URL = os.getenv('MPESA_CALLBACK_URL', 'https://your-domain.com/mpesa/callback/')
+
+# =============================================
+# LOGGING CONFIGURATION
+# =============================================
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+        },
+        'file': {
+            'level': 'DEBUG',
+            'class': 'logging.FileHandler',
+            'filename': 'mpesa_debug.log',
+        },
+    },
+    'loggers': {
+        'store': {
+            'handlers': ['console', 'file'],
+            'level': 'DEBUG',
+            'propagate': True,
+        },
+    },
+}
