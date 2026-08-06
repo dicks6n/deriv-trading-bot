@@ -1,583 +1,92 @@
-<!-- templates/store/payment.html -->
-{% load static %}
-<!DOCTYPE html>
-<html lang="en">
+{% extends 'base_dashboard.html' %}
 
-<head>
-    <meta charset="utf-8">
-    <title>Payment - Delight Care</title>
-    <meta content="width=device-width, initial-scale=1.0" name="viewport">
-    <link href="{% static 'img/favicon.ico' %}" rel="icon">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;500&family=Poppins:wght@200;600;700&display=swap" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.10.0/css/all.min.css" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.4.1/font/bootstrap-icons.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <link href="{% static 'store/lib/animate/animate.min.css' %}" rel="stylesheet">
-    <link href="{% static 'store/lib/owlcarousel/assets/owl.carousel.min.css' %}" rel="stylesheet">
-    <link href="{% static 'store/css/bootstrap.min.css' %}" rel="stylesheet">
-    <link href="{% static 'store/css/style.css' %}" rel="stylesheet">
+{% block content %}
+<div class="max-w-7xl mx-auto space-y-6">
+    <h2 class="text-2xl font-bold text-slate-950">Funding</h2>
 
-    <style>
-        body {
-            background-image: url("{% static 'store/img/bg.png' %}");
-            background-size: cover;
-            background-attachment: fixed;
-            background-position: center;
-            background-repeat: no-repeat;
-            min-height: 100vh;
-        }
-
-        .bg-white {
-            background: rgba(255, 255, 255, 0.95) !important;
-            backdrop-filter: blur(10px);
-        }
-        .hero-header {
-            background: rgba(144, 188, 121, 0.92) !important;
-            backdrop-filter: blur(10px);
-        }
-        .sticky-top {
-            background: #90bc79 !important;
-        }
-        .navbar-light .navbar-nav .nav-link {
-            color: rgba(255, 255, 255, 0.8) !important;
-        }
-        .navbar-light .navbar-nav .nav-link:hover,
-        .navbar-light .navbar-nav .nav-link.active {
-            color: #ffffff !important;
-        }
-        .navbar-brand h2 {
-            color: #ffffff !important;
-        }
-        .text-primary {
-            color: #90bc79 !important;
-        }
-        .btn-primary {
-            background: #90bc79;
-            border: none;
-            color: #ffffff !important;
-            transition: all 0.3s;
-        }
-        .btn-primary:hover {
-            background: #7dab66 !important;
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(144, 188, 121, 0.4);
-            color: #ffffff !important;
-        }
-        .btn-outline-primary {
-            color: #90bc79 !important;
-            border-color: #90bc79 !important;
-        }
-        .btn-outline-primary:hover {
-            background: #90bc79 !important;
-            color: #ffffff !important;
-        }
-        .btn-success {
-            background: linear-gradient(135deg, #00b894, #00a381);
-            border: none;
-            color: #ffffff !important;
-        }
-        .btn-success:hover {
-            background: linear-gradient(135deg, #00a381, #00876a);
-            color: #ffffff !important;
-        }
-
-        .nav-pills .nav-link {
-            border-radius: 30px;
-            padding: 10px 25px;
-            font-weight: 500;
-            color: #6c757d;
-        }
-        .nav-pills .nav-link.active {
-            background: #90bc79 !important;
-            color: white !important;
-        }
-        .nav-pills .nav-link:hover {
-            background: #90bc79;
-            color: white;
-        }
-
-        .input-group-text {
-            border-radius: 30px 0 0 30px;
-            background: #f8f9fa;
-        }
-        .form-control {
-            border-radius: 0 30px 30px 0;
-            background: rgba(255, 255, 255, 0.9) !important;
-            border: 1px solid #e9ecef !important;
-        }
-        .form-control:focus {
-            border-color: #90bc79 !important;
-            box-shadow: 0 0 0 0.25rem rgba(144, 188, 121, 0.25) !important;
-        }
-        .bg-light {
-            background-color: rgba(248, 249, 250, 0.9) !important;
-        }
-        .border-0 {
-            border: 1px solid #e9ecef !important;
-        }
-        .rounded-pill {
-            border-radius: 50px !important;
-        }
-        .shadow-sm {
-            box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075) !important;
-        }
-
-        .fade-in {
-            animation: fadeIn 0.3s ease-in;
-        }
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .back-to-top {
-            background: #90bc79 !important;
-            color: #ffffff !important;
-            border: none !important;
-        }
-        .back-to-top:hover {
-            background: #7dab66 !important;
-            color: #ffffff !important;
-        }
-        .footer .border-bottom {
-            color: #90bc79 !important;
-        }
-        .alert {
-            border-radius: 30px;
-        }
-    </style>
-</head>
-
-<body>
-   
-    <div class="container-fluid sticky-top">
-        <div class="container">
-            <nav class="navbar navbar-expand-lg navbar-light p-0">
-                <a href="/" class="navbar-brand"><h2 class="text-white">Delight Care</h2></a>
-                <button type="button" class="navbar-toggler ms-auto me-0" data-bs-toggle="collapse" data-bs-target="#navbarCollapse">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
-                <div class="collapse navbar-collapse" id="navbarCollapse">
-                    <div class="navbar-nav ms-auto">
-                        <a href="/" class="nav-item nav-link">Home</a>
-                        <a href="{% url 'my_orders' %}" class="nav-item nav-link">📦 My Orders</a>
-                        <a href="/cart/" class="nav-item nav-link">🛒 View Cart</a>
-                        <a href="{% url 'blog_list' %}" class="nav-item nav-link">📝 Blog</a>
-                        
-                        {% if user.is_authenticated %}
-                            <span class="nav-item nav-link text-white-50">Welcome, {{ user.username }}</span>
-                            <a href="{% url 'logout' %}" class="nav-item nav-link text-danger">Logout</a>
-                        {% else %}
-                            <a href="{% url 'login' %}" class="nav-item nav-link">Login</a>
-                            <a href="{% url 'signup' %}" class="nav-item nav-link">Signup</a>
-                        {% endif %}
-                    </div>
-                </div>
-            </nav>
-        </div>
+    <!-- Top Filter Tabs -->
+    <div class="border-b border-slate-200 mb-6">
+        <nav class="-mb-px flex space-x-8" aria-label="Tabs">
+            <a href="#" class="border-blue-500 text-blue-600 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm" aria-current="page">Deposit</a>
+            <a href="#" class="border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">Withdrawal</a>
+            <a href="#" class="border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">Internal Transfer</a>
+            <a href="#" class="border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">Transaction History</a>
+        </nav>
     </div>
 
-    <div class="container-fluid hero-header mb-5">
-        <div class="container text-center">
-            <h1 class="display-4 text-white mb-3 animated slideInDown">Secure Payment 💳</h1>
-            <nav aria-label="breadcrumb">
-                <ol class="breadcrumb justify-content-center mb-0 animated slideInDown">
-                    <li class="breadcrumb-item"><a class="text-white" href="/">Home</a></li>
-                    <li class="breadcrumb-item"><a class="text-white" href="/cart/">Cart</a></li>
-                    <li class="breadcrumb-item text-white active" aria-current="page">Payment</li>
-                </ol>
-            </nav>
-        </div>
-    </div>
-
-    <div class="container-fluid py-5">
-        <div class="container">
-            <div class="row g-5 justify-content-center">
-                
-                <div class="col-lg-8 wow fadeIn" data-wow-delay="0.1s">
-                    <div class="bg-white border rounded p-5 shadow-sm">
-                        <div class="text-center mb-4">
-                            <h3 style="color: #90bc79 !important;">Select Your Payment Mode</h3>
-                            <h4 class="text-dark">Amount Due: <span style="color: #90bc79 !important;">KES {{ grand_total|floatformat:2 }}</span></h4>
-                        </div>
-
-                        {% if messages %}
-                            {% for message in messages %}
-                                <div class="alert alert-{{ message.tags }} text-center" role="alert">
-                                    {{ message }}
-                                </div>
-                            {% endfor %}
-                        {% endif %}
-
-                        <ul class="nav nav-pills justify-content-center mb-5 border-bottom pb-3" id="paymentTabs" role="tablist">
-                            <li class="nav-item" role="presentation">
-                                <button class="nav-link active me-2" id="mpesa-tab" data-bs-toggle="pill" data-bs-target="#mpesa-pane" type="button" role="tab">📱 M-Pesa STK Push</button>
-                            </li>
-                            <li class="nav-item" role="presentation">
-                                <button class="nav-link me-2" id="airtel-tab" data-bs-toggle="pill" data-bs-target="#airtel-pane" type="button" role="tab">📱 Airtel Money</button>
-                            </li>
-                            <li class="nav-item" role="presentation">
-                                <button class="nav-link" id="card-tab" data-bs-toggle="pill" data-bs-target="#card-pane" type="button" role="tab">💳 Card Payment</button>
-                            </li>
-                        </ul>
-
-                        <div class="tab-content" id="paymentTabsContent">
-                            
-                            <!-- M-Pesa Tab -->
-                            <div class="tab-pane fade show active" id="mpesa-pane" role="tabpanel" aria-labelledby="mpesa-tab">
-                                <form method="post" action="{% url 'payment' %}" id="mpesaForm">
-                                    {% csrf_token %}
-                                    <input type="hidden" name="payment_method" value="mpesa">
-                                    <div class="row g-3">
-                                        <div class="col-12">
-                                            <label class="form-label text-muted fw-bold">M-Pesa Phone Number</label>
-                                            <div class="input-group">
-                                                <span class="input-group-text bg-light">+254</span>
-                                                <input type="tel" 
-                                                       name="phone" 
-                                                       id="phoneInput"
-                                                       class="form-control bg-light border-0 px-4 py-3" 
-                                                       placeholder="712345678" 
-                                                       required>
-                                            </div>
-                                            <div class="form-text text-muted">
-                                                <i class="fas fa-info-circle"></i> 
-                                                Ensure your phone is unlocked to receive the PIN prompt screen.
-                                            </div>
-                                        </div>
-                                        
-                                        <div class="col-12 mt-3">
-                                            <div class="bg-light p-3 rounded">
-                                                <h6 class="mb-2">Order Summary</h6>
-                                                <div class="d-flex justify-content-between">
-                                                    <span>Subtotal:</span>
-                                                    <span>KES {{ total_price|floatformat:2 }}</span>
-                                                </div>
-                                                <div class="d-flex justify-content-between">
-                                                    <span>GST (18%):</span>
-                                                    <span>KES {{ gst|floatformat:2 }}</span>
-                                                </div>
-                                                <hr>
-                                                <div class="d-flex justify-content-between fw-bold">
-                                                    <span>Total:</span>
-                                                    <span style="color: #90bc79 !important;">KES {{ grand_total|floatformat:2 }}</span>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        
-                                        <div class="col-12 mt-4">
-                                            <button type="submit" id="stkBtn" class="btn btn-success w-100 rounded-pill py-3 fw-bold">
-                                                <span id="btnText"><i class="fas fa-mobile-alt"></i> Pay with M-Pesa</span>
-                                                <span id="btnSpinner" class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
-                                            </button>
-                                        </div>
-                                    </div>
-                                </form>
-                            </div>
-
-                            <!-- Airtel Money Tab -->
-                            <div class="tab-pane fade" id="airtel-pane" role="tabpanel" aria-labelledby="airtel-tab">
-                                <form method="post" enctype="multipart/form-data" action="{% url 'payment' %}">
-                                    {% csrf_token %}
-                                    <input type="hidden" name="payment_method" value="bank_transfer">
-                                    <div class="row g-3">
-                                        <div class="col-12">
-                                            <label class="form-label text-muted fw-bold">Airtel Money Phone Number</label>
-                                            <input type="tel" name="phone" class="form-control bg-light border-0 px-4 py-3" placeholder="e.g., 073XXXXXXX" required>
-                                        </div>
-                                        <div class="col-12">
-                                            <label class="form-label text-muted fw-bold">Upload Airtel Payment Screenshot</label>
-                                            <input type="file" name="payment_screenshot" class="form-control bg-light border-0 px-4 py-3" accept="image/*" required>
-                                        </div>
-                                        <div class="col-12">
-                                            <label class="form-label text-muted fw-bold">UTR Last 6 Digits</label>
-                                            <input type="text" name="utr_last6" class="form-control bg-light border-0 px-4 py-3" placeholder="123456" pattern="[0-9]{6}" required>
-                                        </div>
-                                        <div class="col-12 mt-4">
-                                            <button type="submit" class="btn btn-primary w-100 rounded-pill py-3 fw-bold">
-                                                <i class="fas fa-upload"></i> Submit Airtel Details
-                                            </button>
-                                        </div>
-                                    </div>
-                                </form>
-                            </div>
-
-                            <!-- Card Payment Tab -->
-                            <div class="tab-pane fade" id="card-pane" role="tabpanel" aria-labelledby="card-tab">
-                                <form method="post" action="{% url 'process_card_payment' %}" id="cardForm">
-                                    {% csrf_token %}
-                                    <input type="hidden" name="payment_method" value="card">
-                                    
-                                    <!-- Card Preview -->
-                                    <div class="card-preview mb-4" style="background: linear-gradient(135deg, #1a1a2e, #16213e); color: white; padding: 20px; border-radius: 15px; min-height: 180px; position: relative;">
-                                        <div class="card-number" id="previewNumber" style="font-size: 1.5rem; letter-spacing: 3px; font-family: 'Courier New', monospace;">•••• •••• •••• ••••</div>
-                                        <div class="row mt-3">
-                                            <div class="col-6">
-                                                <div class="card-holder" id="previewHolder" style="font-size: 0.9rem; text-transform: uppercase;">CARD HOLDER</div>
-                                            </div>
-                                            <div class="col-6 text-end">
-                                                <div class="card-expiry" id="previewExpiry" style="font-size: 0.9rem;">MM/YY</div>
-                                            </div>
-                                        </div>
-                                        <div class="card-brand" style="position: absolute; bottom: 20px; right: 20px; font-size: 2rem;">
-                                            <i class="fas fa-credit-card"></i>
-                                        </div>
-                                    </div>
-
-                                    <!-- Card Icons -->
-                                    <div class="text-center mb-3">
-                                        <span style="font-size: 2rem; color: #6c757d;">
-                                            <i class="fab fa-cc-visa"></i>
-                                            <i class="fab fa-cc-mastercard"></i>
-                                            <i class="fab fa-cc-amex"></i>
-                                            <i class="fab fa-cc-discover"></i>
-                                        </span>
-                                        <br>
-                                        <small class="text-muted">We accept Visa, Mastercard, American Express</small>
-                                    </div>
-
-                                    <div class="row g-3">
-                                        <div class="col-12">
-                                            <label class="form-label text-muted fw-bold">Cardholder Name</label>
-                                            <input type="text" id="cardholderName" name="cardholder_name" class="form-control bg-light border-0 px-4 py-3" placeholder="John Doe" required>
-                                        </div>
-                                        <div class="col-12">
-                                            <label class="form-label text-muted fw-bold">Card Number</label>
-                                            <input type="text" id="cardNumber" name="card_number" class="form-control bg-light border-0 px-4 py-3" placeholder="4111 1111 1111 1111" maxlength="19" required>
-                                            <div class="form-text text-muted">We accept Visa, Mastercard, and American Express</div>
-                                        </div>
-                                        <div class="col-md-6">
-                                            <label class="form-label text-muted fw-bold">Expiry Date</label>
-                                            <input type="text" id="expiryDate" name="expiry" class="form-control bg-light border-0 px-4 py-3" placeholder="MM/YY" maxlength="5" required>
-                                        </div>
-                                        <div class="col-md-6">
-                                            <label class="form-label text-muted fw-bold">CVV</label>
-                                            <input type="password" id="cvv" name="cvv" class="form-control bg-light border-0 px-4 py-3" placeholder="123" maxlength="4" required>
-                                        </div>
-                                        <div class="col-12">
-                                            <div class="form-check">
-                                                <input type="checkbox" name="save_card" id="save_card" class="form-check-input">
-                                                <label for="save_card" class="form-check-label">
-                                                    <i class="fas fa-check-circle" style="color: #90bc79 !important;"></i> Save card for future payments
-                                                </label>
-                                            </div>
-                                        </div>
-                                        <div class="col-12">
-                                            <div class="alert alert-info">
-                                                <i class="fas fa-lock me-2"></i>
-                                                Your payment is secure and encrypted. We do not store your card details.
-                                            </div>
-                                        </div>
-                                        <div class="col-12 mt-2">
-                                            <button type="submit" id="cardPayBtn" class="btn btn-primary w-100 rounded-pill py-3 fw-bold">
-                                                <i class="fas fa-credit-card me-2"></i> Pay KES {{ grand_total|floatformat:2 }}
-                                            </button>
-                                        </div>
-                                    </div>
-                                </form>
-                            </div>
-
-                        </div>
-                    </div>
+    <!-- Payment Method Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        
+        <!-- 1. Bank Card -->
+        <div class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm transition-shadow space-y-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <div class="w-12 h-8 bg-slate-100 rounded flex items-center justify-center font-bold text-slate-500 text-xs border border-slate-200">IMG</div>
+                    <span class="font-bold text-slate-900">Bank Card</span>
                 </div>
+            </div>
+            <div class="text-xs text-slate-600 space-y-1.5 border-t border-slate-100 pt-4">
+                <p class="flex justify-between">Processing time <span class="font-bold text-slate-950">Instant</span></p>
+                <p class="flex justify-between">Limits <span class="font-bold text-slate-950">10 - 10000 USD</span></p>
+            </div>
+        </div>
 
+        <!-- 2. MPESA (Clickable Trigger) -->
+        <button type="button" onclick="document.getElementById('mpesaModal').style.display='flex'" class="text-left bg-white p-6 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow space-y-4 cursor-pointer">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <div class="w-12 h-8 bg-slate-100 rounded flex items-center justify-center font-bold text-slate-500 text-xs border border-slate-200">MP</div>
+                    <span class="font-bold text-slate-900">MPESA</span>
+                </div>
+            </div>
+            <div class="text-xs text-slate-600 space-y-1.5 border-t border-slate-100 pt-4">
+                <p class="flex justify-between">Processing time <span class="font-bold text-slate-950">Instant</span></p>
+                <p class="flex justify-between">Limits <span class="font-bold text-slate-950">10 - 1900 USD</span></p>
+            </div>
+        </button>
+
+        <!-- 3. Tether USD -->
+        <div class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm transition-shadow space-y-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <div class="w-12 h-8 bg-slate-100 rounded flex items-center justify-center font-bold text-slate-500 text-xs border border-slate-200">USDT</div>
+                    <span class="font-bold text-slate-900">Tether USD/USDT</span>
+                </div>
+            </div>
+            <div class="text-xs text-slate-600 space-y-1.5 border-t border-slate-100 pt-4">
+                <p class="flex justify-between">Processing time <span class="font-bold text-slate-950">15 mins</span></p>
+                <p class="flex justify-between">Limits <span class="font-bold text-slate-950">15 - 1000000 USD</span></p>
             </div>
         </div>
     </div>
+</div>
 
-    <div class="container-fluid bg-white footer">
-        <div class="container py-5 text-center">
-            <p class="mb-0">&copy; <a class="border-bottom" href="#" style="color: #90bc79 !important;">Delight Care</a>, All Rights Reserved.</p>
-        </div>
+<!-- MPESA Modal Overlay -->
+<div id="mpesaModal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900 bg-opacity-50 hidden p-4">
+    <div class="bg-white rounded-2xl shadow-xl w-full max-w-sm p-6 relative">
+        <h3 class="text-lg font-bold text-slate-950 mb-4">Deposit via MPESA</h3>
+        
+        <form method="POST" action="{% url 'request_deposit' %}">
+            {% csrf_token %}
+            <input type="hidden" name="method" value="MPESA">
+            
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">Amount (USD)</label>
+                    <input type="number" name="amount" required class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-blue-500 focus:border-blue-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">Phone Number (e.g. 2547...)</label>
+                    <input type="text" name="phone_number" required placeholder="0712345678" class="...">
+                </div>
+            </div>
+
+            <div class="mt-6 flex gap-3">
+                <button type="submit" class="flex-1 bg-blue-600 text-white font-bold py-2 rounded-lg hover:bg-blue-700 transition">Pay Now</button>
+                <button type="button" onclick="document.getElementById('mpesaModal').style.display='none'" class="flex-1 bg-slate-100 text-slate-700 font-bold py-2 rounded-lg hover:bg-slate-200 transition">Cancel</button>
+            </div>
+        </form>
     </div>
+</div>
 
-    <a href="#" class="btn btn-lg btn-primary btn-lg-square back-to-top"><i class="bi bi-arrow-up"></i></a>
-
-    <!-- Scripts -->
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.1/jquery.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="{% static 'lib/wow/wow.min.js' %}"></script>
-    <script src="{% static 'lib/easing/easing.min.js' %}"></script>
-    <script src="{% static 'lib/waypoints/waypoints.min.js' %}"></script>
-    <script src="{% static 'lib/owlcarousel/owl.carousel.min.js' %}"></script>
-    <script src="{% static 'js/main.js' %}"></script>
-
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // ============================================
-            // M-PESA FORM HANDLING
-            // ============================================
-            const mpesaForm = document.getElementById('mpesaForm');
-            if (mpesaForm) {
-                mpesaForm.addEventListener('submit', function(e) {
-                    const btn = document.getElementById('stkBtn');
-                    const btnText = document.getElementById('btnText');
-                    const spinner = document.getElementById('btnSpinner');
-                    
-                    btn.disabled = true;
-                    btnText.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending Prompt to Phone...';
-                    spinner.classList.remove('d-none');
-                    
-                    setTimeout(function() {
-                        btn.disabled = false;
-                        btnText.innerHTML = '<i class="fas fa-mobile-alt"></i> Pay with M-Pesa';
-                        spinner.classList.add('d-none');
-                    }, 30000);
-                });
-            }
-
-            // ============================================
-            // CARD FORM HANDLING
-            // ============================================
-            const cardForm = document.getElementById('cardForm');
-            const cardNumber = document.getElementById('cardNumber');
-            const cardholderName = document.getElementById('cardholderName');
-            const expiryDate = document.getElementById('expiryDate');
-            const cvv = document.getElementById('cvv');
-            const cardPayBtn = document.getElementById('cardPayBtn');
-
-            // Preview elements
-            const previewNumber = document.getElementById('previewNumber');
-            const previewHolder = document.getElementById('previewHolder');
-            const previewExpiry = document.getElementById('previewExpiry');
-
-            // Format card number with spaces
-            if (cardNumber) {
-                cardNumber.addEventListener('input', function(e) {
-                    let value = this.value.replace(/\D/g, '');
-                    let formatted = '';
-                    for (let i = 0; i < value.length; i++) {
-                        if (i > 0 && i % 4 === 0) {
-                            formatted += ' ';
-                        }
-                        formatted += value[i];
-                    }
-                    this.value = formatted;
-                    
-                    let display = this.value || '•••• •••• •••• ••••';
-                    if (previewNumber) previewNumber.textContent = display;
-                });
-            }
-
-            // Update card holder preview
-            if (cardholderName) {
-                cardholderName.addEventListener('input', function(e) {
-                    let value = this.value.toUpperCase() || 'CARD HOLDER';
-                    if (previewHolder) previewHolder.textContent = value;
-                });
-            }
-
-            // Format expiry date
-            if (expiryDate) {
-                expiryDate.addEventListener('input', function(e) {
-                    let value = this.value.replace(/\D/g, '');
-                    if (value.length >= 2) {
-                        value = value.substring(0, 2) + '/' + value.substring(2);
-                    }
-                    this.value = value;
-                    
-                    let display = this.value || 'MM/YY';
-                    if (previewExpiry) previewExpiry.textContent = display;
-                });
-            }
-
-            // CVV - only numbers
-            if (cvv) {
-                cvv.addEventListener('input', function(e) {
-                    this.value = this.value.replace(/\D/g, '');
-                });
-            }
-
-            // Card form validation
-            if (cardForm) {
-                cardForm.addEventListener('submit', function(e) {
-                    const cardNum = document.getElementById('cardNumber').value.replace(/\s/g, '');
-                    if (cardNum.length < 16) {
-                        alert('⚠️ Please enter a valid card number (minimum 16 digits)');
-                        e.preventDefault();
-                        return;
-                    }
-                    
-                    const expiry = document.getElementById('expiryDate').value;
-                    if (!expiry.match(/^\d{2}\/\d{2}$/)) {
-                        alert('⚠️ Please enter expiry date in MM/YY format');
-                        e.preventDefault();
-                        return;
-                    }
-                    
-                    const cvvVal = document.getElementById('cvv').value;
-                    if (cvvVal.length < 3) {
-                        alert('⚠️ Please enter a valid CVV (3-4 digits)');
-                        e.preventDefault();
-                        return;
-                    }
-                    
-                    if (cardPayBtn) {
-                        cardPayBtn.disabled = true;
-                        cardPayBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Processing...';
-                    }
-                });
-            }
-
-            // ============================================
-            // PHONE NUMBER FORMATTING
-            // ============================================
-            const phoneInput = document.getElementById('phoneInput');
-            if (phoneInput) {
-                phoneInput.addEventListener('input', function(e) {
-                    this.value = this.value.replace(/\D/g, '');
-                    if (this.value.length > 12) {
-                        this.value = this.value.slice(0, 12);
-                    }
-                });
-            }
-
-            // ============================================
-            // TAB SWITCHING ANIMATION
-            // ============================================
-            document.querySelectorAll('[data-bs-toggle="pill"]').forEach(function(tab) {
-                tab.addEventListener('shown.bs.tab', function(e) {
-                    const target = document.querySelector(e.target.getAttribute('data-bs-target'));
-                    if (target) {
-                        target.classList.add('fade-in');
-                        setTimeout(function() {
-                            target.classList.remove('fade-in');
-                        }, 300);
-                    }
-                });
-            });
-
-            // ============================================
-            // AUTO-CLOSE ALERTS
-            // ============================================
-            const alerts = document.querySelectorAll('.alert');
-            alerts.forEach(function(alert) {
-                setTimeout(function() {
-                    alert.style.transition = 'opacity 0.5s';
-                    alert.style.opacity = '0';
-                    setTimeout(function() {
-                        alert.remove();
-                    }, 500);
-                }, 5000);
-            });
-
-            // ============================================
-            // PREVENT DOUBLE SUBMISSION
-            // ============================================
-            document.querySelectorAll('form').forEach(function(form) {
-                form.addEventListener('submit', function() {
-                    const submitBtn = form.querySelector('button[type="submit"]');
-                    if (submitBtn && !submitBtn.disabled) {
-                        submitBtn.disabled = true;
-                        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
-                    }
-                });
-            });
-        });
-    </script>
-
-</body>
-
-</html>
+{% endblock %}

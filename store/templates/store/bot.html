@@ -1,0 +1,252 @@
+{% extends 'base_dashboard.html' %}
+{% load static %}
+
+{% block content %}
+<div class="space-y-6 max-w-7xl mx-auto">
+
+    <!-- ============================================================ -->
+    <!-- Page Header with Global Bot Controls -->
+    <!-- ============================================================ -->
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-800 pb-5">
+        <div>
+            <h1 class="text-2xl font-black text-white tracking-wide">AI Trading Engine</h1>
+            <p class="text-xs text-slate-400 mt-1">Monitor live bot performance, PnL, and manage execution.</p>
+        </div>
+        
+        <div class="flex items-center gap-3 flex-wrap">
+            <!-- Status Indicator -->
+            <div class="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-800 border border-slate-700 text-xs">
+                {% if bot_status == 'running' %}
+                    <span class="relative flex h-2 w-2">
+                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                        <span class="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+                    </span>
+                    <span class="font-bold text-green-400 uppercase tracking-wider">Running</span>
+                {% elif bot_status == 'error' %}
+                    <span class="relative flex h-2 w-2">
+                        <span class="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
+                    </span>
+                    <span class="font-bold text-red-400 uppercase tracking-wider">Error</span>
+                {% else %}
+                    <span class="relative flex h-2 w-2">
+                        <span class="relative inline-flex rounded-full h-2 w-2 bg-slate-500"></span>
+                    </span>
+                    <span class="font-bold text-slate-400 uppercase tracking-wider">Stopped</span>
+                {% endif %}
+                <span class="text-slate-500 ml-2 font-mono">| {{ current_pair|default:"NOT SET" }}</span>
+            </div>
+
+            <!-- Control Buttons Form -->
+            <form method="post" action="{% url 'bot_control' %}" class="flex gap-2">
+                {% csrf_token %}
+                
+                {% if bot_status != 'running' %}
+                    <button name="action" value="start" type="submit" class="flex items-center gap-1.5 py-1.5 px-4 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-lg transition cursor-pointer disabled:opacity-50" {% if not current_pair %}disabled{% endif %}>
+                        <i class="fa-solid fa-play"></i> START
+                    </button>
+                {% else %}
+                    <button name="action" value="stop" type="submit" class="flex items-center gap-1.5 py-1.5 px-4 bg-slate-700 hover:bg-slate-600 text-slate-200 font-bold text-xs rounded-lg transition cursor-pointer">
+                        <i class="fa-solid fa-stop"></i> STOP
+                    </button>
+                {% endif %}
+                
+                <!-- Emergency Stop - Distinct Red -->
+                <button name="action" value="emergency_stop" type="submit" 
+                        onclick="return confirm('⚠️ WARNING: This will instantly cancel ALL pending orders and market sell ALL holdings at current market price. Are you sure?');" 
+                        class="flex items-center gap-1.5 py-1.5 px-4 bg-red-600 hover:bg-red-500 text-white font-bold text-xs rounded-lg transition cursor-pointer">
+                    <i class="fa-solid fa-skull-crossbones"></i> EMERGENCY SELL
+                </button>
+            </form>
+
+            <!-- New Bot Initialization Trigger -->
+            <button onclick="openCreateBotModal()" class="flex items-center gap-1.5 py-1.5 px-4 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs rounded-lg transition cursor-pointer">
+                <i class="fa-solid fa-plus"></i> NEW BOT
+            </button>
+        </div>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- Bot Stats Grid -->
+    <!-- ============================================================ -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+        
+        <!-- Card 1: Account Balance -->
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-sm">
+            <div class="flex items-center justify-between mb-3">
+                <h3 class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Account Balance</h3>
+                <i class="fa-solid fa-wallet text-indigo-400 text-sm opacity-70"></i>
+            </div>
+            <p class="text-2xl font-bold text-white font-mono">${{ account_balance|floatformat:2|default:"0.00" }} <span class="text-sm text-slate-500">USD</span></p>
+        </div>
+
+        <!-- Card 2: Unrealized PnL -->
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-sm">
+            <div class="flex items-center justify-between mb-3">
+                <h3 class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Unrealized PnL</h3>
+                <i class="fa-solid fa-chart-line text-emerald-400 text-sm opacity-70"></i>
+            </div>
+            {% if unrealized_pnl > 0 %}
+                <p class="text-2xl font-bold text-emerald-400 font-mono">+${{ unrealized_pnl|floatformat:2 }}</p>
+                <p class="text-[10px] text-emerald-400 mt-1">+{{ pnl_pct|default:"0.00" }}% Floating</p>
+            {% elif unrealized_pnl < 0 %}
+                <p class="text-2xl font-bold text-rose-400 font-mono">${{ unrealized_pnl|floatformat:2 }}</p>
+                <p class="text-[10px] text-rose-400 mt-1">{{ pnl_pct|default:"0.00" }}% Floating</p>
+            {% else %}
+                <p class="text-2xl font-bold text-slate-300 font-mono">$0.00</p>
+                <p class="text-[10px] text-slate-500 mt-1">0.00%</p>
+            {% endif %}
+        </div>
+
+        <!-- Card 3: Active Orders -->
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-sm">
+            <div class="flex items-center justify-between mb-3">
+                <h3 class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Active Grid Orders</h3>
+                <i class="fa-solid fa-grip-lines text-sky-400 text-sm opacity-70"></i>
+            </div>
+            <p class="text-2xl font-bold text-white font-mono">{{ active_orders_count|default:"0" }}</p>
+            <p class="text-[10px] text-slate-500 mt-1">Next buy: ${{ next_buy_price|default:"N/A" }}</p>
+        </div>
+
+        <!-- Card 4: Bot Strategy -->
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-sm">
+            <div class="flex items-center justify-between mb-3">
+                <h3 class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Strategy Active</h3>
+                <i class="fa-solid fa-brain text-amber-400 text-sm opacity-70"></i>
+            </div>
+            <p class="text-base font-bold text-white">{{ bot_strategy_display|default:"AI Volatility Hunter v2.1" }}</p>
+            <p class="text-[10px] text-slate-500 mt-1">Int: {{ poll_frequency|default:"4" }}s | Spr: {{ spread_pct|default:"0.5%" }}</p>
+        </div>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- Live Logs and Position Info -->
+    <!-- ============================================================ -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        
+        <!-- Live Execution Logs -->
+        <div class="lg:col-span-2 bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-sm">
+            <h3 class="text-lg font-bold text-white mb-1">Live Execution Logs</h3>
+            <p class="text-xs text-slate-400 mb-4">Real-time feed of AI decisions and API responses</p>
+            
+            <!-- Scrollable Log Window -->
+            <div id="log-container" class="h-96 bg-slate-950 border border-slate-800 rounded-xl p-4 overflow-y-auto font-mono text-[11px] text-slate-300 space-y-1.5 flex flex-col-reverse">
+                {% for log in logs reversed %}
+                    <div class="flex gap-2">
+                        <span class="text-slate-600 shrink-0">[{{ log.timestamp|default:"HH:MM:SS" }}]</span>
+                        <span class="flex-1 break-all {% if 'ERROR' in log.message %}text-rose-400{% elif 'WARN' in log.message %}text-amber-400{% elif 'BUY' in log.message %}text-sky-400{% elif 'SELL' in log.message %}text-emerald-400{% elif 'INFO' in log.message %}text-blue-400{% endif %}">
+                            {{ log.message }}
+                        </span>
+                    </div>
+                {% empty %}
+                    <div class="text-slate-600 italic text-center pt-10">Awaiting bot initialization...</div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Current Position Details -->
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-sm space-y-5">
+            <div>
+                <h3 class="text-lg font-bold text-white mb-1">Current Position</h3>
+                <p class="text-xs text-slate-400">Net exposure & risk management</p>
+            </div>
+
+            <div class="space-y-3 text-sm">
+                <div class="flex justify-between items-center bg-slate-950 p-3 rounded-lg border border-slate-800">
+                    <span class="text-slate-400 text-xs">Asset</span>
+                    <span class="font-bold text-white text-xs font-mono">{{ current_pair|default:"--/--" }}</span>
+                </div>
+                <div class="flex justify-between items-center bg-slate-950 p-3 rounded-lg border border-slate-800">
+                    <span class="text-slate-400 text-xs">Size Held</span>
+                    <span class="font-bold text-white font-mono text-xs">{{ position_size|floatformat:8|default:"0.00000000" }}</span>
+                </div>
+                <div class="flex justify-between items-center bg-slate-950 p-3 rounded-lg border border-slate-800">
+                    <span class="text-slate-400 text-xs">Avg. Entry Price</span>
+                    <span class="font-bold text-white font-mono text-xs">${{ avg_entry_price|floatformat:4|default:"0.0000" }}</span>
+                </div>
+                <div class="flex justify-between items-center bg-slate-950 p-3 rounded-lg border border-slate-800">
+                    <span class="text-slate-400 text-xs">Current Price</span>
+                    <span class="font-bold text-sky-400 font-mono text-xs">${{ current_price|floatformat:4|default:"0.0000" }}</span>
+                </div>
+            </div>
+
+            <!-- Risk Settings Display -->
+            <div class="pt-3 border-t border-slate-800 space-y-3">
+                <h4 class="text-sm font-semibold text-slate-300">Risk Parameters</h4>
+                <div class="flex justify-between items-center text-xs">
+                    <span class="text-slate-400">Trailing Stop (ATR Mult)</span>
+                    <span class="font-medium text-amber-400">{{ trailing_stop_mult|default:"2.5" }}x</span>
+                </div>
+                <div class="flex justify-between items-center text-xs">
+                    <span class="text-slate-400">Calculated SL Price</span>
+                    <span class="font-medium text-rose-400 font-mono">${{ calculated_sl_price|floatformat:4|default:"0.0000" }}</span>
+                </div>
+                 <div class="flex justify-between items-center text-xs">
+                    <span class="text-slate-400">Cooldown Active</span>
+                    <span class="font-medium {% if cooldown_active %}text-amber-400{% else %}text-slate-500{% endif %}">
+                        {% if cooldown_active %}YES ({{ cooldown_timer }}m remaining){% else %}NO{% endif %}
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- Create New Bot Modal Window -->
+<!-- ============================================================ -->
+<div id="createBotModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm">
+    <div class="bg-slate-900 border border-slate-800 w-full max-w-lg rounded-2xl p-6 shadow-2xl space-y-4">
+        <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+            <h3 class="text-base font-bold text-white">Initialize New Trading Bot</h3>
+            <button onclick="closeCreateBotModal()" class="text-slate-400 hover:text-white cursor-pointer">
+                <i class="fa-solid fa-xmark text-lg"></i>
+            </button>
+        </div>
+
+        <form method="post" action="{% url 'create_bot' %}" class="space-y-4">
+            {% csrf_token %}
+            <div>
+                <label class="block text-xs font-semibold text-slate-400 mb-1">Bot Name</label>
+                {{ form.bot_name }}
+            </div>
+            <div>
+                <label class="block text-xs font-semibold text-slate-400 mb-1">Execution Strategy</label>
+                {{ form.strategy }}
+            </div>
+            <div>
+                <label class="block text-xs font-semibold text-slate-400 mb-1">Asset / Pair</label>
+                {{ form.trading_pair }}
+            </div>
+            <div>
+                <label class="block text-xs font-semibold text-slate-400 mb-1">Base Stake ($)</label>
+                {{ form.stake_amount }}
+            </div>
+
+            <div class="flex justify-end gap-3 pt-4 border-t border-slate-800">
+                <button type="button" onclick="closeCreateBotModal()" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold rounded-lg cursor-pointer">Cancel</button>
+                <button type="submit" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-lg cursor-pointer">Deploy Bot</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- JavaScript Handlers -->
+<!-- ============================================================ -->
+<script>
+    document.addEventListener('DOMContentLoaded', (event) => {
+        const logContainer = document.getElementById('log-container');
+        if (logContainer) {
+            logContainer.scrollTop = logContainer.scrollHeight;
+        }
+    });
+
+    function openCreateBotModal() {
+        document.getElementById('createBotModal').classList.remove('hidden');
+    }
+
+    function closeCreateBotModal() {
+        document.getElementById('createBotModal').classList.add('hidden');
+    }
+</script>
+{% endblock %}

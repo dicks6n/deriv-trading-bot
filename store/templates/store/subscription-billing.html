@@ -1,0 +1,271 @@
+{% extends 'base_dashboard.html' %}
+
+{% block content %}
+<div class="space-y-6 max-w-7xl mx-auto">
+
+    <!-- Page Header -->
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-800 pb-5">
+        <div>
+            <h1 class="text-2xl font-black text-white tracking-wide">Subscription & Billing</h1>
+            <p class="text-xs text-slate-400 mt-1">Manage your active subscription plan, payment methods, and billing history.</p>
+        </div>
+        <div class="flex items-center gap-3">
+            <span class="px-3 py-1.5 rounded-full text-xs font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 flex items-center gap-2">
+                <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> Active Plan: {{ user_profile.subscription_tier|upper|default:"FREE" }}
+            </span>
+        </div>
+    </div>
+
+    <!-- Current Active Subscription Card -->
+    <div class="bg-gradient-to-r from-slate-900 via-indigo-950/40 to-slate-900 border border-indigo-500/30 rounded-2xl p-6 shadow-xl relative overflow-hidden">
+        <div class="absolute -top-12 -right-12 w-48 h-48 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none"></div>
+        
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 items-center relative z-10">
+            <div class="lg:col-span-2 space-y-2">
+                <div class="flex items-center gap-2">
+                    <span class="text-[10px] font-bold text-indigo-400 uppercase bg-indigo-500/10 px-2.5 py-1 rounded border border-indigo-500/20">Current Tier</span>
+                    <span class="text-xs text-slate-400 font-mono">ID: SUB-{{ request.user.id }}</span>
+                </div>
+                <h2 class="text-xl font-bold text-white">Pro Algorithmic Trading Suite</h2>
+                <p class="text-xs text-slate-300 leading-relaxed">
+                    Includes unlimited automated digit signal execution, WebSocket live tick streams, and priority API relay routing.
+                </p>
+                <div class="flex flex-wrap items-center gap-4 pt-2 text-xs text-slate-400 font-mono">
+                    <div><strong class="text-white">Billing Cycle:</strong> Monthly</div>
+                    <div><strong class="text-white">Next Renewal:</strong> September 6, 2026</div>
+                    <div><strong class="text-emerald-400">$49.00 / month</strong></div>
+                </div>
+            </div>
+
+            <div class="flex flex-col sm:flex-row lg:flex-col gap-3 justify-end">
+                <button onclick="openModal('upgrade-modal')" class="w-full py-3 px-4 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs rounded-xl transition shadow-lg shadow-indigo-600/30 flex items-center justify-center gap-2 cursor-pointer">
+                    <i class="fa-solid fa-arrow-up-right-dots"></i> Upgrade Plan
+                </button>
+                <button onclick="openModal('cancel-modal')" class="w-full py-3 px-4 bg-slate-800 hover:bg-rose-900/40 text-slate-300 hover:text-rose-300 font-bold text-xs rounded-xl transition border border-slate-700 hover:border-rose-500/40 flex items-center justify-center gap-2 cursor-pointer">
+                    <i class="fa-solid fa-ban"></i> Cancel Subscription
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Available Upgrade Plans Grid -->
+    <div class="space-y-4">
+        <h3 class="text-lg font-bold text-white">Available Subscription Tiers</h3>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+            
+            <!-- Plan 1 -->
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 flex flex-col justify-between hover:border-indigo-500/40 transition">
+                <div>
+                    <div class="flex justify-between items-center mb-4">
+                        <span class="text-xs font-bold text-slate-400 uppercase">Starter</span>
+                        <span class="text-xs font-mono font-bold text-white bg-slate-800 px-2 py-1 rounded">Free</span>
+                    </div>
+                    <h4 class="text-xl font-black text-white mb-2">$0 <span class="text-xs font-normal text-slate-400">/ forever</span></h4>
+                    <p class="text-xs text-slate-400 mb-6">Basic manual digit analysis and single asset tracking.</p>
+                    <ul class="space-y-3 text-xs text-slate-300 mb-6">
+                        <li class="flex items-center gap-2"><i class="fa-solid fa-check text-emerald-400"></i> Standard WebSocket Ticks</li>
+                        <li class="flex items-center gap-2"><i class="fa-solid fa-check text-emerald-400"></i> Manual Trade Execution</li>
+                        <li class="flex items-center gap-2 text-slate-500"><i class="fa-solid fa-xmark text-rose-500"></i> Automated Bot Engine</li>
+                    </ul>
+                </div>
+                <button class="w-full py-2.5 bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs rounded-xl transition cursor-pointer">Current Plan</button>
+            </div>
+
+            <!-- Plan 2 (Featured) -->
+            <div class="bg-gradient-to-b from-indigo-950/80 to-slate-900 border-2 border-indigo-500 rounded-2xl p-6 flex flex-col justify-between shadow-xl relative">
+                <div class="absolute -top-3 left-1/2 -translate-x-1/2 bg-indigo-600 text-white text-[10px] font-bold uppercase tracking-wider px-3 py-0.5 rounded-full shadow">Most Popular</div>
+                <div>
+                    <div class="flex justify-between items-center mb-4 pt-1">
+                        <span class="text-xs font-bold text-indigo-300 uppercase">Pro Trader</span>
+                        <span class="text-xs font-mono font-bold text-emerald-400 bg-emerald-500/10 px-2 py-1 rounded border border-emerald-500/20">$49/mo</span>
+                    </div>
+                    <h4 class="text-xl font-black text-white mb-2">$49 <span class="text-xs font-normal text-slate-400">/ month</span></h4>
+                    <p class="text-xs text-slate-300 mb-6">Full automated execution suite with gradient boosting models.</p>
+                    <ul class="space-y-3 text-xs text-slate-200 mb-6 font-medium">
+                        <li class="flex items-center gap-2"><i class="fa-solid fa-check text-emerald-400"></i> Unlimited Auto-Trading Bots</li>
+                        <li class="flex items-center gap-2"><i class="fa-solid fa-check text-emerald-400"></i> Real-Time AI Digit Predictions</li>
+                        <li class="flex items-center gap-2"><i class="fa-solid fa-check text-emerald-400"></i> Priority Deriv API Relay</li>
+                    </ul>
+                </div>
+                <button class="w-full py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs rounded-xl transition shadow-lg cursor-pointer">Active Plan</button>
+            </div>
+
+            <!-- Plan 3 -->
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 flex flex-col justify-between hover:border-indigo-500/40 transition">
+                <div>
+                    <div class="flex justify-between items-center mb-4">
+                        <span class="text-xs font-bold text-amber-400 uppercase">VIP Enterprise</span>
+                        <span class="text-xs font-mono font-bold text-amber-400 bg-amber-500/10 px-2 py-1 rounded border border-amber-500/20">$199/mo</span>
+                    </div>
+                    <h4 class="text-xl font-black text-white mb-2">$199 <span class="text-xs font-normal text-slate-400">/ month</span></h4>
+                    <p class="text-xs text-slate-400 mb-6">Custom server hosting, dedicated webhooks, and institutional support.</p>
+                    <ul class="space-y-3 text-xs text-slate-300 mb-6">
+                        <li class="flex items-center gap-2"><i class="fa-solid fa-check text-emerald-400"></i> Dedicated WebSocket Gateway</li>
+                        <li class="flex items-center gap-2"><i class="fa-solid fa-check text-emerald-400"></i> Custom M-Pesa & Payment Webhooks</li>
+                        <li class="flex items-center gap-2"><i class="fa-solid fa-check text-emerald-400"></i> 24/7 Priority Support & Setup</li>
+                    </ul>
+                </div>
+                <button onclick="openModal('upgrade-modal')" class="w-full py-2.5 bg-slate-800 hover:bg-indigo-600 text-white font-bold text-xs rounded-xl transition cursor-pointer">Switch to VIP</button>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Billing History Table -->
+<!-- Billing History Table -->
+<div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-sm">
+    <div class="flex items-center justify-between mb-5">
+        <div>
+            <h3 class="text-lg font-bold text-white">Billing & Transaction History</h3>
+            <p class="text-xs text-slate-400 mt-0.5">Review deposits, withdrawals, and subscription invoices</p>
+        </div>
+    </div>
+
+    <div class="overflow-x-auto">
+        <table class="w-full text-left text-xs font-mono">
+            <thead class="text-[10px] uppercase tracking-wider text-slate-500 border-b border-slate-800 font-semibold">
+                <tr>
+                    <th class="py-3 px-3">Type</th>
+                    <th class="py-3 px-3">Details</th>
+                    <th class="py-3 px-3">Date</th>
+                    <th class="py-3 px-3">Amount</th>
+                    <th class="py-3 px-3">Status</th>
+                    <th class="py-3 px-3 text-right">Action</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-800 text-slate-300">
+                {% for tx in transactions %}
+                <tr class="hover:bg-slate-800/40 transition">
+                    <td class="py-3.5 px-3 text-indigo-400 font-bold uppercase">{{ tx.transaction_type }}</td>
+                    <td class="py-3.5 px-3 font-sans">{{ tx.details|default:"N/A" }}</td>
+                    <td class="py-3.5 px-3 text-slate-400">{{ tx.created_at|date:"M d, Y H:i" }}</td>
+                    <td class="py-3.5 px-3 font-bold text-white">${{ tx.amount }} USD</td>
+                    <td class="py-3.5 px-3">
+                        <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">COMPLETED</span>
+                    </td>
+                    <td class="py-3.5 px-3 text-right font-sans">
+                        <button onclick="downloadInvoice('TX-{{ tx.id }}')" class="px-3 py-1 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold rounded-lg transition cursor-pointer">
+                            <i class="fa-solid fa-download mr-1"></i> PDF
+                        </button>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6" class="text-center py-4 text-slate-500">No transaction history found.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+</div>
+
+<!-- UPGRADE MODAL -->
+<div id="upgrade-modal" class="hidden fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-indigo-500/30 rounded-2xl p-6 w-full max-w-md shadow-2xl relative">
+        <button onclick="closeModal('upgrade-modal')" class="absolute top-4 right-4 text-slate-400 hover:text-white cursor-pointer">
+            <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+        <div class="w-12 h-12 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400 text-xl mb-3">
+            <i class="fa-solid fa-arrow-up-right-dots"></i>
+        </div>
+        <h3 class="text-lg font-bold text-white">Confirm Plan Upgrade</h3>
+        <p class="text-xs text-slate-400 mt-1">Select your preferred billing method or gateway to upgrade your account instantly.</p>
+        
+        <form method="POST" action="" class="mt-5 space-y-3 text-xs">
+            {% csrf_token %}
+            <div>
+                <label class="block text-slate-400 font-bold mb-1">Select Tier</label>
+                <select name="tier" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-white focus:outline-none focus:border-indigo-500 cursor-pointer">
+                    <option value="pro">Pro Trader ($49/mo)</option>
+                    <option value="vip">VIP Enterprise ($199/mo)</option>
+                </select>
+            </div>
+            <div>
+                <label class="block text-slate-400 font-bold mb-1">Payment Method</label>
+                <select name="payment_method" id="paymentMethodSelect" onchange="togglePhoneField()" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-white focus:outline-none focus:border-indigo-500 cursor-pointer">
+                    <option value="balance">Account Balance</option>
+                    <option value="mpesa" selected>M-Pesa Callback / STK Push</option>
+                    <option value="deriv">Deriv API Wallet</option>
+                </select>
+            </div>
+            <!-- Added Phone Number Prompt Field -->
+            <div id="phoneFieldContainer">
+                <label class="block text-slate-400 font-bold mb-1">M-Pesa Phone Number</label>
+                <input type="text" name="phone_number" placeholder="2547XXXXXXXX" value="{{ request.user.profile.phone_number|default:'' }}"
+                    class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-white focus:outline-none focus:border-indigo-500 font-mono">
+            </div>
+            <button type="submit" class="w-full py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl transition cursor-pointer shadow-lg shadow-indigo-600/30 mt-2">Proceed with Payment</button>
+        </form>
+    </div>
+</div>
+
+<!-- CANCEL MODAL -->
+<div id="cancel-modal" class="hidden fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-rose-500/30 rounded-2xl p-6 w-full max-w-md shadow-2xl relative">
+        <button onclick="closeModal('cancel-modal')" class="absolute top-4 right-4 text-slate-400 hover:text-white cursor-pointer">
+            <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+        <div class="w-12 h-12 rounded-xl bg-rose-500/10 border border-rose-500/20 flex items-center justify-center text-rose-400 text-xl mb-3">
+            <i class="fa-solid fa-triangle-exclamation"></i>
+        </div>
+        <h3 class="text-lg font-bold text-white">Cancel Subscription?</h3>
+        <p class="text-xs text-slate-400 mt-1">Your subscription will remain active until the end of your current billing cycle (September 6, 2026), after which it will downgrade to Free.</p>
+        <div class="mt-6 flex gap-3">
+            <button onclick="closeModal('cancel-modal')" class="w-1/2 py-3 bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs rounded-xl transition cursor-pointer">Keep Subscription</button>
+            <button onclick="confirmCancellation()" class="w-1/2 py-3 bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs rounded-xl transition cursor-pointer shadow-lg shadow-rose-600/30">Confirm Cancellation</button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function openModal(id) {
+    const el = document.getElementById(id);
+    if (el) el.classList.remove('hidden');
+}
+
+function closeModal(id) {
+    const el = document.getElementById(id);
+    if (el) el.classList.add('hidden');
+}
+
+function togglePhoneField() {
+    const method = document.getElementById('paymentMethodSelect').value;
+    const container = document.getElementById('phoneFieldContainer');
+    if (method === 'mpesa') {
+        container.style.display = 'block';
+    } else {
+        container.style.display = 'none';
+    }
+}
+
+// Run on load to set initial state
+document.addEventListener('DOMContentLoaded', togglePhoneField);
+
+function downloadInvoice(invoiceId) {
+    const toast = document.createElement("div");
+    toast.className = "fixed bottom-5 right-5 z-50 px-4 py-3 rounded-xl border font-mono text-xs shadow-2xl backdrop-blur-md bg-indigo-900/90 border-indigo-500 text-indigo-200 transition-all duration-300";
+    toast.innerHTML = `<i class="fa-solid fa-file-arrow-down mr-2"></i> Downloading invoice ${invoiceId} as PDF...`;
+    document.body.appendChild(toast);
+    setTimeout(() => {
+        toast.style.opacity = '0';
+        setTimeout(() => toast.remove(), 300);
+    }, 3000);
+}
+
+function confirmCancellation() {
+    closeModal('cancel-modal');
+    const toast = document.createElement("div");
+    toast.className = "fixed bottom-5 right-5 z-50 px-4 py-3 rounded-xl border font-mono text-xs shadow-2xl backdrop-blur-md bg-rose-900/90 border-rose-500 text-rose-200 transition-all duration-300";
+    toast.innerHTML = `<i class="fa-solid fa-circle-check mr-2"></i> Subscription cancellation scheduled successfully.`;
+    document.body.appendChild(toast);
+    setTimeout(() => {
+        toast.style.opacity = '0';
+        setTimeout(() => toast.remove(), 300);
+    }, 4000);
+}
+</script>
+{% endblock %}

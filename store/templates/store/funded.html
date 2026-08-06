@@ -1,0 +1,163 @@
+{% extends 'base_dashboard.html' %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto space-y-6">
+
+    <!-- Header & Breadcrumbs -->
+    <div class="flex justify-between items-end">
+        <div>
+            <h1 class="text-xl font-black text-white">My Funded Accounts</h1>
+            <p class="text-xs text-slate-400">Overview of all funded accounts, equity, and performance metrics</p>
+        </div>
+        <div class="flex items-center gap-3">
+            <span class="px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-brandGreen text-[10px] font-bold flex items-center gap-2">
+                <span class="w-1.5 h-1.5 rounded-full bg-brandGreen"></span> 2 ACTIVE
+            </span>
+            <div class="bg-cardBg border border-cardBorder px-4 py-2 rounded-xl text-xs font-bold text-slate-300">
+                Total Equity: $150,000
+            </div>
+        </div>
+    </div>
+
+    <!-- MAIN GRID -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        
+        <!-- LEFT/MIDDLE COLUMN (Detailed Stats) -->
+        <div class="lg:col-span-2 space-y-6">
+            
+            <!-- Account Summary Card -->
+            <div class="bg-cardBg border border-cardBorder p-6 rounded-2xl">
+                <div class="flex justify-between items-start mb-6">
+                    <div>
+                        <h3 class="text-sm font-bold text-white">Consolidated Performance</h3>
+                        <p class="text-[11px] text-slate-500">Total equity & growth metrics</p>
+                    </div>
+                    <span class="px-2 py-1 bg-emerald-500/10 text-brandGreen text-[10px] font-bold rounded-lg border border-emerald-500/20">HEALTHY</span>
+                </div>
+                
+                <!-- Main Numbers -->
+                <div class="grid grid-cols-3 gap-6">
+                    <div>
+                        <p class="text-[10px] text-slate-500 uppercase tracking-widest font-bold">Total Equity</p>
+                        <h2 class="text-2xl font-black text-white">$154,280</h2>
+                    </div>
+                    <div>
+                        <p class="text-[10px] text-slate-500 uppercase tracking-widest font-bold">Total Profit</p>
+                        <h2 class="text-2xl font-black text-brandGreen">+$4,280</h2>
+                    </div>
+                    <div>
+                        <p class="text-[10px] text-slate-500 uppercase tracking-widest font-bold">Active Since</p>
+                        <h2 class="text-2xl font-black text-white">42 Days</h2>
+                    </div>
+                </div>
+
+                <!-- Equity Bar -->
+                <div class="mt-8 bg-slate-900/40 p-4 rounded-xl border border-slate-800/50">
+                    <div class="flex justify-between items-center mb-3">
+                        <h4 class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Equity Distribution</h4>
+                        <span class="text-[10px] font-bold text-white">$154,280</span>
+                    </div>
+                    
+                    <!-- Visual Bar -->
+                    <div class="w-full bg-slate-950 h-3 rounded-full overflow-hidden flex border border-slate-800">
+                        <div class="bg-brandGreen h-full w-[65%] relative group">
+                            <span class="absolute -top-6 left-0 text-[9px] text-brandGreen font-bold opacity-0 group-hover:opacity-100 transition">$100.7K</span>
+                        </div>
+                        <div class="bg-indigo-500 h-full w-[35%] relative group">
+                            <span class="absolute -top-6 right-0 text-[9px] text-indigo-400 font-bold opacity-0 group-hover:opacity-100 transition">$53.5K</span>
+                        </div>
+                    </div>
+                
+                    <!-- Professional Legend -->
+                    <div class="grid grid-cols-2 gap-2 mt-4">
+                        <div class="flex items-center gap-2">
+                            <span class="w-2 h-2 rounded-full bg-brandGreen shadow-[0_0_8px_rgba(16,185,129,0.5)]"></span>
+                            <span class="text-[9px] text-slate-400 font-bold uppercase">PV-100K (65%)</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <span class="w-2 h-2 rounded-full bg-indigo-500 shadow-[0_0_8px_rgba(99,102,241,0.5)]"></span>
+                            <span class="text-[9px] text-slate-400 font-bold uppercase">PV-50K (35%)</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Activity Table -->
+            <div class="bg-cardBg border border-cardBorder rounded-2xl overflow-hidden">
+                <div class="px-6 py-4 border-b border-cardBorder flex justify-between items-center">
+                    <h3 class="text-sm font-bold text-white">Recent Activity</h3>
+                    <button class="text-[10px] text-indigo-400 hover:text-indigo-300 font-bold">VIEW ALL</button>
+                </div>
+                <table class="w-full text-left text-xs">
+                    <thead class="bg-slate-900/50 text-slate-500 uppercase text-[10px]">
+                        <tr>
+                            <th class="px-6 py-3 font-bold">Account</th>
+                            <th class="px-6 py-3 font-bold">Instrument</th>
+                            <th class="px-6 py-3 font-bold">Side</th>
+                            <th class="px-6 py-3 font-bold">Result</th>
+                            <th class="px-6 py-3 font-bold">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-cardBorder text-slate-300">
+                        <tr>
+                            <td class="px-6 py-4 font-mono font-bold">PV-100K</td>
+                            <td class="px-6 py-4">EURUSD</td>
+                            <td class="px-6 py-4 text-brandGreen">BUY</td>
+                            <td class="px-6 py-4 text-brandGreen">+$320</td>
+                            <td class="px-6 py-4"><span class="bg-slate-800 px-2 py-0.5 rounded text-[10px]">Closed</span></td>
+                        </tr>
+                        <tr>
+                            <td class="px-6 py-4 font-mono font-bold">PV-50K</td>
+                            <td class="px-6 py-4">GBPUSD</td>
+                            <td class="px-6 py-4 text-rose-400">SELL</td>
+                            <td class="px-6 py-4 text-rose-400">-$150</td>
+                            <td class="px-6 py-4"><span class="bg-slate-800 px-2 py-0.5 rounded text-[10px]">Closed</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- RIGHT SIDEBAR (Account Status) -->
+        <div class="space-y-6">
+            <div class="bg-cardBg border border-cardBorder p-6 rounded-2xl space-y-6">
+                <h3 class="text-sm font-bold text-white">Account Status</h3>
+                
+                <div class="space-y-4">
+                    <div class="flex justify-between text-xs">
+                        <span class="text-slate-500">Scaling Stage</span>
+                        <span class="text-white font-bold">Stage 2</span>
+                    </div>
+                    <div class="flex justify-between text-xs">
+                        <span class="text-slate-500">Max Drawdown</span>
+                        <span class="text-rose-400 font-bold">3.2%</span>
+                    </div>
+                    <div class="flex justify-between text-xs">
+                        <span class="text-slate-500">Profit Split</span>
+                        <span class="text-white font-bold">80 / 20</span>
+                    </div>
+                </div>
+
+                <button class="w-full py-3 rounded-xl bg-brandGreen text-slate-950 font-bold text-xs hover:bg-emerald-400 transition">
+                    View Trading Plan
+                </button>
+            </div>
+
+            <!-- Performance Snapshot -->
+            <div class="bg-cardBg border border-cardBorder p-6 rounded-2xl">
+                <h3 class="text-sm font-bold text-white mb-4">Performance</h3>
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="bg-slate-900 p-3 rounded-xl border border-cardBorder">
+                        <p class="text-[9px] text-slate-500 uppercase font-bold">Win Rate</p>
+                        <p class="text-lg font-black text-white">68.5%</p>
+                    </div>
+                    <div class="bg-slate-900 p-3 rounded-xl border border-cardBorder">
+                        <p class="text-[9px] text-slate-500 uppercase font-bold">Profit Factor</p>
+                        <p class="text-lg font-black text-white">1.94</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -10,8 +10,33 @@ urlpatterns = [
     # API & Trade Execution
     path('api/analysis/<int:asset_id>/', views.ai_analysis_api, name='ai_analysis_api'),
     path('open-trade/', views.open_trade, name='open_trade'),
+    path('history/', views.trade_history, name='trade_history'),
+    path('api/check-notifications/', views.check_notifications, name='check_notifications'),
+    path('webhooks/', views.webhook_automations, name='webhooks'),
+    path('trade/execute/', views.execute_trade, name='execute_trade'),
+    path('webhook-automations/', views.webhook_automations, name='webhook_automations'),
+    path('webhook-automations/create/', views.create_webhook, name='create_webhook'),
+    # store/urls.py
+    path('automations/webhooks/', views.webhook_automations_view, name='webhook_automations'),
+    path('automations/webhooks/<int:webhook_id>/toggle/', views.toggle_webhook_status, name='toggle_webhook'),
 # project/urls.py
+    path('bot/', views.bot_dashboard_view, name='bot'),  # <-- Ensure name is 'bot'
+    path('bot/control/', views.bot_control_view, name='bot_control'),
+    path('bot/create/', views.create_bot_view, name='create_bot'),
+    
+    # URL endpoint for processing button actions (POST only)
+    path('bot/control/', views.bot_control_view, name='bot_control'),
+    path('payments/status/', views.payment_status_view, name='payment_status'),
+    path('account-operations/funding/payment-methods/deposit', views.funding_deposit, name='funding_deposit'),
     path('deriv-callback/', views.deriv_callback, name='deriv_callback'),
+    path('admin/deposits/', views.admin_deposit_approval_view, name='admin_deposit_approval'),
+    path('request-deposit/', views.request_deposit, name='request_deposit'),
+    path('request-withdrawal/', views.request_withdrawal, name='request_withdrawal'),
+    path('digits_trading/', views.digits_trading, name='digits_trading'),
+    path('deposit/', views.request_deposit, name='request_deposit'),
+    path('api/payment-status/<str:checkout_id>/', views.check_payment_status, name='check_payment_status'),
+    path('funded/', views.funded_view, name='funded'),
+    path('trade/', views.trade_view, name='trade'),
     # AI & Signals
     path('live-signals/', views.live_signals, name='live_signals'),
     path('ai-generator/', views.ai_signal_generator, name='ai_signal_generator'),
@@ -61,18 +86,22 @@ urlpatterns = [
     path('connected-exchanges/', views.connected_exchanges, name='connected_exchanges'),
     path('subscription/', views.subscription_billing, name='subscription_billing'),
     path('help-center/', views.help_center, name='help_center'),
-
-
-
+    path('account-operations/funding/payment-methods/deposit/mpesa-callback/', views.mpesa_callback, name='mpesa_callback'),
+    path('admin-payments/', views.admin_payment_dashboard, name='admin_payment_dashboard'),
+    path('deposit/request/', views.request_deposit, name='request_deposit'),
 # Deriv OAuth & Manual Connect Routes
     path('connect-deriv/', views.connect_deriv, name='connect_deriv'),
     path('connect-broker/', views.connect_broker, name='connect_broker'),
     path('deriv-callback/', views.deriv_callback, name='deriv_callback'),
 
+
+    path('subscription/', views.subscription_billing, name='subscription_billing'),
     # API & Execution
     path('api/analysis/<int:asset_id>/', views.ai_analysis_api, name='ai_analysis_api'),
     path('open-trade/', views.open_trade, name='open_trade'),
     # Auth
+    path('api/webhooks/<str:source_name>/', views.handle_incoming_webhook, name='incoming_webhook'),
+    path('profile/', views.profile, name='profile'),
     path('login/', views.login_view, name='login'),
     path('signup/', views.signup_view, name='signup'),
     path('logout/', views.logout_view, name='logout'),

@@ -8,7 +8,7 @@ from django.conf import settings
 from .ai_model import EvenOddAIPredictor
 import os
 
-APP_ID = getattr(settings, 'DERIV_APP_ID', '1089')
+APP_ID = getattr(settings, 'DERIV_APP_ID', '33XN84FbZfx1ZO1xDyUzH')
 DERIV_WS_URL = f"wss://ws.derivws.com/websockets/v3?app_id={APP_ID}"
 
 logger = logging.getLogger(__name__)
@@ -29,7 +29,7 @@ SYMBOL_MAP = {
 
 class DerivService:
     def __init__(self):
-        self.app_id = getattr(settings, 'DERIV_APP_ID', '1089')
+        self.app_id = getattr(settings, 'DERIV_APP_ID', '33XN84FbZfx1ZO1xDyUzH')
         self.api_token = getattr(settings, 'DERIV_API_TOKEN', '')
         self.ws_url = f"wss://ws.derivws.com/websockets/v3?app_id={self.app_id}"
         self.ai_engine = EvenOddAIPredictor()
@@ -50,7 +50,8 @@ class DerivService:
             }
 
         try:
-            async with websockets.connect(self.ws_url, ssl=ssl_context, timeout=4) as ws:
+            # Fixed timeout -> open_timeout
+            async with websockets.connect(self.ws_url, ssl=ssl_context, open_timeout=4) as ws:
                 # 1. Authorize API Token
                 await ws.send(json.dumps({"authorize": active_token}))
                 auth_res = json.loads(await asyncio.wait_for(ws.recv(), timeout=3))
@@ -115,7 +116,8 @@ class DerivService:
     async def get_recent_ticks(self, symbol="frxXAUUSD", count=50):
         deriv_symbol = self.resolve_symbol(symbol)
         try:
-            async with websockets.connect(self.ws_url, ssl=ssl_context, timeout=3) as ws:
+            # Fixed timeout -> open_timeout
+            async with websockets.connect(self.ws_url, ssl=ssl_context, open_timeout=3) as ws:
                 req = {
                     "ticks_history": deriv_symbol,
                     "adjust_start_time": 1,
@@ -168,7 +170,8 @@ class DerivService:
             }
 
         try:
-            async with websockets.connect(self.ws_url, ssl=ssl_context, timeout=5) as ws:
+            # Fixed timeout -> open_timeout
+            async with websockets.connect(self.ws_url, ssl=ssl_context, open_timeout=5) as ws:
                 # 1. Authorize connection
                 await ws.send(json.dumps({"authorize": active_token}))
                 auth_res = json.loads(await asyncio.wait_for(ws.recv(), timeout=3))
@@ -221,4 +224,4 @@ class DerivService:
 
         except Exception as e:
             logger.error(f"Deriv Trade Execution Error: {e}")
-            return {"success": False, "error": str(e)}        
+            return {"success": False, "error": str(e)}

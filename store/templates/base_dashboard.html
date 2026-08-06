@@ -72,15 +72,15 @@
     <aside id="sidebar" class="fixed top-0 bottom-0 left-0 z-50 w-64 bg-cardBg border-r border-cardBorder flex flex-col justify-between transition-transform duration-300 -translate-x-full lg:translate-x-0">
         
         <!-- SIDEBAR TOP SECTION -->
-        <div>
+        <div class="overflow-y-auto flex-1 pb-6">
             <!-- LOGO HEADER -->
-            <div class="h-16 px-6 flex items-center justify-between border-b border-cardBorder/60">
-                <a href="#" class="flex items-center gap-2.5">
+            <div class="h-16 px-6 flex items-center justify-between border-b border-cardBorder/60 sticky top-0 bg-cardBg z-10">
+                <a href="/" class="flex items-center gap-2.5">
                     <div class="w-9 h-9 rounded-xl bg-brandGreen/20 border border-brandGreen/30 text-brandGreen flex items-center justify-center text-lg font-extrabold shadow-lg shadow-brandGreen/10">
-                        <i class="fa-solid fa-[#]">S</i>
+                        <i class="fa-solid fa-chart-line"></i>
                     </div>
                     <div>
-                        <span class="text-base font-extrabold tracking-wider text-white">SIGNAL<span class="text-brandGreen">AIX</span></span>
+                        <span class="text-base font-extrabold tracking-wider text-white">PATREO<span class="text-brandGreen">AIX</span></span>
                         <span class="block text-[9px] font-mono text-slate-500 uppercase tracking-widest -mt-1">Pro Trading AI</span>
                     </div>
                 </a>
@@ -93,75 +93,152 @@
             <nav class="p-4 space-y-1">
                 <p class="px-3 text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2 font-mono">Main Menu</p>
 
-                <!-- Dashboard Overview Link -->
-                <a href="#" class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-medium text-slate-400 hover:text-white hover:bg-slate-800/50 transition group">
+                <!-- Dashboard Link -->
+                <a href="{% url 'dashboard' %}" 
+                   class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs transition group {% if request.resolver_match.url_name == 'dashboard' %}bg-slate-800/90 text-white font-bold border border-slate-700/50 shadow-md{% else %}text-slate-400 font-medium hover:text-white hover:bg-slate-800/50{% endif %}">
                     <div class="w-7 h-7 rounded-lg bg-slate-800/80 border border-cardBorder/60 text-slate-400 flex items-center justify-center text-xs group-hover:text-white transition">
-                        <i class="fa-solid fa-chart-pie"></i>
+                        <i class="fa-solid fa-gauge"></i>
                     </div>
-                    <span>Overview</span>
+                    <span>Dashboard</span>
+                </a>
+
+                <!-- Funded Accounts Link -->
+                <a href="{% url 'funded' %}" 
+                   class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs transition group {% if request.resolver_match.url_name == 'funded' %}bg-slate-800/90 text-white font-bold border border-slate-700/50 shadow-md{% else %}text-slate-400 font-medium hover:text-white hover:bg-slate-800/50{% endif %}">
+                    <div class="w-7 h-7 rounded-lg bg-slate-800/80 border border-cardBorder/60 text-slate-400 flex items-center justify-center text-xs group-hover:text-white transition">
+                        <i class="fa-solid fa-wallet"></i>
+                    </div>
+                    <span>Funded Accounts</span>
+                </a>
+
+                <!-- Markets Link -->
+                <a href="{% url 'markets' %}" 
+                   class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs transition group {% if request.resolver_match.url_name == 'markets' %}bg-slate-800/90 text-white font-bold border border-slate-700/50 shadow-md{% else %}text-slate-400 font-medium hover:text-white hover:bg-slate-800/50{% endif %}">
+                    <div class="w-7 h-7 rounded-lg bg-slate-800/80 border border-cardBorder/60 text-slate-400 flex items-center justify-center text-xs group-hover:text-white transition">
+                        <i class="fa-solid fa-globe"></i>
+                    </div>
+                    <span>Markets</span>
                 </a>
 
                 <!-- Market Analysis Link -->
-                <a href="#" class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-medium text-slate-400 hover:text-white hover:bg-slate-800/50 transition group">
+                <a href="{% url 'market_overview' %}" 
+                   class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs transition group {% if request.resolver_match.url_name == 'market_overview' %}bg-slate-800/90 text-white font-bold border border-slate-700/50 shadow-md{% else %}text-slate-400 font-medium hover:text-white hover:bg-slate-800/50{% endif %}">
                     <div class="w-7 h-7 rounded-lg bg-slate-800/80 border border-cardBorder/60 text-slate-400 flex items-center justify-center text-xs group-hover:text-white transition">
                         <i class="fa-solid fa-chart-line"></i>
                     </div>
                     <span>Market Analysis</span>
                 </a>
 
-                <!-- Candlestick Signals Link -->
-                <a href="#" class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-medium text-slate-400 hover:text-white hover:bg-slate-800/50 transition group">
-                    <div class="w-7 h-7 rounded-lg bg-slate-800/80 border border-cardBorder/60 text-slate-400 flex items-center justify-center text-xs group-hover:text-white transition">
-                        <i class="fa-solid fa-[#]">📊</i>
+                <!-- Digits Trading Link -->
+                <a href="{% url 'digits_trading' %}" 
+                   class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs transition group {% if request.resolver_match.url_name == 'digits_trading' %}bg-slate-800/90 text-white font-bold border border-slate-700/50 shadow-md{% else %}text-slate-400 font-medium hover:text-white hover:bg-slate-800/50{% endif %}">
+                    <div class="w-7 h-7 rounded-lg bg-brandGreen/20 border border-brandGreen/30 text-brandGreen flex items-center justify-center text-xs group-hover:scale-105 transition">
+                        <i class="fa-solid fa-bolt"></i>
                     </div>
-                    <span>Candlestick Signals</span>
+                    <span>Digits Trading</span>
                 </a>
 
-                <!-- FULLY INTEGRATED: AI PREDICTION MODELS LINK -->
+                <!-- Trading Bot Link -->
+                <a href="{% url 'bot' %}" 
+                   class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs transition group {% if request.resolver_match.url_name == 'bot' %}bg-slate-800/90 text-white font-bold border border-slate-700/50 shadow-md{% else %}text-slate-400 font-medium hover:text-white hover:bg-slate-800/50{% endif %}">
+                    <div class="w-7 h-7 rounded-lg bg-slate-800/80 border border-cardBorder/60 text-slate-400 flex items-center justify-center text-xs group-hover:text-white transition">
+                        <i class="fa-solid fa-robot"></i>
+                    </div>
+                    <span>Trading Bot</span>
+                </a>
+
+                <!-- Live Trade Link -->
+                <a href="{% url 'trade' %}" 
+                   class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs transition group {% if request.resolver_match.url_name == 'trade' %}bg-slate-800/90 text-white font-bold border border-slate-700/50 shadow-md{% else %}text-slate-400 font-medium hover:text-white hover:bg-slate-800/50{% endif %}">
+                    <div class="w-7 h-7 rounded-lg bg-slate-800/80 border border-cardBorder/60 text-slate-400 flex items-center justify-center text-xs group-hover:text-white transition">
+                        <i class="fa-solid fa-right-left"></i>
+                    </div>
+                    <span>Live Trade</span>
+                </a>
+
+                <!-- Trade History Link -->
+                <a href="{% url 'trade_history' %}" 
+                   class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs transition group {% if request.resolver_match.url_name == 'trade_history' %}bg-slate-800/90 text-white font-bold border border-slate-700/50 shadow-md{% else %}text-slate-400 font-medium hover:text-white hover:bg-slate-800/50{% endif %}">
+                    <div class="w-7 h-7 rounded-lg bg-slate-800/80 border border-cardBorder/60 text-slate-400 flex items-center justify-center text-xs group-hover:text-white transition">
+                        <i class="fa-solid fa-clock-rotate-left"></i>
+                    </div>
+                    <span>Trade History</span>
+                </a>
+
+                <!-- Portfolio Link -->
+                <a href="{% url 'portfolio' %}" 
+                   class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs transition group {% if request.resolver_match.url_name == 'portfolio' %}bg-slate-800/90 text-white font-bold border border-slate-700/50 shadow-md{% else %}text-slate-400 font-medium hover:text-white hover:bg-slate-800/50{% endif %}">
+                    <div class="w-7 h-7 rounded-lg bg-slate-800/80 border border-cardBorder/60 text-slate-400 flex items-center justify-center text-xs group-hover:text-white transition">
+                        <i class="fa-solid fa-briefcase"></i>
+                    </div>
+                    <span>Portfolio</span>
+                </a>
+
+                <!-- AI PREDICTION MODELS LINK -->
                 <a href="{% url 'ai_prediction_models' %}" 
                    class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs transition group {% if request.resolver_match.url_name == 'ai_prediction_models' %}bg-slate-800/90 text-white font-bold border border-indigo-500/30 shadow-md shadow-indigo-500/5{% else %}text-slate-400 font-medium hover:text-white hover:bg-slate-800/50{% endif %}">
-                    
                     <div class="w-7 h-7 rounded-lg bg-indigo-500/20 border border-indigo-500/30 text-indigo-400 flex items-center justify-center text-xs group-hover:bg-indigo-500/30 group-hover:scale-105 transition">
                         <i class="fa-solid fa-brain"></i>
                     </div>
-                    
                     <span class="flex-1">AI Models</span>
-
-                    <span class="px-2 py-0.5 rounded-full text-[9px] font-bold bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 uppercase tracking-wider">
-                        AI
-                    </span>
+                    <span class="px-2 py-0.5 rounded-full text-[9px] font-bold bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 uppercase tracking-wider">AI</span>
                 </a>
 
-                <!-- Trade Journal Link -->
-                <a href="#" class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-medium text-slate-400 hover:text-white hover:bg-slate-800/50 transition group">
+                <!-- News & Sentiment Link -->
+                <a href="{% url 'news_sentiment' %}" 
+                   class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs transition group {% if request.resolver_match.url_name == 'news_sentiment' %}bg-slate-800/90 text-white font-bold border border-slate-700/50 shadow-md{% else %}text-slate-400 font-medium hover:text-white hover:bg-slate-800/50{% endif %}">
                     <div class="w-7 h-7 rounded-lg bg-slate-800/80 border border-cardBorder/60 text-slate-400 flex items-center justify-center text-xs group-hover:text-white transition">
-                        <i class="fa-solid fa-book"></i>
+                        <i class="fa-solid fa-newspaper"></i>
                     </div>
-                    <span>Trade Journal</span>
+                    <span>News & Sentiment</span>
                 </a>
 
-                <p class="px-3 text-[10px] font-bold text-slate-500 uppercase tracking-wider pt-4 mb-2 font-mono">System</p>
+                <p class="px-3 text-[10px] font-bold text-slate-500 uppercase tracking-wider pt-4 mb-2 font-mono">Billing & System</p>
 
-                <!-- Settings Link -->
-                <a href="#" class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-medium text-slate-400 hover:text-white hover:bg-slate-800/50 transition group">
+                <!-- Deposit & Billing Link -->
+                <a href="" 
+                   class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs transition group {% if request.resolver_match.url_name == 'deposit' %}bg-slate-800/90 text-white font-bold border border-slate-700/50 shadow-md{% else %}text-slate-400 font-medium hover:text-white hover:bg-slate-800/50{% endif %}">
                     <div class="w-7 h-7 rounded-lg bg-slate-800/80 border border-cardBorder/60 text-slate-400 flex items-center justify-center text-xs group-hover:text-white transition">
-                        <i class="fa-solid fa-gear"></i>
+                        <i class="fa-solid fa-credit-card"></i>
                     </div>
-                    <span>Settings</span>
+                    <span>Deposit & Billing</span>
                 </a>
 
-                <!-- Documentation Link -->
-                <a href="#" class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-medium text-slate-400 hover:text-white hover:bg-slate-800/50 transition group">
+                <!-- Webhooks Link -->
+                <a href="{% url 'webhooks' %}" 
+                   class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs transition group {% if request.resolver_match.url_name == 'webhooks' %}bg-slate-800/90 text-white font-bold border border-slate-700/50 shadow-md{% else %}text-slate-400 font-medium hover:text-white hover:bg-slate-800/50{% endif %}">
                     <div class="w-7 h-7 rounded-lg bg-slate-800/80 border border-cardBorder/60 text-slate-400 flex items-center justify-center text-xs group-hover:text-white transition">
-                        <i class="fa-solid fa-circle-question"></i>
+                        <i class="fa-solid fa-code"></i>
                     </div>
-                    <span>Help & API Docs</span>
+                    <span>Webhooks & API</span>
                 </a>
+
+                {% if user.is_staff %}
+                <p class="px-3 text-[10px] font-bold text-amber-500/80 uppercase tracking-wider pt-4 mb-2 font-mono">Admin Panel</p>
+
+                <!-- Admin Approvals -->
+                <a href="" 
+                   class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs transition group {% if request.resolver_match.url_name == 'admin_approvals' %}bg-slate-800/90 text-white font-bold border border-amber-500/30 shadow-md{% else %}text-slate-400 font-medium hover:text-white hover:bg-slate-800/50{% endif %}">
+                    <div class="w-7 h-7 rounded-lg bg-amber-500/20 border border-amber-500/30 text-amber-400 flex items-center justify-center text-xs group-hover:scale-105 transition">
+                        <i class="fa-solid fa-user-check"></i>
+                    </div>
+                    <span>Approvals</span>
+                </a>
+
+                <!-- Admin Create Post -->
+                <a href="" 
+                   class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs transition group {% if request.resolver_match.url_name == 'admin_create_post' %}bg-slate-800/90 text-white font-bold border border-amber-500/30 shadow-md{% else %}text-slate-400 font-medium hover:text-white hover:bg-slate-800/50{% endif %}">
+                    <div class="w-7 h-7 rounded-lg bg-amber-500/20 border border-amber-500/30 text-amber-400 flex items-center justify-center text-xs group-hover:scale-105 transition">
+                        <i class="fa-solid fa-pen-to-square"></i>
+                    </div>
+                    <span>Create Post</span>
+                </a>
+                {% endif %}
             </nav>
         </div>
 
-        <!-- SIDEBAR FOOTER (USER PROFILE) -->
-        <div class="p-3 border-t border-cardBorder/60">
+        <!-- SIDEBAR FOOTER (USER PROFILE & LOGOUT) -->
+        <div class="p-3 border-t border-cardBorder/60 bg-cardBg">
             <div class="bg-slate-900/80 p-2.5 rounded-xl border border-cardBorder/60 flex items-center justify-between">
                 <div class="flex items-center gap-2.5 overflow-hidden">
                     <div class="w-8 h-8 rounded-lg bg-brandGreen/20 border border-brandGreen/40 text-brandGreen font-bold flex items-center justify-center text-xs shrink-0">
@@ -169,12 +246,23 @@
                     </div>
                     <div class="truncate">
                         <p class="text-xs font-bold text-white truncate">{{ user.username|default:"Pro Trader" }}</p>
-                        <p class="text-[10px] text-brandGreen font-mono font-medium truncate">Pro Plan Active</p>
+                        <a href="{% url 'profile' %}" class="block transition-transform hover:scale-[1.02]">
+                            <div class="bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded-full text-[10px] font-bold inline-block mt-0.5">
+                                Pro Plan Active
+                            </div>
+                        </a>
                     </div>
                 </div>
-                <a href="#" class="text-slate-500 hover:text-slate-300 p-1.5 transition">
-                    <i class="fa-solid fa-right-from-bracket text-xs"></i>
-                </a>
+
+                <!-- FIXED DJANGO LOGOUT FORM -->
+                <form method="POST" action="{% url 'logout' %}" class="inline">
+                    {% csrf_token %}
+                    <button type="submit" 
+                            title="Log Out" 
+                            class="text-slate-500 hover:text-rose-400 p-1.5 transition border-0 bg-transparent cursor-pointer flex items-center justify-center">
+                        <i class="fa-solid fa-right-from-bracket text-xs"></i>
+                    </button>
+                </form>
             </div>
         </div>
 
@@ -197,7 +285,7 @@
                 <input type="text" placeholder="Search signals, models, pairs..." class="w-full bg-slate-900/90 text-xs text-slate-200 placeholder-slate-500 pl-9 pr-3 py-2 rounded-xl border border-cardBorder focus:outline-none focus:border-brandGreen transition">
             </div>
 
-            <!-- Right Controls (Market Status & User Actions) -->
+            <!-- Right Controls -->
             <div class="flex items-center gap-3 font-mono">
                 <!-- Market Status Badge -->
                 <div class="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-brandGreen text-xs">
@@ -205,25 +293,48 @@
                     <span class="font-sans font-bold text-[11px]">MARKETS OPEN</span>
                 </div>
 
-                <!-- Notifications -->
-                <button class="w-9 h-9 rounded-xl bg-slate-900 border border-cardBorder text-slate-400 hover:text-white flex items-center justify-center text-xs relative transition">
-                    <i class="fa-regular fa-bell"></i>
-                    <span class="absolute top-2 right-2 w-2 h-2 rounded-full bg-brandGreen"></span>
-                </button>
+                <!-- NOTIFICATION DROPDOWN -->
+                <div class="relative">
+                    <button id="notif-btn" class="w-9 h-9 rounded-xl bg-slate-900 border border-cardBorder text-slate-400 hover:text-white flex items-center justify-center text-xs relative transition">
+                        <i class="fa-regular fa-bell"></i>
+                        <span id="notif-badge" class="{% if not notifications %}hidden{% endif %} absolute top-0 right-0 w-2.5 h-2.5 rounded-full bg-brandGreen"></span>
+                    </button>
+                    <!-- Dropdown Content -->
+                    <div id="notif-dropdown" class="hidden absolute right-0 mt-2 w-72 bg-slate-900 border border-cardBorder rounded-xl shadow-2xl z-50 overflow-hidden">
+                        <div class="p-3 border-b border-cardBorder text-[10px] font-bold text-slate-400 uppercase">Notifications</div>
+                        <div id="notif-list" class="max-h-64 overflow-y-auto">
+                            {% for n in notifications %}
+                                <a href="{{ n.link|default:'#' }}" class="block p-3 border-b border-cardBorder hover:bg-slate-800 transition cursor-pointer">
+                                    <p class="text-xs font-bold text-brandGreen">{{ n.title }}</p>
+                                    <p class="text-[10px] text-slate-400">{{ n.message }}</p>
+                                </a>
+                            {% empty %}
+                                <div id="notif-empty" class="p-4 text-center text-slate-500 text-xs">No new notifications</div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
 
                 <!-- Quick Action Button -->
-                <a href="{% url 'ai_prediction_models' %}" class="px-3.5 py-2 rounded-xl bg-brandGreen hover:bg-emerald-400 text-slate-950 font-bold text-xs font-sans transition flex items-center gap-1.5 shadow-md shadow-emerald-500/10">
+                <a href="{% url 'digits_trading' %}" class="px-3.5 py-2 rounded-xl bg-brandGreen hover:bg-emerald-400 text-slate-950 font-bold text-xs font-sans transition flex items-center gap-1.5 shadow-md shadow-emerald-500/10">
                     <i class="fa-solid fa-bolt"></i> <span class="hidden sm:inline">AI Signals</span>
                 </a>
             </div>
         </header>
 
-        <!-- PAGE CONTENT SLOT -->
+        <!-- TICKER TAPE WIDGET -->
+        <div class="w-full">
+            <script type="module" src="https://widgets.tradingview-widget.com/w/en/tv-ticker-tape.js"></script>
+            <tv-ticker-tape 
+                theme="dark" 
+                symbols="FOREXCOM:SPXUSD,FOREXCOM:NSXUSD,FOREXCOM:DJI,FX:EURUSD,BITSTAMP:BTCUSD,BITSTAMP:ETHUSD,CMCMARKETS:GOLD">
+            </tv-ticker-tape>
+        </div>
+
         <main class="p-4 sm:p-6 lg:p-8 flex-1">
             {% block content %}{% endblock %}
         </main>
 
-        <!-- FOOTER -->
         <footer class="px-6 py-4 border-t border-cardBorder/60 text-xs text-slate-500 flex flex-col sm:flex-row items-center justify-between gap-2">
             <p>© 2026 SignalAIX. All technical predictions generated by algorithmic ML models.</p>
             <div class="flex items-center gap-4 text-slate-400">
@@ -235,7 +346,7 @@
 
     </div>
 
-    <!-- JavaScript Sidebar Toggle -->
+    <!-- JavaScript -->
     <script>
         function toggleSidebar() {
             const sidebar = document.getElementById('sidebar');
@@ -243,8 +354,42 @@
             sidebar.classList.toggle('-translate-x-full');
             backdrop.classList.toggle('hidden');
         }
-    </script>
 
+        // Notification Dropdown Toggle
+        document.getElementById('notif-btn').addEventListener('click', () => {
+            document.getElementById('notif-dropdown').classList.toggle('hidden');
+        });
+
+        // Function to dynamically add notifications
+        function addNotificationDynamically(title, message, link) {
+            const list = document.getElementById('notif-list');
+            const badge = document.getElementById('notif-badge');
+            const emptyState = document.getElementById('notif-empty');
+            
+            if(emptyState) emptyState.remove();
+            
+            const item = document.createElement('a');
+            item.href = link || '#';
+            item.className = "block p-3 border-b border-cardBorder hover:bg-slate-800 transition cursor-pointer";
+            item.innerHTML = `<p class="text-xs font-bold text-brandGreen">${title}</p><p class="text-[10px] text-slate-400">${message}</p>`;
+            
+            list.prepend(item);
+            badge.classList.remove('hidden');
+        }
+
+        // Real-time Polling: Check every 10 seconds
+        setInterval(async () => {
+            try {
+                const response = await fetch('/api/check-notifications/');
+                const data = await response.json();
+                if (data.new_notifications && data.new_notifications.length > 0) {
+                    data.new_notifications.forEach(notif => {
+                        addNotificationDynamically(notif.title, notif.message, notif.link);
+                    });
+                }
+            } catch (error) { console.error('Error fetching notifications:', error); }
+        }, 10000);
+    </script>
     {% block extra_js %}{% endblock %}
 </body>
 </html>

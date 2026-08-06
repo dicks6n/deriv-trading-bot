@@ -6,7 +6,7 @@ from django.core.management.base import BaseCommand
 from asgiref.sync import async_to_sync
 from channels.layers import get_channel_layer
 
-DERIV_APP_ID = "VRTC2859755"  # Demo App ID (replace with yours)
+DERIV_APP_ID = "33XN84FbZfx1ZO1xDyUzH"  # Demo App ID (replace with yours)
 DERIV_WS_URL = f"wss://ws.binaryws.com/websockets/v3?app_id={DERIV_APP_ID}"
 
 class Command(BaseCommand):

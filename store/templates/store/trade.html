@@ -1,0 +1,153 @@
+{% extends 'base_dashboard.html' %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Trading Panel Header -->
+    <div class="flex items-center justify-between">
+        <h2 class="text-2xl font-black text-white">Market Execution</h2>
+        
+        <!-- Market Selector Dropdown -->
+        <select id="market-selector" onchange="changeSymbol(this.value)" class="bg-slate-800 text-white p-2 rounded-lg border border-slate-700 text-sm">
+            <option value="DERIV:R100">Volatility 100 Index</option>
+            <option value="DERIV:R75">Volatility 75 Index</option>
+            <option value="DERIV:R50">Volatility 50 Index</option>
+            <option value="FX:EURUSD">EUR/USD</option>
+        </select>
+
+        <div id="connection-status" class="px-3 py-1 rounded-full bg-slate-800 text-slate-400 text-xs font-bold">
+            Connecting...
+        </div>
+    </div>
+
+    <!-- Main Trading Grid -->
+    <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+        
+        <!-- Left: TradingView Chart Panel -->
+        <div class="lg:col-span-3 bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl h-[500px]">
+            <div id="tradingview_chart_container" style="height: 100%; width: 100%;"></div>
+        </div>
+
+        <!-- Right: Execution Panel (Exness Style) -->
+        <div class="lg:col-span-1 bg-slate-900 border border-slate-800 rounded-lg shadow-xl flex flex-col h-[500px]">
+            <!-- Tab Navigation -->
+            <div class="flex border-b border-slate-800">
+                <button onclick="switchTab('market')" id="tab-market" class="flex-1 py-3 text-xs font-bold text-white border-b-2 border-indigo-500">Market</button>
+                <button onclick="switchTab('pending')" id="tab-pending" class="flex-1 py-3 text-xs font-bold text-slate-500 hover:text-slate-300">Pending</button>
+            </div>
+
+            <div class="p-4 space-y-4 flex-1">
+                <!-- Volume Input -->
+                <div>
+                    <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Volume (Lots)</label>
+                    <div class="flex items-center bg-slate-950 border border-slate-800 rounded mt-1">
+                        <button onclick="changeVolume(-0.01)" class="px-3 py-2 text-slate-400 hover:text-white">-</button>
+                        <input type="number" id="trade-stake" value="0.01" step="0.01" class="w-full bg-transparent text-center text-sm font-mono text-white outline-none">
+                        <button onclick="changeVolume(0.01)" class="px-3 py-2 text-slate-400 hover:text-white">+</button>
+                    </div>
+                </div>
+
+                <!-- Placeholders for TP/SL -->
+                <div class="grid grid-cols-1 gap-2">
+                    <div class="bg-slate-950 border border-slate-800 p-2 rounded">
+                        <label class="text-[9px] text-slate-500 uppercase">Take Profit</label>
+                        <div class="text-xs text-slate-300 font-mono">Not set</div>
+                    </div>
+                    <div class="bg-slate-950 border border-slate-800 p-2 rounded">
+                        <label class="text-[9px] text-slate-500 uppercase">Stop Loss</label>
+                        <div class="text-xs text-slate-300 font-mono">Not set</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Execution Buttons -->
+            <div class="p-4 border-t border-slate-800 grid grid-cols-2 gap-2">
+                <button onclick="executeTrade('PUT')" class="py-3 bg-[#eb3b5a] hover:bg-rose-600 text-white rounded transition flex flex-col items-center">
+                    <span class="text-[10px] font-bold uppercase">Sell</span>
+                    <span class="text-sm font-mono font-bold">4,045.17</span>
+                </button>
+                <button onclick="executeTrade('CALL')" class="py-3 bg-[#0fb9b1] hover:bg-emerald-600 text-white rounded transition flex flex-col items-center">
+                    <span class="text-[10px] font-bold uppercase">Buy</span>
+                    <span class="text-sm font-mono font-bold">4,045.41</span>
+                </button>
+            </div>
+            
+            <div id="trade-status" class="pb-2 text-[10px] text-center text-slate-500 font-medium">Ready to trade</div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
+<script>
+    const socket = new WebSocket(`ws://${window.location.host}/ws/trading/`);
+
+    // Initialize Chart
+    function initChart(symbol = "DERIV:R100") {
+        new TradingView.widget({
+            "autosize": true,
+            "symbol": symbol,
+            "interval": "1",
+            "timezone": "Etc/UTC",
+            "theme": "dark",
+            "style": "1",
+            "container_id": "tradingview_chart_container"
+        });
+    }
+
+    initChart();
+
+    function changeSymbol(symbol) {
+        document.getElementById('tradingview_chart_container').innerHTML = '';
+        initChart(symbol);
+    }
+
+    // Interactive Volume
+    function changeVolume(amount) {
+        const stakeInput = document.getElementById('trade-stake');
+        let newValue = Math.max(0.01, (parseFloat(stakeInput.value) || 0) + amount);
+        stakeInput.value = newValue.toFixed(2);
+    }
+
+    // Tab Switching
+    function switchTab(tabName) {
+        const marketBtn = document.getElementById('tab-market');
+        const pendingBtn = document.getElementById('tab-pending');
+        
+        if (tabName === 'market') {
+            marketBtn.classList.add('border-indigo-500', 'text-white');
+            marketBtn.classList.remove('text-slate-500');
+            pendingBtn.classList.remove('border-indigo-500', 'text-white');
+            pendingBtn.classList.add('text-slate-500');
+        } else {
+            pendingBtn.classList.add('border-indigo-500', 'text-white');
+            pendingBtn.classList.remove('text-slate-500');
+            marketBtn.classList.remove('border-indigo-500', 'text-white');
+            marketBtn.classList.add('text-slate-500');
+        }
+    }
+
+    // Execution
+    function executeTrade(type) {
+        const stake = document.getElementById('trade-stake').value;
+        const symbol = document.getElementById('market-selector').value;
+        document.getElementById('trade-status').innerText = "Placing order...";
+        
+        socket.send(JSON.stringify({
+            'action': 'run_bot',
+            'symbol': symbol,
+            'contract_type': type,
+            'amount': parseFloat(stake)
+        }));
+    }
+
+    socket.onmessage = function(e) {
+        const data = JSON.parse(e.data);
+        if (data.type === 'bot_trade_result') {
+            document.getElementById('trade-status').innerText = data.result.error ? `Error: ${data.result.error}` : "Trade Success!";
+        }
+    };
+
+    socket.onopen = () => document.getElementById('connection-status').innerText = "Live";
+</script>
+{% endblock %}

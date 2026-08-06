@@ -131,3 +131,39 @@ def generate_trade_signal(asset_symbol="XAU/USD", search_queries=None, articles_
         "neutral_count": neutral_count,
         "articles": analyzed_articles
     }
+
+from .models import NewsArticle
+# Import your specific sentiment service
+from store.services.sentiment_service import analyze_news_sentiment 
+
+def fetch_financial_news():
+    """
+    Fetches financial news via API and processes sentiment 
+    using the local sentiment_service.
+    """
+    api_key = "YOUR_API_KEY"
+    url = f"https://finnhub.io/api/v1/news?category=general&token={api_key}"
+    
+    response = requests.get(url)
+    
+    if response.status_code == 200:
+        articles = response.json()
+        
+        for art in articles[:10]: # Process the latest 10 articles
+            
+            # 1. Use your existing sentiment service to get the sentiment
+            # This calls the file located at /Users/mac/Desktop/trading/store/services/sentiment_service.py
+            sentiment_data = analyze_news_sentiment(art['summary'])
+            
+            # 2. Update or create the database record
+            NewsArticle.objects.update_or_create(
+                title=art['headline'],
+                defaults={
+                    'summary': art['summary'],
+                    'source': art['source'],
+                    'category': 'Forex', 
+                    # Use the result from your custom service
+                    'sentiment': sentiment_data.get('label', 'Neutral'), 
+                    'timestamp': art['datetime']
+                }
+            )

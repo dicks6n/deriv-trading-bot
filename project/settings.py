@@ -4,23 +4,22 @@ from dotenv import load_dotenv
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
-
+DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # Load environment variables from .env file
 load_dotenv(os.path.join(BASE_DIR, '.env'))
 
 # =============================================
 # DERIV API CONFIGURATION
 # =============================================
-DERIV_APP_ID = os.getenv('DERIV_APP_ID', '1089')
-DERIV_API_TOKEN = os.getenv('DERIV_API_TOKEN', 'pat_4a7dc12692db94a04f868fd7fe6d75ba5fc71139778dab12d6c717d3b3111663')
+DERIV_APP_ID = os.getenv('DERIV_APP_ID', '33XN84FbZfx1ZO1xDyUzH')
+DERIV_API_TOKEN = os.getenv('DERIV_API_TOKEN', 'pat_88425959654f17ccd0a5f09ea440c64761dd130618179d2db744b85e3ce7d385')
 
 # =============================================
 # SECURITY & DEPLOYMENT
 # =============================================
 SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-ahw@(v2zyav9rjx$yqhgjer+qfa$xiv7k1d37!q$0w8ylwba3k')
 DEBUG = True
-ALLOWED_HOSTS = ['*']
-
+ALLOWED_HOSTS = ['localhost', '127.0.0.1', '192.168.100.60']
 # =============================================
 # APPLICATION DEFINITION
 # =============================================
@@ -34,6 +33,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'store.apps.StoreConfig',
     'channels',
+    'django_daraja',  # <--- ADD THIS LINE
 ]
 
 ASGI_APPLICATION = 'project.asgi.application'
@@ -122,7 +122,7 @@ MPESA_CONSUMER_SECRET = os.getenv('MPESA_CONSUMER_SECRET', 'UCf5kdz3nAe6Gakk2IJb
 MPESA_PASSKEY = os.getenv('MPESA_PASSKEY', 'bfb279f9aa9bdbcf158e97dd71a467cd2e0c893059b10f78e6b72ada1ed2c919')
 MPESA_SHORTCODE = os.getenv('MPESA_SHORTCODE', '174379')
 MPESA_ENVIRONMENT = os.getenv('MPESA_ENVIRONMENT', 'sandbox')
-
+MPESA_EXPRESS_SHORTCODE = '174379'  # Lipa na M-Pesa Online (STK Push) Shortcode
 if MPESA_ENVIRONMENT == 'production':
     MPESA_BASE_URL = 'https://api.safaricom.co.ke'
 else:

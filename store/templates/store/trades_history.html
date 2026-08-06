@@ -1,0 +1,49 @@
+{% extends 'base_dashboard.html' %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Header Section -->
+    <div>
+        <h2 class="text-2xl font-bold text-white">Trade History</h2>
+        <p class="text-slate-400 text-sm mt-1">Review all your completed and pending trades executed through the system.</p>
+    </div>
+
+    <!-- Main Table Container -->
+    <div class="bg-cardBg border border-cardBorder rounded-2xl p-5 shadow-sm">
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs">
+                <thead class="text-[10px] uppercase tracking-wider text-slate-500 border-b border-cardBorder font-semibold">
+                    <tr>
+                        <th class="py-4 px-4">Date</th>
+                        <th class="py-4 px-4">Symbol</th>
+                        <th class="py-4 px-4">Contract</th>
+                        <th class="py-4 px-4">Stake</th>
+                        <th class="py-4 px-4">Status</th>
+                        <th class="py-4 px-4 text-right">Profit/Loss</th>
+                    </tr>
+                </thead>
+                <!-- Inside trades_history.html -->
+<tbody id="history-tbody" class="divide-y divide-cardBorder/50 font-mono text-slate-200">
+    {% for trade in trades %}
+    <tr class="hover:bg-slate-900/50 transition-colors">
+        <!-- Using the correct fields identified in your model -->
+        <td class="py-4 px-4 text-slate-400">{{ trade.date_opened|date:"d M, H:i" }}</td>
+        <td class="py-4 px-4 font-bold">{{ trade.asset }}</td>
+        <td class="py-4 px-4 uppercase">{{ trade.direction }}</td>
+        <td class="py-4 px-4">${{ trade.stake }}</td>
+        <td class="py-4 px-4">
+            <span class="px-2 py-1 rounded-full {% if trade.status == 'WON' %}bg-emerald-500/10 text-emerald-400{% elif trade.status == 'LOST' %}bg-rose-500/10 text-rose-400{% else %}bg-amber-500/10 text-amber-400{% endif %} border border-current font-bold text-[10px]">
+                {{ trade.status }}
+            </span>
+        </td>
+        <td class="py-4 px-4 text-right font-bold {% if trade.payout >= 0 %}text-emerald-400{% else %}text-rose-400{% endif %}">
+            {{ trade.payout|default:"0.00" }} USD
+        </td>
+    </tr>
+    {% endfor %}
+</tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
