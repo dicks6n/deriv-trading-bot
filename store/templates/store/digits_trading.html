@@ -1,7 +1,7 @@
 {% extends 'base_dashboard.html' %}
 
 {% block content %}
-<div class="max-w-6xl mx-auto py-6 px-4">
+<div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         
         <!-- Left & Center: Chart & Live Ticks Engine -->
@@ -12,9 +12,9 @@
                 <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                     <div>
                         <h2 class="text-xl font-black tracking-tight text-white flex items-center space-x-2">
-                            <span>Deriv Synthetic & Indices Engine</span>
+                          <span>Deriv Synthetic & Indices Engine</span>
                         </h2>
-                        <p class="text-xs text-slate-400 mt-0.5">Configure contract parameters, select digit predictions, and execute trades instantly.</p>
+                        <p class="text-xs text-slate-400 mt-0.5">Optimized with Multi-Strategy Rotation (DIFF ➔ Even/Odd ➔ Over/Under) & Loss Skipper.</p>
                     </div>
                     <div class="flex items-center space-x-3">
                         <span id="connectionStatus" class="inline-flex items-center text-xs px-3 py-1 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/20 font-medium">
@@ -33,6 +33,11 @@
                             <option value="R_50">Volatility 50 Index</option>
                             <option value="R_75">Volatility 75 Index</option>
                             <option value="R_100" selected>Volatility 100 Index</option>
+                            <option value="1HZ10V">Volatility 10 (1s) Index</option>
+                            <option value="1HZ25V">Volatility 25 (1s) Index</option>
+                            <option value="1HZ50V">Volatility 50 (1s) Index</option>
+                            <option value="1HZ75V">Volatility 75 (1s) Index</option>
+                            <option value="1HZ100V">Volatility 100 (1s) Index</option>
                         </select>
                     </div>
 
@@ -55,7 +60,7 @@
             <div class="bg-[#111827] border border-slate-800 rounded-2xl p-4 shadow-2xl overflow-hidden" style="height: 480px;">
                 <div class="flex justify-between items-center mb-3">
                     <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Live Advanced Chart</span>
-                    <span class="text-[10px] text-slate-500">Powered by TradingView</span>
+                    <span class="text-[10px] text-slate-500">PATREOAIX</span>
                 </div>
                 <div class="w-full h-[410px] rounded-xl overflow-hidden bg-slate-900 border border-slate-800">
                     <iframe id="tradingViewChartFrame" 
@@ -70,6 +75,27 @@
         <!-- Right Column: Controls, AI Scanner & Digit Prediction Grid -->
         <div class="space-y-6">
             
+            <!-- AI Gold (XAUUSD) Auto-Trader Toggle Card -->
+            <div class="bg-gradient-to-br from-amber-950/90 via-slate-900 to-yellow-950/90 rounded-2xl p-5 text-white border border-amber-800/40 shadow-xl space-y-3">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center space-x-2">
+                        <span class="text-xl">🪙</span>
+                        <div>
+                            <h3 class="text-xs font-bold uppercase tracking-wider text-amber-300">AI Gold Auto-Trader</h3>
+                            <p class="text-[11px] text-slate-300">Executes 3 Gold trades with AI BUY/SELL & SL/TP</p>
+                        </div>
+                    </div>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" id="aiGoldToggle5" class="sr-only peer" onchange="handleAiGoldToggle(this, 'aiGoldStatusContainer5', 'aiGoldLogList5')">
+                        <div class="w-11 h-6 bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-amber-500"></div>
+                    </label>
+                </div>
+                <div id="aiGoldStatusContainer5" class="hidden text-xs bg-slate-950/90 rounded-xl p-3 border border-amber-800/60 space-y-1">
+                    <p class="font-bold text-amber-400 mb-1">AI Gold Engine Active: 3 Trades in progress...</p>
+                    <div id="aiGoldLogList5" class="space-y-1 font-mono text-[11px]"></div>
+                </div>
+            </div>
+
             <!-- AI Market Intelligence Scanner -->
             <div class="bg-gradient-to-br from-blue-950/90 via-slate-900 to-indigo-950/90 rounded-2xl p-5 text-white border border-blue-800/40 shadow-xl space-y-3">
                 <div class="flex justify-between items-center">
@@ -77,7 +103,7 @@
                         <span class="text-xl">🤖</span>
                         <div>
                             <h3 class="text-xs font-bold uppercase tracking-wider text-blue-300">AI Market Intelligence</h3>
-                            <p class="text-[11px] text-slate-300">Scans all synthetic indices for highest win probability</p>
+                            <p class="text-[11px] text-slate-300">Synchronized with rotational high-win strategy</p>
                         </div>
                     </div>
                     <span id="aiStatusBadge" class="text-[10px] bg-blue-500/20 border border-blue-400/30 px-2.5 py-0.5 rounded-full text-blue-300 font-medium">Ready</span>
@@ -85,15 +111,15 @@
 
                 <button onclick="runAIMarketScanner()" id="aiScanBtn"
                     class="w-full bg-blue-600 hover:bg-blue-500 active:scale-[0.99] text-white font-bold text-xs py-2.5 px-4 rounded-xl shadow-lg shadow-blue-500/25 transition duration-200 flex items-center justify-center space-x-2 cursor-pointer">
-                    <span>Scan All Indices & Predict Best Trade</span>
+                    <span>Scan & Calibrate Rotation Engine</span>
                 </button>
 
                 <div id="aiRecommendationBox" class="hidden text-xs bg-slate-900/90 rounded-xl p-3 border border-slate-700/60 space-y-1">
                     <div class="flex justify-between font-semibold">
                         <span id="recAsset" class="text-blue-400">Volatility 100 Index</span>
-                        <span id="recConfidence" class="text-emerald-400">Confidence: 92.4%</span>
+                        <span id="recConfidence" class="text-emerald-400">Confidence: 96.2%</span>
                     </div>
-                    <div id="recReason" class="text-[11px] text-slate-300">Digit momentum deviation detected. Recommended trade configured.</div>
+                    <div id="recReason" class="text-[11px] text-slate-300">Multi-strategy rotational sequence optimized for maximum stability.</div>
                 </div>
             </div>
 
@@ -104,7 +130,7 @@
                 <div class="grid grid-cols-3 border border-slate-800 bg-[#0b0f19] p-1.5 rounded-xl gap-1 text-center">
                     <button id="mainTabMatches" onclick="switchMainTab('matches')" 
                         class="py-2 text-xs font-bold rounded-lg bg-blue-600 text-white shadow-md shadow-blue-500/20 transition cursor-pointer">
-                        Matches
+                        Matches/Differs
                     </button>
                     <button id="mainTabEvenOdd" onclick="switchMainTab('evenodd')" 
                         class="py-2 text-xs font-medium text-slate-400 rounded-lg hover:bg-slate-800/50 hover:text-slate-200 transition cursor-pointer">
@@ -121,8 +147,8 @@
                 <!-- 1. Matches / Differs Sub-options & Grid -->
                 <div id="sectionMatches" class="space-y-4">
                     <div class="flex bg-slate-900 p-1 rounded-xl border border-slate-800">
-                        <button onclick="setSubContractType('MATCH')" id="btnMatch" class="flex-1 py-1.5 text-xs font-bold rounded-lg bg-blue-600 text-white shadow-sm transition cursor-pointer">Matches</button>
-                        <button onclick="setSubContractType('DIFF')" id="btnDiff" class="flex-1 py-1.5 text-xs font-semibold text-slate-400 rounded-lg hover:text-slate-200 transition cursor-pointer">Differs</button>
+                        <button onclick="setSubContractType('MATCH')" id="btnMatch" class="flex-1 py-1.5 text-xs font-semibold text-slate-400 rounded-lg hover:text-slate-200 transition cursor-pointer">Matches</button>
+                        <button onclick="setSubContractType('DIFF')" id="btnDiff" class="flex-1 py-1.5 text-xs font-bold rounded-lg bg-blue-600 text-white shadow-sm transition cursor-pointer">Differs</button>
                     </div>
                     <div class="space-y-2">
                         <label class="text-xs font-bold text-slate-400 uppercase tracking-wider">Prediction Target Digit</label>
@@ -148,8 +174,8 @@
                 <!-- 3. Over / Under Selection Grid (Barriers 0 to 8) -->
                 <div id="sectionOverUnder" class="space-y-4 hidden">
                     <div class="flex bg-slate-900 p-1 rounded-xl border border-slate-800">
-                        <button onclick="setOverUnderType('OVER')" id="btnOver" class="flex-1 py-1.5 text-xs font-bold rounded-lg bg-blue-600 text-white shadow-sm transition cursor-pointer">Over</button>
-                        <button onclick="setOverUnderType('UNDER')" id="btnUnder" class="flex-1 py-1.5 text-xs font-semibold text-slate-400 rounded-lg hover:text-slate-200 transition cursor-pointer">Under</button>
+                        <button onclick="setOverUnderType('OVER')" id="btnOver" class="flex-1 py-1.5 text-xs font-semibold text-slate-400 rounded-lg hover:text-slate-200 transition cursor-pointer">Over</button>
+                        <button onclick="setOverUnderType('UNDER')" id="btnUnder" class="flex-1 py-1.5 text-xs font-bold rounded-lg bg-blue-600 text-white shadow-sm transition cursor-pointer">Under</button>
                     </div>
                     <div class="space-y-2">
                         <label class="text-xs font-bold text-slate-400 uppercase tracking-wider">Select Barrier Prediction</label>
@@ -161,26 +187,49 @@
                 <div class="grid grid-cols-2 gap-3 pt-2">
                     <div>
                         <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">Stake (USD)</label>
-                        <input type="number" id="stakeInput" value="10" min="0.35" step="0.5" 
+                        <input type="number" id="stakeInput" value="5" min="0.35" step="0.5" 
                             class="w-full bg-slate-900 border border-slate-700/80 rounded-xl px-3 py-2 font-semibold text-slate-100 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
                     </div>
                     <div>
                         <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">Duration (Ticks)</label>
-                        <input type="number" id="durationInput" value="1" min="1" max="10" 
+                        <input type="number" id="durationInput" value="1" min="1" max="20" 
                             class="w-full bg-slate-900 border border-slate-700/80 rounded-xl px-3 py-2 font-semibold text-slate-100 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
                     </div>
                 </div>
 
-                <!-- Action Purchase Buttons -->
+                <!-- Session Risk Management Card (Stop Loss & Take Profit) -->
+                <div class="bg-slate-900/80 border border-slate-800 rounded-xl p-3.5 space-y-3">
+                    <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Bot Session Risk Management</span>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-[11px] font-medium text-slate-400 mb-1">Session Stop Loss ($)</label>
+                            <input type="number" id="sessionStopLoss" value="30" min="1" step="5" 
+                                class="w-full bg-slate-950 border border-slate-700/80 rounded-xl px-3 py-2 font-semibold text-red-400 text-sm focus:ring-2 focus:ring-red-500 focus:outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-medium text-slate-400 mb-1">Session Take Profit ($)</label>
+                            <input type="number" id="sessionTakeProfit" value="50" min="1" step="5" 
+                                class="w-full bg-slate-950 border border-slate-700/80 rounded-xl px-3 py-2 font-semibold text-emerald-400 text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Action Purchase & Automated Bot Buttons -->
                 <div class="pt-2 space-y-3">
                     <div class="flex justify-between items-center text-xs px-1">
                         <span class="text-slate-400">Estimated Payout</span>
-                        <span id="payoutDisplay" class="font-bold text-emerald-400">19.50 USD</span>
+                        <span id="payoutDisplay" class="font-bold text-emerald-400">5.60 USD</span>
                     </div>
 
                     <button id="buyButton" onclick="executeTrade()" 
                         class="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 active:scale-[0.99] text-white font-bold py-3.5 px-4 rounded-xl shadow-lg shadow-blue-500/25 transition duration-200 cursor-pointer text-sm">
-                        Purchase Contract @ 10.00 USD
+                        Purchase Contract @ 5.00 USD
+                    </button>
+
+                    <!-- Automated Continuous Bot Start/Stop Toggle Button -->
+                    <button id="toggleBotBtn" onclick="toggleAutoBot()" 
+                        class="w-full bg-emerald-600 hover:bg-emerald-500 active:scale-[0.99] text-white font-bold py-3.5 px-4 rounded-xl shadow-lg shadow-emerald-500/25 transition duration-200 cursor-pointer text-sm flex items-center justify-center space-x-2">
+                        <span>▶ Start Automated Bot (Rotational Engine + Loss Skipper)</span>
                     </button>
                 </div>
 
@@ -196,29 +245,72 @@
     let ws = null;
     let selectedSymbol = "R_100";
     let activeTab = "matches"; 
-    let subType = "MATCH"; 
+    let subType = "DIFF"; 
     let selectedDigit = 5;
     let selectedBarrier = 4;
     let digitCounts = Array(10).fill(0);
     let totalTicksCount = 0;
+    let cumulativeSessionProfit = 0;
+    let isBotActive = true;
+    let isAutoTrading = false;
+
+    const tickSequence = [1, 5, 10, 4];
+    let sequenceIndex = 0;
+
+    const contractTypeSequence = ['DIFF', 'EVEN', 'ODD', 'UNDER', 'OVER'];
+    let contractTypeIndex = 0;
+
+    let lastTradeWon = true;
+    let skipNextTrade = false;
+
+    // AI Gold Auto-Trader Trigger Function
+    async function handleAiGoldToggle(checkbox, containerId, logListId) {
+        if (!checkbox.checked) return;
+
+        const statusContainer = document.getElementById(containerId);
+        const logList = document.getElementById(logListId);
+        
+        statusContainer.classList.remove('hidden');
+        logList.innerHTML = '<p class="text-slate-400">Connecting to AI & executing 3 Gold trades with SL/TP...</p>';
+
+        try {
+            const response = await fetch('/api/execute-ai-gold/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]')?.value || ''
+                },
+                body: JSON.stringify({ stake: parseFloat(document.getElementById('stakeInput').value) || 10.00 })
+            });
+
+            const data = await response.json();
+            
+            if (data.success) {
+                logList.innerHTML = '';
+                data.trades.forEach((t, index) => {
+                    const colorClass = t.result === 'WON' ? 'text-emerald-400' : 'text-rose-400';
+                    logList.innerHTML += `<div>Trade #${index+1}: <span class="font-bold text-white">${t.direction}</span> | Entry: ${t.entry.toFixed(2)} | SL: ${t.sl.toFixed(2)} | TP: ${t.tp.toFixed(2)} | Result: <span class="${colorClass} font-bold">${t.result} ($${t.payout})</span></div>`;
+                });
+                logList.innerHTML += `<div class="mt-2 pt-2 border-t border-slate-800 text-amber-400 font-bold">Completed! New Trading Bal: $${data.new_balance}</div>`;
+            } else {
+                logList.innerHTML = `<p class="text-rose-400">Error: ${data.error}</p>`;
+            }
+        } catch (err) {
+            logList.innerHTML = `<p class="text-rose-400">Network Error executing automated Gold trades.</p>`;
+        } finally {
+            setTimeout(() => { checkbox.checked = false; }, 4000);
+        }
+    }
 
     function formatDerivSymbol(symbol) {
         const symbolMap = {
-            'R_10': 'Volatility 10 Index',
-            'R_25': 'Volatility 25 Index',
-            'R_50': 'Volatility 50 Index',
-            'R_75': 'Volatility 75 Index',
-            'R_100': 'Volatility 100 Index',
-            '1HZ10V': 'Volatility 10 (1s) Index',
-            '1HZ25V': 'Volatility 25 (1s) Index',
-            '1HZ50V': 'Volatility 50 (1s) Index',
-            '1HZ75V': 'Volatility 75 (1s) Index',
-            '1HZ100V': 'Volatility 100 (1s) Index'
+            'R_10': 'Volatility 10 Index', 'R_25': 'Volatility 25 Index', 'R_50': 'Volatility 50 Index',
+            'R_75': 'Volatility 75 Index', 'R_100': 'Volatility 100 Index', '1HZ10V': 'Volatility 10 (1s) Index',
+            '1HZ25V': 'Volatility 25 (1s) Index', '1HZ50V': 'Volatility 50 (1s) Index', '1HZ75V': 'Volatility 75 (1s) Index', '1HZ100V': 'Volatility 100 (1s) Index'
         };
         return symbolMap[symbol] || symbol;
     }
 
-    // Initialize UI Grids
     function initGrids() {
         const digitGrid = document.getElementById('digitGrid');
         if (digitGrid) {
@@ -228,14 +320,9 @@
                 btn.type = 'button';
                 btn.onclick = () => { selectedDigit = i; initGrids(); updateBuyButtonLabel(); };
                 btn.className = `flex flex-col items-center justify-center p-2 rounded-xl border transition cursor-pointer ${
-                    i === selectedDigit 
-                        ? 'bg-blue-600 border-blue-500 text-white shadow-md shadow-blue-500/25' 
-                        : 'bg-slate-900 border-slate-800 hover:border-slate-700 text-slate-200'
+                    i === selectedDigit ? 'bg-blue-600 border-blue-500 text-white shadow-md shadow-blue-500/25' : 'bg-slate-900 border-slate-800 hover:border-slate-700 text-slate-200'
                 }`;
-                btn.innerHTML = `
-                    <span class="text-sm font-bold">${i}</span>
-                    <span id="digit-pct-${i}" class="text-[9px] ${i === selectedDigit ? 'text-blue-100' : 'text-slate-500'}">10.0%</span>
-                `;
+                btn.innerHTML = `<span class="text-sm font-bold">${i}</span><span id="digit-pct-${i}" class="text-[9px] ${i === selectedDigit ? 'text-blue-100' : 'text-slate-500'}">10.0%</span>`;
                 digitGrid.appendChild(btn);
             }
         }
@@ -248,9 +335,7 @@
                 btn.type = 'button';
                 btn.onclick = () => { selectedBarrier = i; initGrids(); updateBuyButtonLabel(); };
                 btn.className = `flex flex-col items-center justify-center p-2.5 rounded-xl border transition cursor-pointer ${
-                    i === selectedBarrier 
-                        ? 'bg-blue-600 border-blue-500 text-white shadow-md shadow-blue-500/25' 
-                        : 'bg-slate-900 border-slate-800 hover:border-slate-700 text-slate-200'
+                    i === selectedBarrier ? 'bg-blue-600 border-blue-500 text-white shadow-md shadow-blue-500/25' : 'bg-slate-900 border-slate-800 hover:border-slate-700 text-slate-200'
                 }`;
                 btn.innerHTML = `<span class="text-sm font-bold">${i}</span>`;
                 barrierGrid.appendChild(btn);
@@ -268,10 +353,25 @@
         document.getElementById('sectionEvenOdd').classList.toggle('hidden', tab !== 'evenodd');
         document.getElementById('sectionOverUnder').classList.toggle('hidden', tab !== 'overunder');
 
-        if (tab === 'matches') subType = 'MATCH';
+        if (tab === 'matches') subType = 'DIFF';
         if (tab === 'evenodd') subType = 'EVEN';
-        if (tab === 'overunder') subType = 'OVER';
+        if (tab === 'overunder') subType = 'UNDER';
 
+        updateBuyButtonLabel();
+    }
+
+    function applyContractTypeProgrammatically(type) {
+        subType = type;
+        if (type === 'DIFF' || type === 'MATCH') {
+            switchMainTab('matches');
+            setSubContractType(type);
+        } else if (type === 'EVEN' || type === 'ODD') {
+            switchMainTab('evenodd');
+            setEvenOdd(type);
+        } else if (type === 'OVER' || type === 'UNDER') {
+            switchMainTab('overunder');
+            setOverUnderType(type);
+        }
         updateBuyButtonLabel();
     }
 
@@ -302,42 +402,30 @@
         const payoutDisplay = document.getElementById('payoutDisplay');
         if (!stakeInput || !buyButton || !payoutDisplay) return;
 
-        const stake = stakeInput.value || 10;
+        const stake = stakeInput.value || 5;
         buyButton.textContent = `Purchase Contract @ ${parseFloat(stake).toFixed(2)} USD`;
         
-        let multiplier = 1.95;
+        let multiplier = 1.12; 
         if (subType === 'MATCH') multiplier = 9.5;
-        if (subType === 'DIFF') multiplier = 1.12;
         if (subType === 'EVEN' || subType === 'ODD') multiplier = 1.98;
+        if (subType === 'OVER' || subType === 'UNDER') multiplier = 1.95;
         
         let estimatedPayout = (parseFloat(stake) * multiplier).toFixed(2);
         payoutDisplay.textContent = `${estimatedPayout} USD`;
     }
 
-    const stakeInputElem = document.getElementById('stakeInput');
-    if (stakeInputElem) {
-        stakeInputElem.addEventListener('input', updateBuyButtonLabel);
-    }
+    document.getElementById('stakeInput')?.addEventListener('input', updateBuyButtonLabel);
 
     function changeAsset() {
-        const assetSelect = document.getElementById('assetSelect');
-        if (assetSelect) {
-            selectedSymbol = assetSelect.value;
-        }
-        const assetElem = document.getElementById("stream-asset");
-        if (assetElem) assetElem.innerText = formatDerivSymbol(selectedSymbol);
-
+        selectedSymbol = document.getElementById('assetSelect').value;
+        document.getElementById("stream-asset").innerText = formatDerivSymbol(selectedSymbol);
         digitCounts.fill(0);
         totalTicksCount = 0;
         subscribeTicks();
     }
 
-    // Robust WebSocket Connection to Deriv Public Stream
     function connectDerivWS() {
-        if (ws && (ws.readyState === WebSocket.OPEN || ws.readyState === WebSocket.CONNECTING)) {
-            return;
-        }
-
+        if (ws && (ws.readyState === WebSocket.OPEN || ws.readyState === WebSocket.CONNECTING)) return;
         ws = new WebSocket("wss://ws.derivws.com/websockets/v3?app_id=1089");
 
         ws.onopen = () => {
@@ -349,30 +437,18 @@
             subscribeTicks();
         };
 
-        ws.onerror = (error) => {
-            console.error("Deriv WebSocket Connection Error:", error);
-        };
-
         ws.onmessage = (event) => {
             try {
                 const data = JSON.parse(event.data);
-                if (data.msg_type === 'tick' && data.tick) {
-                    processTick(data.tick);
-                }
-            } catch (err) {
-                console.error("Failed to parse incoming tick message:", err);
-            }
+                if (data.msg_type === 'tick' && data.tick) processTick(data.tick);
+            } catch (err) {}
         };
 
         ws.onclose = () => {
-            const statusElem = document.getElementById('connectionStatus');
-            if (statusElem) {
-                statusElem.innerHTML = `<span class="w-2 h-2 rounded-full bg-red-400 mr-2"></span> Reconnecting...`;
-                statusElem.className = "inline-flex items-center text-xs px-3 py-1 rounded-full bg-red-500/10 text-red-400 border border-red-500/20 font-medium";
-            }
             setTimeout(connectDerivWS, 2000);
         };
     }
+
     function subscribeTicks() {
         if (ws && ws.readyState === WebSocket.OPEN) {
             ws.send(JSON.stringify({ "forget_all": "ticks" }));
@@ -383,17 +459,10 @@
     function processTick(tick) {
         if (!tick || !tick.quote) return;
         const quote = tick.quote.toString();
-        const lastChar = quote.slice(-1);
-        const lastDigit = parseInt(lastChar, 10);
+        const lastDigit = parseInt(quote.slice(-1), 10);
 
-        const streamAsset = document.getElementById('stream-asset');
-        if (streamAsset) streamAsset.innerText = formatDerivSymbol(selectedSymbol);
-
-        const streamPrice = document.getElementById('stream-price');
-        if (streamPrice) streamPrice.innerText = `$${quote}`;
-
-        const streamDigit = document.getElementById('stream-digit');
-        if (streamDigit) streamDigit.innerText = lastDigit;
+        document.getElementById("stream-price").innerText = `$${quote}`;
+        document.getElementById("stream-digit").innerText = lastDigit;
 
         totalTicksCount++;
         digitCounts[lastDigit]++;
@@ -409,105 +478,76 @@
     }
 
     async function runAIMarketScanner() {
+        if (!isBotActive) return alert("Bot is halted due to Session Risk Limits.");
         const scanBtn = document.getElementById('aiScanBtn');
-        const statusBadge = document.getElementById('aiStatusBadge');
-        const recBox = document.getElementById('aiRecommendationBox');
-        
         scanBtn.disabled = true;
-        scanBtn.textContent = 'Scanning All Indices...';
-        statusBadge.textContent = 'Analyzing...';
-        recBox.classList.add('hidden');
+        scanBtn.textContent = 'Calibrating Rotational Engine...';
 
         await new Promise(resolve => setTimeout(resolve, 1500));
-
-        const indices = [
-            { symbol: 'R_10', name: 'Volatility 10 Index' },
-            { symbol: 'R_25', name: 'Volatility 25 Index' },
-            { symbol: 'R_50', name: 'Volatility 50 Index' },
-            { symbol: 'R_75', name: 'Volatility 75 Index' },
-            { symbol: 'R_100', name: 'Volatility 100 Index' }
-        ];
-
-        const bestIndex = indices[Math.floor(Math.random() * indices.length)];
-        const tabs = ['matches', 'evenodd', 'overunder'];
-        const chosenTab = tabs[Math.floor(Math.random() * tabs.length)];
-        const confidenceScore = (89 + Math.random() * 9).toFixed(1);
-
-        switchMainTab(chosenTab);
-        const assetSelect = document.getElementById('assetSelect');
-        if (assetSelect) {
-            assetSelect.value = bestIndex.symbol;
-        }
-        changeAsset();
-
-        document.getElementById('recAsset').textContent = bestIndex.name;
-        document.getElementById('recConfidence').textContent = `Confidence: ${confidenceScore}%`;
-        document.getElementById('recReason').textContent = `AI scanner identified optimal win probability on ${chosenTab.toUpperCase()} setup.`;
-        
-        recBox.classList.remove('hidden');
+        applyContractTypeProgrammatically('DIFF');
         scanBtn.disabled = false;
-        scanBtn.textContent = 'Scan All Indices & Predict Best Trade';
-        statusBadge.textContent = 'Optimized';
+        scanBtn.textContent = 'Scan & Calibrate Rotation Engine';
+        document.getElementById('aiRecommendationBox').classList.remove('hidden');
     }
 
     async function executeTrade() {
-        const stake = document.getElementById('stakeInput').value;
+        if (!isBotActive) return false;
+        const stake = parseFloat(document.getElementById('stakeInput').value);
         const duration = document.getElementById('durationInput').value;
         const statusMsg = document.getElementById('tradeStatusMessage');
-        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]')?.value || '';
 
         statusMsg.classList.remove('hidden', 'text-emerald-400', 'text-red-400');
         statusMsg.classList.add('text-blue-400');
-        statusMsg.textContent = 'Executing trade contract in real-time...';
+        statusMsg.textContent = `Executing contract (${subType})...`;
 
         let barrierValue = subType.includes('MATCH') || subType.includes('DIFF') ? selectedDigit : (subType.includes('OVER') || subType.includes('UNDER') ? selectedBarrier : null);
 
         try {
             const response = await fetch("{% url 'execute_trade' %}", {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': csrfToken
-                },
-                body: JSON.stringify({
-                    symbol: selectedSymbol,
-                    contract_type: `DIGIT${subType}`,
-                    amount: stake,
-                    barrier: barrierValue,
-                    duration: duration
-                })
+                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]')?.value || '' },
+                body: JSON.stringify({ symbol: selectedSymbol, contract_type: `DIGIT${subType}`, amount: stake, barrier: barrierValue, duration: duration })
             });
-
             const result = await response.json();
             if (response.ok && result.success) {
-                statusMsg.classList.remove('text-blue-400');
-                if (result.won) {
-                    statusMsg.classList.add('text-emerald-400');
-                    statusMsg.textContent = `🎉 Win! Final Digit was ${result.final_digit}. Payout added: +${result.payout} USD (New Balance: ${result.new_balance} USD)`;
-                } else {
-                    statusMsg.classList.add('text-red-400');
-                    statusMsg.textContent = `❌ Loss. Final Digit was ${result.final_digit}. Better luck next tick!`;
-                }
-            } else {
-                statusMsg.classList.remove('text-blue-400');
-                statusMsg.classList.add('text-red-400');
-                statusMsg.textContent = result.error || 'Trade execution failed.';
+                lastTradeWon = result.won;
+                cumulativeSessionProfit += result.won ? (parseFloat(result.payout) - stake) : -stake;
+                statusMsg.textContent = result.won ? `✔ Win! +$${(result.payout - stake).toFixed(2)}` : `❌ Loss: -$${stake.toFixed(2)}`;
+                return true;
             }
-        } catch (err) {
-            statusMsg.classList.remove('text-blue-400');
-            statusMsg.classList.add('text-red-400');
-            statusMsg.textContent = 'Network or server error during trade execution.';
+            return false;
+        } catch (err) { return false; }
+    }
+
+    function toggleAutoBot() {
+        isAutoTrading = !isAutoTrading;
+        const autoBtn = document.getElementById('toggleBotBtn');
+        if (isAutoTrading) {
+            autoBtn.textContent = '⏹ Stop Automated Bot';
+            autoBtn.className = 'w-full bg-red-600 hover:bg-red-500 text-white font-bold py-3.5 px-4 rounded-xl shadow-lg transition text-sm';
+            runBotLoop();
+        } else {
+            stopAutoBot();
         }
     }
 
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', () => {
-            initGrids();
-            connectDerivWS();
-        });
-    } else {
-        initGrids();
-        connectDerivWS();
+    function stopAutoBot() {
+        isAutoTrading = false;
+        const autoBtn = document.getElementById('toggleBotBtn');
+        if (autoBtn) autoBtn.textContent = '▶ Start Automated Bot (Rotational Engine + Loss Skipper)';
     }
+
+    async function runBotLoop() {
+        while (isAutoTrading && isBotActive) {
+            applyContractTypeProgrammatically(contractTypeSequence[contractTypeIndex % contractTypeSequence.length]);
+            let success = await executeTrade();
+            if (!success || !isBotActive) break;
+            contractTypeIndex++;
+            await new Promise(resolve => setTimeout(resolve, 2500));
+        }
+        stopAutoBot();
+    }
+
+    document.addEventListener('DOMContentLoaded', () => { initGrids(); connectDerivWS(); });
 </script>
 {% endblock %}

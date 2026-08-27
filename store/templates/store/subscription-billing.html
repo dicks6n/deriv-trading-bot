@@ -1,271 +1,179 @@
 {% extends 'base_dashboard.html' %}
+{% load static %}
 
 {% block content %}
-<div class="space-y-6 max-w-7xl mx-auto">
-
-    <!-- Page Header -->
-    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-800 pb-5">
+<div class="p-6 bg-[#0b0f19] min-h-screen text-gray-200 space-y-6">
+    <!-- Header & Active Badge -->
+    <div class="flex justify-between items-center">
         <div>
-            <h1 class="text-2xl font-black text-white tracking-wide">Subscription & Billing</h1>
-            <p class="text-xs text-slate-400 mt-1">Manage your active subscription plan, payment methods, and billing history.</p>
+            <h1 class="text-2xl font-bold text-white">Subscription & Billing</h1>
+            <p class="text-xs text-gray-400 mt-1">Manage your active subscription plan, payment methods, and billing history.</p>
         </div>
-        <div class="flex items-center gap-3">
-            <span class="px-3 py-1.5 rounded-full text-xs font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 flex items-center gap-2">
-                <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> Active Plan: {{ user_profile.subscription_tier|upper|default:"FREE" }}
-            </span>
+        <div class="flex items-center space-x-2 {% if current_plan == 'vip' %}bg-amber-950/60 border border-amber-500/30 text-amber-400{% else %}bg-emerald-950/60 border border-emerald-500/30 text-emerald-400{% endif %} px-3 py-1 rounded-full text-xs font-semibold uppercase">
+            <span>Active Plan: {{ current_plan|default:"Starter" }}</span>
         </div>
     </div>
 
-    <!-- Current Active Subscription Card -->
-    <div class="bg-gradient-to-r from-slate-900 via-indigo-950/40 to-slate-900 border border-indigo-500/30 rounded-2xl p-6 shadow-xl relative overflow-hidden">
-        <div class="absolute -top-12 -right-12 w-48 h-48 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none"></div>
+    <!-- Messages Container -->
+    {% if messages %}
+    <div class="space-y-2">
+        {% for message in messages %}
+        <div class="p-3 rounded-lg text-xs font-semibold {% if message.tags == 'error' %}bg-rose-950/80 text-rose-400 border border-rose-500/30{% else %}bg-emerald-950/80 text-emerald-400 border border-emerald-500/30{% endif %}">
+            {{ message }}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Current Active Subscription Box -->
+    <div class="bg-[#131b2e] border {% if current_plan == 'vip' %}border-amber-500/50 shadow-lg shadow-amber-500/10{% else %}border-gray-800{% endif %} rounded-xl p-6 flex flex-col md:flex-row justify-between items-start md:items-center">
+        <div>
+            <span class="text-xs {% if current_plan == 'vip' %}text-amber-400{% else %}text-indigo-400{% endif %} font-medium uppercase tracking-wider">Current Active Subscription Plan</span>
+            <h2 class="text-xl font-bold text-white mt-1">
+                {% if current_plan == 'vip' %}VIP Corporate Trading Suite{% elif current_plan == 'pro' %}Pro Algorithmic Trading Suite{% else %}Starter Plan{% endif %}
+            </h2>
+            <p class="text-xs text-gray-400 mt-1">
+                {% if current_plan == 'vip' %}Dedicated multi-thread servers, custom AI models, and 24/7 VIP lounge support.{% else %}Includes unlimited automated signal execution, WebSocket data feeds & priority relay trading.{% endif %}
+            </p>
+            <p class="text-xs text-gray-300 mt-3 font-semibold">Next Renewal: <span class="text-white">September 6, 2026</span></p>
+        </div>
+        <div class="flex space-x-3 mt-4 md:mt-0">
+            <form method="POST" action="{% url 'cancel_subscription' %}">
+                {% csrf_token %}
+                <button type="submit" class="bg-gray-800 hover:bg-gray-700 text-gray-300 text-xs font-semibold px-4 py-2.5 rounded-lg border border-gray-700 transition">Cancel Subscription</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Available Subscription Tiers -->
+    <h3 class="text-lg font-bold text-white mb-4" id="tiers">Available Subscription Tiers</h3>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
         
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 items-center relative z-10">
-            <div class="lg:col-span-2 space-y-2">
-                <div class="flex items-center gap-2">
-                    <span class="text-[10px] font-bold text-indigo-400 uppercase bg-indigo-500/10 px-2.5 py-1 rounded border border-indigo-500/20">Current Tier</span>
-                    <span class="text-xs text-slate-400 font-mono">ID: SUB-{{ request.user.id }}</span>
+        <!-- Starter Plan -->
+        <div class="bg-[#131b2e] border border-gray-800 rounded-xl p-6 flex flex-col justify-between">
+            <div>
+                <div class="flex justify-between items-center mb-4">
+                    <h4 class="text-sm font-bold text-gray-300 uppercase tracking-wide">Starter</h4>
+                    <span class="text-xs bg-gray-800 text-gray-300 px-2.5 py-1 rounded-md font-medium">Free</span>
                 </div>
-                <h2 class="text-xl font-bold text-white">Pro Algorithmic Trading Suite</h2>
-                <p class="text-xs text-slate-300 leading-relaxed">
-                    Includes unlimited automated digit signal execution, WebSocket live tick streams, and priority API relay routing.
-                </p>
-                <div class="flex flex-wrap items-center gap-4 pt-2 text-xs text-slate-400 font-mono">
-                    <div><strong class="text-white">Billing Cycle:</strong> Monthly</div>
-                    <div><strong class="text-white">Next Renewal:</strong> September 6, 2026</div>
-                    <div><strong class="text-emerald-400">$49.00 / month</strong></div>
+                <div class="mb-6">
+                    <span class="text-3xl font-extrabold text-white">$0</span>
+                    <span class="text-xs text-gray-400">/ forever</span>
                 </div>
+                <ul class="space-y-3 text-xs text-gray-300 mb-6">
+                    <li class="flex items-center"><i class="fas fa-check text-emerald-400 mr-2"></i> Standard Signal Analytics</li>
+                    <li class="flex items-center"><i class="fas fa-check text-emerald-400 mr-2"></i> Manual Trade Execution</li>
+                    <li class="flex items-center text-gray-500"><i class="fas fa-times text-red-400 mr-2"></i> No Automated Bots</li>
+                </ul>
             </div>
-
-            <div class="flex flex-col sm:flex-row lg:flex-col gap-3 justify-end">
-                <button onclick="openModal('upgrade-modal')" class="w-full py-3 px-4 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs rounded-xl transition shadow-lg shadow-indigo-600/30 flex items-center justify-center gap-2 cursor-pointer">
-                    <i class="fa-solid fa-arrow-up-right-dots"></i> Upgrade Plan
-                </button>
-                <button onclick="openModal('cancel-modal')" class="w-full py-3 px-4 bg-slate-800 hover:bg-rose-900/40 text-slate-300 hover:text-rose-300 font-bold text-xs rounded-xl transition border border-slate-700 hover:border-rose-500/40 flex items-center justify-center gap-2 cursor-pointer">
-                    <i class="fa-solid fa-ban"></i> Cancel Subscription
-                </button>
-            </div>
+            <button class="w-full bg-gray-800 text-gray-400 text-xs font-semibold py-2.5 rounded-lg cursor-default">{% if current_plan == 'starter' %}Current Plan{% else %}Basic Tier{% endif %}</button>
         </div>
-    </div>
 
-    <!-- Available Upgrade Plans Grid -->
-    <div class="space-y-4">
-        <h3 class="text-lg font-bold text-white">Available Subscription Tiers</h3>
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+        <!-- Pro Trader Plan -->
+        <div class="bg-[#131b2e] {% if current_plan == 'pro' %}border-2 border-indigo-500 shadow-xl shadow-indigo-500/10{% else %}border border-gray-800{% endif %} rounded-xl p-6 flex flex-col justify-between relative">
+            <div class="absolute -top-3 right-6 bg-indigo-600 text-white text-[10px] uppercase font-bold tracking-wider px-3 py-0.5 rounded-full">{% if current_plan == 'pro' %}Active Plan{% else %}Popular{% endif %}</div>
+            <div>
+                <div class="flex justify-between items-center mb-4">
+                    <h4 class="text-sm font-bold text-white uppercase tracking-wide">Pro Trader</h4>
+                    <span class="text-xs bg-indigo-950 text-indigo-400 px-2.5 py-1 rounded-md font-medium">$49/mo</span>
+                </div>
+                <div class="mb-6">
+                    <span class="text-3xl font-extrabold text-white">$49</span>
+                    <span class="text-xs text-gray-400">/ month</span>
+                </div>
+                <ul class="space-y-3 text-xs text-gray-300 mb-6">
+                    <li class="flex items-center"><i class="fas fa-check text-emerald-400 mr-2"></i> Advanced AI Trading Bots</li>
+                    <li class="flex items-center"><i class="fas fa-check text-emerald-400 mr-2"></i> Priority Tick Execution</li>
+                    <li class="flex items-center"><i class="fas fa-check text-emerald-400 mr-2"></i> Funded Account Eligibility</li>
+                </ul>
+            </div>
             
-            <!-- Plan 1 -->
-            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 flex flex-col justify-between hover:border-indigo-500/40 transition">
-                <div>
-                    <div class="flex justify-between items-center mb-4">
-                        <span class="text-xs font-bold text-slate-400 uppercase">Starter</span>
-                        <span class="text-xs font-mono font-bold text-white bg-slate-800 px-2 py-1 rounded">Free</span>
-                    </div>
-                    <h4 class="text-xl font-black text-white mb-2">$0 <span class="text-xs font-normal text-slate-400">/ forever</span></h4>
-                    <p class="text-xs text-slate-400 mb-6">Basic manual digit analysis and single asset tracking.</p>
-                    <ul class="space-y-3 text-xs text-slate-300 mb-6">
-                        <li class="flex items-center gap-2"><i class="fa-solid fa-check text-emerald-400"></i> Standard WebSocket Ticks</li>
-                        <li class="flex items-center gap-2"><i class="fa-solid fa-check text-emerald-400"></i> Manual Trade Execution</li>
-                        <li class="flex items-center gap-2 text-slate-500"><i class="fa-solid fa-xmark text-rose-500"></i> Automated Bot Engine</li>
-                    </ul>
+            {% if current_plan == 'pro' %}
+            <button class="w-full bg-indigo-600 text-white text-xs font-semibold py-2.5 rounded-lg cursor-default">Active Plan</button>
+            {% else %}
+            <form method="POST" action="{% url 'subscription_billing' %}" class="space-y-3 mt-4">
+                {% csrf_token %}
+                <input type="hidden" name="tier" value="pro">
+                <select name="payment_method" class="w-full bg-slate-900 border border-gray-700 text-white text-xs rounded-lg p-2 focus:outline-none focus:border-indigo-500">
+                    <option value="mpesa">M-Pesa STK Push</option>
+                    <option value="balance">Account Balance (${{ account.balance|default:"0.00" }})</option>
+                </select>
+                <input type="text" name="phone_number" placeholder="2547XXXXXXXX" value="{{ request.user.profile.phone_number }}" class="w-full bg-slate-900 border border-gray-700 text-white text-xs rounded-lg p-2 focus:outline-none focus:border-indigo-500">
+                <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold py-2.5 rounded-lg transition">Upgrade to Pro ($49)</button>
+            </form>
+            {% endif %}
+        </div>
+
+        <!-- VIP Corporate Plan -->
+        <div class="bg-[#131b2e] {% if current_plan == 'vip' %}border-2 border-amber-500 shadow-xl shadow-amber-500/10{% else %}border border-gray-800{% endif %} rounded-xl p-6 flex flex-col justify-between relative">
+            <div class="absolute -top-3 right-6 bg-amber-600 text-white text-[10px] uppercase font-bold tracking-wider px-3 py-0.5 rounded-full">{% if current_plan == 'vip' %}Active Plan{% else %}Elite{% endif %}</div>
+            <div>
+                <div class="flex justify-between items-center mb-4">
+                    <h4 class="text-sm font-bold text-amber-400 uppercase tracking-wide">VIP Corporate</h4>
+                    <span class="text-xs bg-amber-950/60 text-amber-400 px-2.5 py-1 rounded-md font-medium">$199/mo</span>
                 </div>
-                <button class="w-full py-2.5 bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs rounded-xl transition cursor-pointer">Current Plan</button>
+                <div class="mb-6">
+                    <span class="text-3xl font-extrabold text-white">$199</span>
+                    <span class="text-xs text-gray-400">/ month</span>
+                </div>
+                <ul class="space-y-3 text-xs text-gray-300 mb-6">
+                    <li class="flex items-center"><i class="fas fa-check text-emerald-400 mr-2"></i> Dedicated Multi-Thread Servers</li>
+                    <li class="flex items-center"><i class="fas fa-check text-emerald-400 mr-2"></i> Custom AI Model Training</li>
+                    <li class="flex items-center"><i class="fas fa-check text-emerald-400 mr-2"></i> 24/7 Priority Support & VIP Lounge</li>
+                </ul>
             </div>
 
-            <!-- Plan 2 (Featured) -->
-            <div class="bg-gradient-to-b from-indigo-950/80 to-slate-900 border-2 border-indigo-500 rounded-2xl p-6 flex flex-col justify-between shadow-xl relative">
-                <div class="absolute -top-3 left-1/2 -translate-x-1/2 bg-indigo-600 text-white text-[10px] font-bold uppercase tracking-wider px-3 py-0.5 rounded-full shadow">Most Popular</div>
-                <div>
-                    <div class="flex justify-between items-center mb-4 pt-1">
-                        <span class="text-xs font-bold text-indigo-300 uppercase">Pro Trader</span>
-                        <span class="text-xs font-mono font-bold text-emerald-400 bg-emerald-500/10 px-2 py-1 rounded border border-emerald-500/20">$49/mo</span>
-                    </div>
-                    <h4 class="text-xl font-black text-white mb-2">$49 <span class="text-xs font-normal text-slate-400">/ month</span></h4>
-                    <p class="text-xs text-slate-300 mb-6">Full automated execution suite with gradient boosting models.</p>
-                    <ul class="space-y-3 text-xs text-slate-200 mb-6 font-medium">
-                        <li class="flex items-center gap-2"><i class="fa-solid fa-check text-emerald-400"></i> Unlimited Auto-Trading Bots</li>
-                        <li class="flex items-center gap-2"><i class="fa-solid fa-check text-emerald-400"></i> Real-Time AI Digit Predictions</li>
-                        <li class="flex items-center gap-2"><i class="fa-solid fa-check text-emerald-400"></i> Priority Deriv API Relay</li>
-                    </ul>
-                </div>
-                <button class="w-full py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs rounded-xl transition shadow-lg cursor-pointer">Active Plan</button>
-            </div>
-
-            <!-- Plan 3 -->
-            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 flex flex-col justify-between hover:border-indigo-500/40 transition">
-                <div>
-                    <div class="flex justify-between items-center mb-4">
-                        <span class="text-xs font-bold text-amber-400 uppercase">VIP Enterprise</span>
-                        <span class="text-xs font-mono font-bold text-amber-400 bg-amber-500/10 px-2 py-1 rounded border border-amber-500/20">$199/mo</span>
-                    </div>
-                    <h4 class="text-xl font-black text-white mb-2">$199 <span class="text-xs font-normal text-slate-400">/ month</span></h4>
-                    <p class="text-xs text-slate-400 mb-6">Custom server hosting, dedicated webhooks, and institutional support.</p>
-                    <ul class="space-y-3 text-xs text-slate-300 mb-6">
-                        <li class="flex items-center gap-2"><i class="fa-solid fa-check text-emerald-400"></i> Dedicated WebSocket Gateway</li>
-                        <li class="flex items-center gap-2"><i class="fa-solid fa-check text-emerald-400"></i> Custom M-Pesa & Payment Webhooks</li>
-                        <li class="flex items-center gap-2"><i class="fa-solid fa-check text-emerald-400"></i> 24/7 Priority Support & Setup</li>
-                    </ul>
-                </div>
-                <button onclick="openModal('upgrade-modal')" class="w-full py-2.5 bg-slate-800 hover:bg-indigo-600 text-white font-bold text-xs rounded-xl transition cursor-pointer">Switch to VIP</button>
-            </div>
-
+            {% if current_plan == 'vip' %}
+            <button class="w-full bg-amber-600 text-white text-xs font-semibold py-2.5 rounded-lg cursor-default">Active Plan</button>
+            {% else %}
+            <form method="POST" action="{% url 'subscription_billing' %}" class="space-y-3 mt-4">
+                {% csrf_token %}
+                <input type="hidden" name="tier" value="vip">
+                <select name="payment_method" class="w-full bg-slate-900 border border-gray-700 text-white text-xs rounded-lg p-2 focus:outline-none focus:border-amber-500">
+                    <option value="mpesa">M-Pesa STK Push</option>
+                    <option value="balance">Account Balance (${{ account.balance|default:"0.00" }})</option>
+                </select>
+                <input type="text" name="phone_number" placeholder="2547XXXXXXXX" value="{{ request.user.profile.phone_number }}" class="w-full bg-slate-900 border border-gray-700 text-white text-xs rounded-lg p-2 focus:outline-none focus:border-amber-500">
+                <button type="submit" class="w-full bg-amber-600 hover:bg-amber-500 text-white text-xs font-semibold py-2.5 rounded-lg transition">Upgrade to VIP ($199)</button>
+            </form>
+            {% endif %}
         </div>
     </div>
 
-    <!-- Billing History Table -->
-<!-- Billing History Table -->
-<div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-sm">
-    <div class="flex items-center justify-between mb-5">
-        <div>
-            <h3 class="text-lg font-bold text-white">Billing & Transaction History</h3>
-            <p class="text-xs text-slate-400 mt-0.5">Review deposits, withdrawals, and subscription invoices</p>
-        </div>
-    </div>
-
-    <div class="overflow-x-auto">
-        <table class="w-full text-left text-xs font-mono">
-            <thead class="text-[10px] uppercase tracking-wider text-slate-500 border-b border-slate-800 font-semibold">
-                <tr>
-                    <th class="py-3 px-3">Type</th>
-                    <th class="py-3 px-3">Details</th>
-                    <th class="py-3 px-3">Date</th>
-                    <th class="py-3 px-3">Amount</th>
-                    <th class="py-3 px-3">Status</th>
-                    <th class="py-3 px-3 text-right">Action</th>
+    <!-- Billing & Transaction History Table -->
+    <h3 class="text-lg font-bold text-white mb-4">Billing & Transaction History</h3>
+    <div class="bg-[#131b2e] border border-gray-800 rounded-xl overflow-hidden">
+        <table class="w-full text-left border-collapse">
+            <thead>
+                <tr class="border-b border-gray-800 text-xs text-gray-400 uppercase bg-[#0e1422]">
+                    <th class="p-4 font-semibold">Status</th>
+                    <th class="p-4 font-semibold">Date</th>
+                    <th class="p-4 font-semibold">Amount</th>
+                    <th class="p-4 font-semibold text-right">Result</th>
                 </tr>
             </thead>
-            <tbody class="divide-y divide-slate-800 text-slate-300">
-                {% for tx in transactions %}
-                <tr class="hover:bg-slate-800/40 transition">
-                    <td class="py-3.5 px-3 text-indigo-400 font-bold uppercase">{{ tx.transaction_type }}</td>
-                    <td class="py-3.5 px-3 font-sans">{{ tx.details|default:"N/A" }}</td>
-                    <td class="py-3.5 px-3 text-slate-400">{{ tx.created_at|date:"M d, Y H:i" }}</td>
-                    <td class="py-3.5 px-3 font-bold text-white">${{ tx.amount }} USD</td>
-                    <td class="py-3.5 px-3">
-                        <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">COMPLETED</span>
+            <tbody class="divide-y divide-gray-800/60 text-xs">
+                {% for txn in transactions %}
+                <tr>
+                    <td class="p-4 font-medium text-white flex items-center space-x-2">
+                        <i class="fas fa-circle-notch text-indigo-400 text-[10px]"></i>
+                        <span>{{ txn.transaction_type }}</span>
                     </td>
-                    <td class="py-3.5 px-3 text-right font-sans">
-                        <button onclick="downloadInvoice('TX-{{ tx.id }}')" class="px-3 py-1 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold rounded-lg transition cursor-pointer">
-                            <i class="fa-solid fa-download mr-1"></i> PDF
-                        </button>
+                    <td class="p-4 text-gray-400">{{ txn.created_at|date:"M d, Y" }}</td>
+                    <td class="p-4 font-semibold text-white">${{ txn.amount }}</td>
+                    <td class="p-4 text-right">
+                        <span class="px-2.5 py-1 rounded-md text-[10px] font-bold {% if txn.status == 'COMPLETED' %}bg-emerald-950/80 text-emerald-400 border border-emerald-500/20{% elif txn.status == 'PROCESSING' %}bg-amber-950/80 text-amber-400 border border-amber-500/20{% else %}bg-rose-950/80 text-rose-400 border border-rose-500/20{% endif %}">
+                            {{ txn.status }}
+                        </span>
                     </td>
                 </tr>
                 {% empty %}
                 <tr>
-                    <td colspan="6" class="text-center py-4 text-slate-500">No transaction history found.</td>
+                    <td colspan="4" class="p-6 text-center text-gray-500">No recent transaction history available.</td>
                 </tr>
                 {% endfor %}
             </tbody>
         </table>
     </div>
 </div>
-
-</div>
-
-<!-- UPGRADE MODAL -->
-<div id="upgrade-modal" class="hidden fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
-    <div class="bg-slate-900 border border-indigo-500/30 rounded-2xl p-6 w-full max-w-md shadow-2xl relative">
-        <button onclick="closeModal('upgrade-modal')" class="absolute top-4 right-4 text-slate-400 hover:text-white cursor-pointer">
-            <i class="fa-solid fa-xmark text-lg"></i>
-        </button>
-        <div class="w-12 h-12 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400 text-xl mb-3">
-            <i class="fa-solid fa-arrow-up-right-dots"></i>
-        </div>
-        <h3 class="text-lg font-bold text-white">Confirm Plan Upgrade</h3>
-        <p class="text-xs text-slate-400 mt-1">Select your preferred billing method or gateway to upgrade your account instantly.</p>
-        
-        <form method="POST" action="" class="mt-5 space-y-3 text-xs">
-            {% csrf_token %}
-            <div>
-                <label class="block text-slate-400 font-bold mb-1">Select Tier</label>
-                <select name="tier" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-white focus:outline-none focus:border-indigo-500 cursor-pointer">
-                    <option value="pro">Pro Trader ($49/mo)</option>
-                    <option value="vip">VIP Enterprise ($199/mo)</option>
-                </select>
-            </div>
-            <div>
-                <label class="block text-slate-400 font-bold mb-1">Payment Method</label>
-                <select name="payment_method" id="paymentMethodSelect" onchange="togglePhoneField()" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-white focus:outline-none focus:border-indigo-500 cursor-pointer">
-                    <option value="balance">Account Balance</option>
-                    <option value="mpesa" selected>M-Pesa Callback / STK Push</option>
-                    <option value="deriv">Deriv API Wallet</option>
-                </select>
-            </div>
-            <!-- Added Phone Number Prompt Field -->
-            <div id="phoneFieldContainer">
-                <label class="block text-slate-400 font-bold mb-1">M-Pesa Phone Number</label>
-                <input type="text" name="phone_number" placeholder="2547XXXXXXXX" value="{{ request.user.profile.phone_number|default:'' }}"
-                    class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-white focus:outline-none focus:border-indigo-500 font-mono">
-            </div>
-            <button type="submit" class="w-full py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl transition cursor-pointer shadow-lg shadow-indigo-600/30 mt-2">Proceed with Payment</button>
-        </form>
-    </div>
-</div>
-
-<!-- CANCEL MODAL -->
-<div id="cancel-modal" class="hidden fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
-    <div class="bg-slate-900 border border-rose-500/30 rounded-2xl p-6 w-full max-w-md shadow-2xl relative">
-        <button onclick="closeModal('cancel-modal')" class="absolute top-4 right-4 text-slate-400 hover:text-white cursor-pointer">
-            <i class="fa-solid fa-xmark text-lg"></i>
-        </button>
-        <div class="w-12 h-12 rounded-xl bg-rose-500/10 border border-rose-500/20 flex items-center justify-center text-rose-400 text-xl mb-3">
-            <i class="fa-solid fa-triangle-exclamation"></i>
-        </div>
-        <h3 class="text-lg font-bold text-white">Cancel Subscription?</h3>
-        <p class="text-xs text-slate-400 mt-1">Your subscription will remain active until the end of your current billing cycle (September 6, 2026), after which it will downgrade to Free.</p>
-        <div class="mt-6 flex gap-3">
-            <button onclick="closeModal('cancel-modal')" class="w-1/2 py-3 bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs rounded-xl transition cursor-pointer">Keep Subscription</button>
-            <button onclick="confirmCancellation()" class="w-1/2 py-3 bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs rounded-xl transition cursor-pointer shadow-lg shadow-rose-600/30">Confirm Cancellation</button>
-        </div>
-    </div>
-</div>
-{% endblock %}
-
-{% block extra_js %}
-<script>
-function openModal(id) {
-    const el = document.getElementById(id);
-    if (el) el.classList.remove('hidden');
-}
-
-function closeModal(id) {
-    const el = document.getElementById(id);
-    if (el) el.classList.add('hidden');
-}
-
-function togglePhoneField() {
-    const method = document.getElementById('paymentMethodSelect').value;
-    const container = document.getElementById('phoneFieldContainer');
-    if (method === 'mpesa') {
-        container.style.display = 'block';
-    } else {
-        container.style.display = 'none';
-    }
-}
-
-// Run on load to set initial state
-document.addEventListener('DOMContentLoaded', togglePhoneField);
-
-function downloadInvoice(invoiceId) {
-    const toast = document.createElement("div");
-    toast.className = "fixed bottom-5 right-5 z-50 px-4 py-3 rounded-xl border font-mono text-xs shadow-2xl backdrop-blur-md bg-indigo-900/90 border-indigo-500 text-indigo-200 transition-all duration-300";
-    toast.innerHTML = `<i class="fa-solid fa-file-arrow-down mr-2"></i> Downloading invoice ${invoiceId} as PDF...`;
-    document.body.appendChild(toast);
-    setTimeout(() => {
-        toast.style.opacity = '0';
-        setTimeout(() => toast.remove(), 300);
-    }, 3000);
-}
-
-function confirmCancellation() {
-    closeModal('cancel-modal');
-    const toast = document.createElement("div");
-    toast.className = "fixed bottom-5 right-5 z-50 px-4 py-3 rounded-xl border font-mono text-xs shadow-2xl backdrop-blur-md bg-rose-900/90 border-rose-500 text-rose-200 transition-all duration-300";
-    toast.innerHTML = `<i class="fa-solid fa-circle-check mr-2"></i> Subscription cancellation scheduled successfully.`;
-    document.body.appendChild(toast);
-    setTimeout(() => {
-        toast.style.opacity = '0';
-        setTimeout(() => toast.remove(), 300);
-    }, 4000);
-}
-</script>
 {% endblock %}

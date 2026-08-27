@@ -1,17 +1,35 @@
-# store/models.py
-from django.db import models
+import json
+from decimal import Decimal
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.dispatch import receiver
 from django.db.models.signals import post_save
-from decimal import Decimal
+from django.db import models
+
 
 class UserProfile(models.Model):
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     subscription_tier = models.CharField(max_length=50, default='free')
+    is_active_subscription = models.BooleanField(default=False)
 
     def __str__(self):
         return self.user.username
+
+
+class UserBot(models.Model):
+    """
+    Stores persistent state for complex bots (e.g., ComplexVolatilityBot).
+    """
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='user_bots')
+    name = models.CharField(max_length=100, help_text="Custom name for bot instance")
+    config_json = models.JSONField(default=dict, help_text="Bot strategy parameters")
+    state_json = models.JSONField(default=dict, help_text="Current running state of the bot")
+    is_running = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"{self.name} ({self.user.username}) - {'Running' if self.is_running else 'Stopped'}"
 
 
 class Asset(models.Model):
@@ -80,17 +98,20 @@ class Trade(models.Model):
         ('LOST', 'Lost'),
         ('CANCELLED', 'Cancelled'),
     ]
-
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    
+    user_bot = models.ForeignKey(UserBot, on_delete=models.SET_NULL, null=True, blank=True, related_name='trades')
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='trades')
     asset = models.ForeignKey(Asset, on_delete=models.CASCADE)
-    direction = models.CharField(max_length=15)  # e.g., BUY, SELL, EVEN, ODD, OVER, UNDER, DIFFER
-    stake = models.DecimalField(max_digits=12, decimal_places=2, default=10.00)
+    direction = models.CharField(max_length=25)  
+    stake = models.DecimalField(max_digits=12, decimal_places=2)
     entry_price = models.DecimalField(max_digits=18, decimal_places=8)
     exit_price = models.DecimalField(max_digits=18, decimal_places=8, null=True, blank=True)
     target_digit = models.IntegerField(null=True, blank=True)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='OPEN')
     payout = models.DecimalField(max_digits=12, decimal_places=2, default=0.00)
+    pnl = models.DecimalField(max_digits=12, decimal_places=2, default=0.00)
     date_opened = models.DateTimeField(auto_now_add=True)
+    date_closed = models.DateTimeField(null=True, blank=True)
 
     class Meta:
         ordering = ['-date_opened']
@@ -103,16 +124,12 @@ class PriceAlert(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     asset = models.ForeignKey(Asset, on_delete=models.CASCADE)
     target_price = models.DecimalField(max_digits=18, decimal_places=8)
-    condition = models.CharField(max_length=20)  # e.g., ABOVE, BELOW
+    condition = models.CharField(max_length=20)
     is_active = models.BooleanField(default=True)
 
     def __str__(self):
         return f"{self.user.username} Alert: {self.asset.symbol} @ {self.target_price}"
 
-
-# ==========================================
-# AI SENTIMENT PREDICTION MODELS
-# ==========================================
 
 class SentimentSignal(models.Model):
     SIGNAL_CHOICES = [
@@ -124,9 +141,9 @@ class SentimentSignal(models.Model):
     asset = models.ForeignKey(Asset, on_delete=models.CASCADE, related_name="sentiment_signals", null=True, blank=True)
     asset_symbol = models.CharField(max_length=20, default="XAU/USD")
     query = models.CharField(max_length=255)
-    composite_score = models.FloatField()  # Score from -1.0 to +1.0
+    composite_score = models.FloatField()
     signal = models.CharField(max_length=10, choices=SIGNAL_CHOICES)
-    confidence = models.FloatField(default=0.0)  # Percentage (e.g. 85.0)
+    confidence = models.FloatField(default=0.0)
     articles_analyzed = models.IntegerField(default=0)
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -142,16 +159,12 @@ class NewsArticle(models.Model):
     title = models.CharField(max_length=500)
     link = models.URLField(max_length=1000)
     published = models.CharField(max_length=100, blank=True, null=True)
-    sentiment = models.CharField(max_length=20)  # Positive, Negative, Neutral
+    sentiment = models.CharField(max_length=20)
     polarity = models.FloatField()
 
     def __str__(self):
         return self.title
 
-
-# ==========================================
-# FINANCIAL & PAYMENT MODELS
-# ==========================================
 
 class UserBrokerAccount(models.Model):
     BROKER_CHOICES = [
@@ -162,7 +175,7 @@ class UserBrokerAccount(models.Model):
 
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='broker_accounts')
     broker = models.CharField(max_length=50, choices=BROKER_CHOICES, default='DERIV')
-    account_number = models.CharField(max_length=100) # e.g. CR123456 or VRTC123456
+    account_number = models.CharField(max_length=100)
     server_name = models.CharField(max_length=100, blank=True, null=True, default='Deriv-Server')
     api_token = models.CharField(max_length=255, blank=True, null=True)
     is_active = models.BooleanField(default=True)
@@ -173,23 +186,32 @@ class UserBrokerAccount(models.Model):
 
 
 class Account(models.Model):
-    """Stores the current state of the user's balance."""
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
-    balance = models.DecimalField(max_digits=12, decimal_places=2, default=0.00)
+    ACCOUNT_TYPES = (
+        ('EXCHANGE', 'Exchange Account'),
+        ('TRADING', 'Trading Account'),
+    )
+
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='accounts')
+    account_type = models.CharField(max_length=20, choices=ACCOUNT_TYPES, default='EXCHANGE')
+    balance = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal('0.00'))
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        unique_together = ('user', 'account_type')
 
     def __str__(self):
-        return f"{self.user.username} - Balance: {self.balance}"
+        return f"@{self.user.username} - {self.get_account_type_display()} (${self.balance})"
 
 
 class Transaction(models.Model):
-    """Stores the history of all successful deposits and withdrawals."""
     TRANSACTION_TYPES = (
         ('DEPOSIT', 'Deposit'),
         ('WITHDRAWAL', 'Withdrawal'),
+        ('INTERNAL_TRANSFER', 'Internal Transfer'),
     )
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     amount = models.DecimalField(max_digits=10, decimal_places=2)
-    transaction_type = models.CharField(max_length=10, choices=TRANSACTION_TYPES)
+    transaction_type = models.CharField(max_length=50) 
     details = models.CharField(max_length=255, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     is_notified = models.BooleanField(default=False)
@@ -197,45 +219,50 @@ class Transaction(models.Model):
     def __str__(self):
         return f"{self.user.username} - {self.transaction_type} of {self.amount}"
 
-# Signal: Update Balance when a Transaction is saved
-@receiver(post_save, sender=Transaction)
-def update_account_balance(sender, instance, created, **kwargs):
-    if created:
-        account, _ = Account.objects.get_or_create(user=instance.user)
-        if instance.transaction_type == 'DEPOSIT':
-            account.balance += instance.amount
-        elif instance.transaction_type == 'WITHDRAWAL':
-            account.balance -= instance.amount
-        account.save()    
+
+class FundedAccount(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='funded_accounts')
+    initial_balance = models.DecimalField(max_digits=12, decimal_places=2, default=0.00)
+    balance = models.DecimalField(max_digits=12, decimal_places=2, default=0.00)
+    is_funded = models.BooleanField(default=False)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    def __str__(self):
+        return f"Funded Account for {self.user.username} - Balance: ${self.balance}"
 
 
 class PaymentRequest(models.Model):
-    """Stores requests for deposits (pending admin approval or API response)."""
     STATUS_CHOICES = (
         ('PENDING', 'Pending'),
         ('APPROVED', 'Approved'),
         ('REJECTED', 'Rejected'),
-        ('PROCESSING', 'Processing (e.g., STK Push sent)'),
+        ('PROCESSING', 'Processing'),
     )
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='payment_requests')
     amount = models.DecimalField(max_digits=12, decimal_places=2)
-    # Using specific names to avoid Python reserved word conflicts
-    transaction_type = models.CharField(max_length=20, default='DEPOSIT')
-    payment_method = models.CharField(max_length=50, default='M-Pesa')
+    transaction_type = models.CharField(max_length=50)
+    payment_method = models.CharField(max_length=50, help_text="e.g., M-Pesa, BTC, USDT")
+    provider_reference = models.CharField(max_length=100, blank=True, null=True)
     status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='PENDING')
     processed = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
 
-# Signal: Handle deposit approval (updates account and creates transaction)
-# store/models.py
+    @property
+    def details(self):
+        if self.provider_reference:
+            return f"{self.transaction_type} via {self.payment_method} (Ref: {self.provider_reference})"
+        return f"{self.transaction_type} via {self.payment_method}"
+
+    def __str__(self):
+        return f"{self.user.username} - {self.transaction_type} ${self.amount} ({self.payment_method})"
+
 
 class MpesaPayment(models.Model):
-    """Stores raw data from M-Pesa STK Push / C2B callbacks."""
     payment_request = models.OneToOneField(PaymentRequest, on_delete=models.CASCADE, related_name='mpesa_details', null=True, blank=True)
     merchant_request_id = models.CharField(max_length=100)
     checkout_request_id = models.CharField(max_length=100)
-    result_code = models.IntegerField(null=True, blank=True)  # Updated to allow initial nulls
-    result_desc = models.TextField(null=True, blank=True)     # Updated to allow initial nulls
+    result_code = models.IntegerField(null=True, blank=True)
+    result_desc = models.TextField(null=True, blank=True)
     amount = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
     mpesa_receipt_number = models.CharField(max_length=100, blank=True)
     transaction_date = models.DateTimeField(null=True, blank=True)
@@ -245,23 +272,6 @@ class MpesaPayment(models.Model):
     def __str__(self):
         return f"Mpesa: {self.mpesa_receipt_number or 'Pending'} ({self.checkout_request_id})"
 
-# Signal: Handle deposit approval (updates account and creates transaction)
-@receiver(post_save, sender=PaymentRequest)
-def handle_payment_approval(sender, instance, **kwargs):
-    if instance.status == 'APPROVED' and not instance.processed:
-        account, created = Account.objects.get_or_create(user=instance.user)
-        account.balance += instance.amount
-        account.save()
-        
-        Transaction.objects.create(
-            user=instance.user,
-            amount=instance.amount,
-            transaction_type='DEPOSIT',
-            details=f"M-Pesa Deposit - {instance.payment_method}"
-        )
-        
-        instance.processed = True
-        instance.save()
 
 class Notification(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
@@ -273,19 +283,6 @@ class Notification(models.Model):
     class Meta:
         ordering = ['-created_at']
 
-@receiver(post_save, sender=Transaction)
-def send_transaction_notification(sender, instance, created, **kwargs):
-    # Create notification only on deposit approval (withdrawals are handled by admin workflow or API)
-    if instance.transaction_type == 'DEPOSIT':
-        title = "Transaction Approved"
-        message = f"Your {instance.transaction_type.lower()} of ${instance.amount} was successful."
-        
-        Notification.objects.create(
-            user=instance.user,
-            title=title,
-            message=message
-        )
-
 
 class Webhook(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
@@ -296,13 +293,12 @@ class Webhook(models.Model):
     is_active = models.BooleanField(default=True)
     requests_count = models.IntegerField(default=0)
     success_rate = models.FloatField(default=100.0)
-    latency = models.IntegerField(default=0) # in ms
+    latency = models.IntegerField(default=0)
     created_at = models.DateTimeField(auto_now_add=True)
 
 
 class WebhookLog(models.Model):
-    """Logs incoming webhooks for auditing and automation triggers."""
-    source = models.CharField(max_length=50, default='Generic')  # e.g., 'TradingView', 'Binance'
+    source = models.CharField(max_length=50, default='Generic')
     payload = models.TextField()
     headers = models.TextField(blank=True, null=True)
     is_processed = models.BooleanField(default=False)
@@ -320,33 +316,11 @@ class WebhookLog(models.Model):
 
 
 class SiteSettings(models.Model):
-    """
-    Singleton model for site-wide trading configuration.
-    Edited from the Django admin. All 'site trading' (simulated trades settled
-    against the user's internal Account balance) reads its stake defaults and
-    limits from here instead of hardcoded values.
-    """
-    default_trade_amount = models.DecimalField(
-        max_digits=12, decimal_places=2, default=10.00,
-        help_text="Stake used for a trade when the trader doesn't specify one."
-    )
-    min_trade_amount = models.DecimalField(
-        max_digits=12, decimal_places=2, default=1.00,
-        help_text="Smallest stake a trader is allowed to place."
-    )
-    max_trade_amount = models.DecimalField(
-        max_digits=12, decimal_places=2, default=1000.00,
-        help_text="Largest stake a trader is allowed to place."
-    )
-    payout_percentage = models.DecimalField(
-        max_digits=5, decimal_places=2, default=90.00,
-        help_text="House payout on a winning trade. 90.00 means a $10 winning "
-                   "stake returns $19.00 total (stake + 90% profit)."
-    )
-    trading_enabled = models.BooleanField(
-        default=True,
-        help_text="Site-wide kill switch. Turn off to pause all new trade execution."
-    )
+    default_trade_amount = models.DecimalField(max_digits=12, decimal_places=2, default=10.00)
+    min_trade_amount = models.DecimalField(max_digits=12, decimal_places=2, default=1.00)
+    max_trade_amount = models.DecimalField(max_digits=12, decimal_places=2, default=1000.00)
+    payout_percentage = models.DecimalField(max_digits=5, decimal_places=2, default=90.00)
+    trading_enabled = models.BooleanField(default=True)
 
     class Meta:
         verbose_name = "Site Settings"
@@ -356,12 +330,10 @@ class SiteSettings(models.Model):
         return "Site Trading Settings"
 
     def save(self, *args, **kwargs):
-        # Enforce singleton: there is only ever one row, with pk=1.
         self.pk = 1
         super().save(*args, **kwargs)
 
     def delete(self, *args, **kwargs):
-        # Prevent the singleton row from being deleted via admin/shell.
         pass
 
     @classmethod
@@ -376,17 +348,13 @@ class WebhookEndpoint(models.Model):
     url = models.URLField(max_length=500)
     is_active = models.BooleanField(default=True)
     requests_count = models.PositiveIntegerField(default=0)
-    success_rate = models.DecimalField(max_digits=5, decimal_places=2, default=100.00) # e.g., 99.80%
-    latency = models.PositiveIntegerField(default=0)  # Measured in milliseconds (ms)
+    success_rate = models.DecimalField(max_digits=5, decimal_places=2, default=100.00)
+    latency = models.PositiveIntegerField(default=0)
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return f"{self.name} ({'Active' if self.is_active else 'Inactive'})"
 
-
-
-
-from django.db import models
 
 class BotLog(models.Model):
     LOG_LEVELS = [
@@ -406,3 +374,89 @@ class BotLog(models.Model):
 
     def __str__(self):
         return f"[{self.timestamp.strftime('%H:%M:%S')}] {self.level}: {self.message}"
+
+
+# ==========================================
+# MODEL SIGNALS
+# ==========================================
+
+@receiver(post_save, sender=Transaction)
+def update_account_balance(sender, instance, created, **kwargs):
+    if created:
+        # Skip internal transfers as they are explicitly managed between accounts in the view
+        if instance.transaction_type == 'INTERNAL_TRANSFER':
+            return
+
+        # Direct external funds (deposits/withdrawals) target the main EXCHANGE account
+        account, _ = Account.objects.get_or_create(user=instance.user, account_type='EXCHANGE')
+        credit_types = ['DEPOSIT', 'TRADE_PAYOUT', 'BONUS', 'ADJUSTMENT']
+        debit_types = ['WITHDRAWAL', 'TRADE_STAKE']
+
+        if instance.transaction_type in credit_types or instance.transaction_type.startswith('SUB_'):
+            account.balance += instance.amount
+        elif instance.transaction_type in debit_types:
+            account.balance -= instance.amount
+        
+        account.save()
+
+
+@receiver(post_save, sender=PaymentRequest)
+def handle_payment_approval(sender, instance, **kwargs):
+    if instance.status == 'APPROVED' and not instance.processed:
+        tier_capital_mapping = {
+            'STARTER': 0.00,
+            'PRO': 50000.00,
+            'VIP': 200000.00,
+        }
+
+        purchased_tier = 'PRO'
+        if 'VIP' in str(instance.details).upper() or 'VIP' in str(instance.transaction_type).upper():
+            purchased_tier = 'VIP'
+        elif 'PRO' in str(instance.details).upper() or 'PRO' in str(instance.transaction_type).upper():
+            purchased_tier = 'PRO'
+        elif 'STARTER' in str(instance.details).upper() or 'STARTER' in str(instance.transaction_type).upper():
+            purchased_tier = 'STARTER'
+
+        assigned_capital = tier_capital_mapping.get(purchased_tier, 50000.00)
+
+        profile, _ = UserProfile.objects.get_or_create(user=instance.user)
+        profile.subscription_tier = purchased_tier.lower()
+        profile.is_active_subscription = (purchased_tier != 'STARTER')
+        profile.save()
+
+        funded_account, _ = FundedAccount.objects.get_or_create(user=instance.user)
+        funded_account.is_funded = (assigned_capital > 0)
+        funded_account.initial_balance = assigned_capital
+        funded_account.balance = assigned_capital
+        funded_account.save()
+
+        Transaction.objects.create(
+            user=instance.user,
+            amount=instance.amount,
+            transaction_type=f'SUB_{purchased_tier}',
+            details=f"Subscription Payment - {purchased_tier} Tier (Funded: ${assigned_capital:,.2f})"
+        )
+
+        instance.processed = True
+        instance.save()
+
+
+@receiver(post_save, sender=Transaction)
+def send_transaction_notification(sender, instance, created, **kwargs):
+    if created and instance.transaction_type == 'DEPOSIT':
+        Notification.objects.create(
+            user=instance.user,
+            title="Transaction Approved",
+            message=f"Your deposit of ${instance.amount} was successful."
+        )
+
+
+
+class ClientAIToggle(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    is_active = models.BooleanField(default=False)
+    assigned_lot_size = models.DecimalField(max_digits=5, decimal_places=2, default=1.00)
+    last_trade_date = models.DateField(null=True, blank=True) # Tracks daily execution
+    
+    def __str__(self):
+        return f"{self.user.username} - Active: {self.is_active}"

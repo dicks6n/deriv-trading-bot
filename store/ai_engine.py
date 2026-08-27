@@ -17,6 +17,32 @@ class DerivMultiContractAIEngine:
         'JD10', 'JD25', 'JD50', 'JD75', 'JD100', 'stpRNG'
     ]
 
+    # Real (non-synthetic) markets: Deriv's forex/metals feed using their
+    # standard "frx" symbol prefix. These are genuine market prices, so the
+    # last digit is NOT uniformly random the way it is on synthetic indices -
+    # only Rise/Fall (direction) predictions are statistically meaningful here.
+    REAL_MARKET_SYMBOLS = [
+        'frxXAUUSD',  # Gold vs USD
+        'frxXAGUSD',  # Silver vs USD
+        'frxEURUSD',
+        'frxUSDJPY',
+        'frxGBPUSD',
+        'frxAUDUSD',
+        'frxUSDCAD',
+        'frxUSDCHF',
+        'frxNZDUSD',
+    ]
+
+    @classmethod
+    def is_real_market(cls, symbol: str) -> bool:
+        """True for real forex/metals symbols (Gold, EUR/USD, USD/JPY, etc.)."""
+        return symbol in cls.REAL_MARKET_SYMBOLS
+
+    @classmethod
+    def is_synthetic(cls, symbol: str) -> bool:
+        """True for Deriv synthetic/volatility indices."""
+        return symbol in cls.SUPPORTED_INDICES
+
     def __init__(self):
         self.rf_models = {}  # Rise/Fall ML models per symbol
         self.eo_models = {}  # Even/Odd ML models per symbol
@@ -182,12 +208,49 @@ class DerivMultiContractAIEngine:
         }
 
     # -----------------------------------------------------------------
+    # 5. REAL MARKET PREDICTION ENGINE (GOLD / FOREX - RISE/FALL ONLY)
+    # -----------------------------------------------------------------
+    def predict_real_market(self, symbol: str, tick_prices: list) -> dict:
+        """
+        Predicts direction only, for real (non-synthetic) markets such as
+        Gold or forex pairs. Digit-based contracts are deliberately not
+        offered here - see REAL_MARKET_SYMBOLS docstring above for why.
+        """
+        if not tick_prices or len(tick_prices) < 15:
+            return {'error': 'Insufficient tick price data provided'}
+
+        last_price = float(tick_prices[-1])
+        df = self.build_feature_matrix(tick_prices)
+        if df.empty:
+            return {'error': 'Failed to build feature matrix'}
+
+        rise_fall = self.predict_rise_fall(df, tick_prices)
+
+        return {
+            'symbol': symbol,
+            'last_price': last_price,
+            'predictions': {'rise_fall': rise_fall},
+            'top_signal': {
+                'category': 'rise_fall',
+                'contract_type': rise_fall['contract'],
+                'barrier': None,
+                'confidence': rise_fall['confidence'],
+                'raw_confidence': rise_fall['raw_confidence'],
+            }
+        }
+
+    # -----------------------------------------------------------------
     # MAIN PREDICTION ENTRY POINT (ALL CONTRACT TYPES)
     # -----------------------------------------------------------------
     def predict_all_contracts(self, symbol: str, tick_prices: list) -> dict:
         """
         Generates comprehensive AI predictions for ALL Deriv trade contracts.
+        Routes real markets (Gold/forex) to the Rise/Fall-only engine, since
+        digit-based contracts don't apply to them.
         """
+        if self.is_real_market(symbol):
+            return self.predict_real_market(symbol, tick_prices)
+
         if not tick_prices or len(tick_prices) < 15:
             return {'error': 'Insufficient tick price data provided'}
 

@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - SignalAIX</title>
+    <title>Login - PATREOAIX</title>
     <!-- Tailwind CSS & FontAwesome -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -18,7 +18,7 @@
                 <i class="fa-solid fa-brain"></i>
             </div>
             <div>
-                <h1 class="font-bold text-lg leading-tight tracking-wide text-white">SignalAIX</h1>
+                <h1 class="font-bold text-lg leading-tight tracking-wide text-white">PATREOAIX</h1>
                 <p class="text-xs text-slate-400">AI Prediction Engine</p>
             </div>
         </a>
@@ -40,7 +40,7 @@
                 <div class="absolute -top-10 -left-10 w-40 h-40 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none"></div>
                 <div class="absolute -bottom-10 -right-10 w-40 h-40 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none"></div>
 
-                <!-- SignalAIX Styled Login Card -->
+                <!-- PATREOAIX Styled Login Card -->
                 <div class="bg-[#0d1322] border border-slate-800 rounded-2xl p-8 shadow-2xl relative z-10">
                     
                     <div class="text-center mb-6">
@@ -80,7 +80,10 @@
 
                         <!-- Password Field -->
                         <div>
-                            <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Password</label>
+                            <div class="flex items-center justify-between mb-1.5">
+                                <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">Password</label>
+                                <a href="{% url 'account_reset_password' %}" class="text-[10px] font-bold text-indigo-400 hover:text-indigo-300 transition">Forgot password?</a>
+                            </div>
                             <div class="relative">
                                 <span class="absolute inset-y-0 left-0 flex items-center pl-3.5 text-slate-500">
                                     <i class="fa-solid fa-lock text-xs"></i>
@@ -100,10 +103,26 @@
                         </button>
                     </form>
 
+                    <!-- Divider -->
+                    <div class="relative my-6 text-center">
+                        <span class="bg-[#0d1322] px-3 text-[10px] text-slate-500 uppercase font-bold relative z-10">or sign in with</span>
+                        <div class="absolute inset-0 flex items-center"><div class="w-full border-t border-slate-800"></div></div>
+                    </div>
+
+                    <!-- Social Login Options -->
+                    <div class="flex items-center justify-center gap-3">
+                        <a href="{% url 'google_login' %}" class="w-10 h-10 rounded-xl bg-[#090d16] border border-slate-800 hover:border-slate-700 text-slate-300 hover:text-white transition flex items-center justify-center text-sm">
+                            <i class="fa-brands fa-google"></i>
+                        </a>
+                        <a href="{% url 'apple_login' %}" class="w-10 h-10 rounded-xl bg-[#090d16] border border-slate-800 hover:border-slate-700 text-slate-300 hover:text-white transition flex items-center justify-center text-sm">
+                            <i class="fa-brands fa-apple"></i>
+                        </a>
+                    </div>
+
                     <!-- Card Footer Link -->
                     <div class="mt-6 pt-5 border-t border-slate-800/80 text-center">
                         <p class="text-xs text-slate-400">
-                            New to SignalAIX? 
+                            New to PATREOAIX? 
                             <a href="{% url 'signup' %}" class="font-bold text-emerald-400 hover:text-emerald-300 transition">Create an account</a>
                         </p>
                     </div>
@@ -116,7 +135,7 @@
 
     <!-- Page Footer -->
     <footer class="border-t border-slate-800/80 bg-[#0d1322] px-6 py-4 text-center text-xs text-slate-500">
-        &copy; SignalAIX AI Prediction Engine. All rights reserved.
+        &copy; PATREOAIX AI Prediction Engine. All rights reserved.
     </footer>
 
 </body>

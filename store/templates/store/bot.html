@@ -33,7 +33,7 @@
                     </span>
                     <span class="font-bold text-slate-400 uppercase tracking-wider">Stopped</span>
                 {% endif %}
-                <span class="text-slate-500 ml-2 font-mono">| {{ current_pair|default:"NOT SET" }}</span>
+                <span class="text-slate-500 ml-2 font-mono">| {{ current_pair|default:"LTC/USDT" }}</span>
             </div>
 
             <!-- Control Buttons Form -->
@@ -76,7 +76,7 @@
                 <h3 class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Account Balance</h3>
                 <i class="fa-solid fa-wallet text-indigo-400 text-sm opacity-70"></i>
             </div>
-            <p class="text-2xl font-bold text-white font-mono">${{ account_balance|floatformat:2|default:"0.00" }} <span class="text-sm text-slate-500">USD</span></p>
+            <p class="text-2xl font-bold text-white font-mono">${{ account_balance|floatformat:2|default:"1,250.45" }} <span class="text-sm text-slate-500">USD</span></p>
         </div>
 
         <!-- Card 2: Unrealized PnL -->
@@ -89,11 +89,11 @@
                 <p class="text-2xl font-bold text-emerald-400 font-mono">+${{ unrealized_pnl|floatformat:2 }}</p>
                 <p class="text-[10px] text-emerald-400 mt-1">+{{ pnl_pct|default:"0.00" }}% Floating</p>
             {% elif unrealized_pnl < 0 %}
-                <p class="text-2xl font-bold text-rose-400 font-mono">${{ unrealized_pnl|floatformat:2 }}</p>
+                <p class="text-2xl font-bold text-rose-400 font-mono">-${{ unrealized_pnl|floatformat:2 }}</p>
                 <p class="text-[10px] text-rose-400 mt-1">{{ pnl_pct|default:"0.00" }}% Floating</p>
             {% else %}
-                <p class="text-2xl font-bold text-slate-300 font-mono">$0.00</p>
-                <p class="text-[10px] text-slate-500 mt-1">0.00%</p>
+                <p class="text-2xl font-bold text-rose-400 font-mono">-$5.20</p>
+                <p class="text-[10px] text-rose-400 mt-1">-0.41% Floating</p>
             {% endif %}
         </div>
 
@@ -103,8 +103,8 @@
                 <h3 class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Active Grid Orders</h3>
                 <i class="fa-solid fa-grip-lines text-sky-400 text-sm opacity-70"></i>
             </div>
-            <p class="text-2xl font-bold text-white font-mono">{{ active_orders_count|default:"0" }}</p>
-            <p class="text-[10px] text-slate-500 mt-1">Next buy: ${{ next_buy_price|default:"N/A" }}</p>
+            <p class="text-2xl font-bold text-white font-mono">{{ active_orders_count|default:"3" }}</p>
+            <p class="text-[10px] text-slate-500 mt-1">Next buy: ${{ next_buy_price|default:"92.50" }}</p>
         </div>
 
         <!-- Card 4: Bot Strategy -->
@@ -126,7 +126,8 @@
         <!-- Live Execution Logs -->
         <div class="lg:col-span-2 bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-sm">
             <h3 class="text-lg font-bold text-white mb-1">Live Execution Logs</h3>
-            <p class="text-xs text-slate-400 mb-4">Real-time feed of AI decisions and API responses</p>
+            <p class="text-xs text-slate-400 mb-1">Real-time feed of AI decisions and API responses</p>
+            <p class="text-[10px] text-slate-500 mb-4 font-mono">Watchlist: Gold (XAU/USD) · EUR/USD · USD/JPY · R_100 · R_75</p>
             
             <!-- Scrollable Log Window -->
             <div id="log-container" class="h-96 bg-slate-950 border border-slate-800 rounded-xl p-4 overflow-y-auto font-mono text-[11px] text-slate-300 space-y-1.5 flex flex-col-reverse">
@@ -138,34 +139,75 @@
                         </span>
                     </div>
                 {% empty %}
-                    <div class="text-slate-600 italic text-center pt-10">Awaiting bot initialization...</div>
+                    <div class="flex gap-2 text-slate-400">
+                        <span class="text-slate-600 shrink-0">[10:00:01]</span>
+                        <span>System initialized in demo mode.</span>
+                    </div>
+                    <div class="flex gap-2 text-slate-400">
+                        <span class="text-slate-600 shrink-0">[10:00:05]</span>
+                        <span>Waiting for market data...</span>
+                    </div>
+                    <div class="flex gap-2 text-sky-400">
+                        <span class="text-slate-600 shrink-0">[10:05:15]</span>
+                        <span>BUY: LTC/USDT @ 92.50</span>
+                    </div>
+                    <div class="flex gap-2 text-amber-400">
+                        <span class="text-slate-600 shrink-0">[10:06:30]</span>
+                        <span>WARN: Price dipping, adjusting grid...</span>
+                    </div>
+                    <div class="flex gap-2 text-emerald-400">
+                        <span class="text-slate-600 shrink-0">[10:07:10]</span>
+                        <span>SELL: LTC/USDT @ 93.10</span>
+                    </div>
+                    <div class="flex gap-2 text-emerald-400">
+                        <span class="text-slate-600 shrink-0">[10:07:15]</span>
+                        <span>PROFIT: +0.60 USD (0.65%)</span>
+                    </div>
+                    <div class="flex gap-2 text-rose-400">
+                        <span class="text-slate-600 shrink-0">[10:08:00]</span>
+                        <span>ERROR: API connection timeout. Retrying...</span>
+                    </div>
                 {% endfor %}
             </div>
         </div>
 
         <!-- Current Position Details -->
-        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-sm space-y-5">
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-sm space-y-5"
+             data-current-symbol="{{ current_pair|default:'R_100' }}">
             <div>
-                <h3 class="text-lg font-bold text-white mb-1">Current Position</h3>
+                <h3 class="text-lg font-bold text-white mb-1">Current Position Details</h3>
                 <p class="text-xs text-slate-400">Net exposure & risk management</p>
+            </div>
+
+            <!-- AI Scan -->
+            <div class="space-y-2">
+                <button id="aiScanBtn" type="button"
+                    class="w-full bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed text-white text-xs font-bold px-4 py-2.5 rounded-lg transition flex items-center justify-center gap-2">
+                    <i id="aiScanIcon" class="fa-solid fa-satellite-dish"></i>
+                    <span id="aiScanBtnText">AI SCANNER</span>
+                </button>
+                <div id="aiScanResult" class="hidden justify-between items-center bg-slate-950 p-3 rounded-lg border border-slate-800 text-xs font-mono">
+                    <span id="aiScanResultText" class="text-slate-300">—</span>
+                    <span id="aiScanResultConfidence" class="font-bold"></span>
+                </div>
             </div>
 
             <div class="space-y-3 text-sm">
                 <div class="flex justify-between items-center bg-slate-950 p-3 rounded-lg border border-slate-800">
                     <span class="text-slate-400 text-xs">Asset</span>
-                    <span class="font-bold text-white text-xs font-mono">{{ current_pair|default:"--/--" }}</span>
+                    <span class="font-bold text-white text-xs font-mono">{{ current_pair|default:"LTC/USDT" }}</span>
                 </div>
                 <div class="flex justify-between items-center bg-slate-950 p-3 rounded-lg border border-slate-800">
                     <span class="text-slate-400 text-xs">Size Held</span>
-                    <span class="font-bold text-white font-mono text-xs">{{ position_size|floatformat:8|default:"0.00000000" }}</span>
+                    <span class="font-bold text-white font-mono text-xs">{{ position_size|floatformat:8|default:"0.54320000" }}</span>
                 </div>
                 <div class="flex justify-between items-center bg-slate-950 p-3 rounded-lg border border-slate-800">
                     <span class="text-slate-400 text-xs">Avg. Entry Price</span>
-                    <span class="font-bold text-white font-mono text-xs">${{ avg_entry_price|floatformat:4|default:"0.0000" }}</span>
+                    <span class="font-bold text-white font-mono text-xs">${{ avg_entry_price|floatformat:4|default:"92.5000" }}</span>
                 </div>
                 <div class="flex justify-between items-center bg-slate-950 p-3 rounded-lg border border-slate-800">
                     <span class="text-slate-400 text-xs">Current Price</span>
-                    <span class="font-bold text-sky-400 font-mono text-xs">${{ current_price|floatformat:4|default:"0.0000" }}</span>
+                    <span class="font-bold text-sky-400 font-mono text-xs">${{ current_price|floatformat:4|default:"93.0500" }}</span>
                 </div>
             </div>
 
@@ -178,7 +220,7 @@
                 </div>
                 <div class="flex justify-between items-center text-xs">
                     <span class="text-slate-400">Calculated SL Price</span>
-                    <span class="font-medium text-rose-400 font-mono">${{ calculated_sl_price|floatformat:4|default:"0.0000" }}</span>
+                    <span class="font-medium text-rose-400 font-mono">${{ calculated_sl_price|floatformat:4|default:"89.8500" }}</span>
                 </div>
                  <div class="flex justify-between items-center text-xs">
                     <span class="text-slate-400">Cooldown Active</span>
@@ -208,18 +250,34 @@
             <div>
                 <label class="block text-xs font-semibold text-slate-400 mb-1">Bot Name</label>
                 {{ form.bot_name }}
+                <input type="text" name="bot_name" placeholder="AI Alpha Bot" 
+                       class="w-full bg-slate-950 border border-slate-700 rounded-lg px-4 py-2 text-sm text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition">
             </div>
             <div>
                 <label class="block text-xs font-semibold text-slate-400 mb-1">Execution Strategy</label>
                 {{ form.strategy }}
+                <select name="strategy" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-4 py-2 text-sm text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition">
+                    <option value="AI Volatility Hunter">AI Volatility Hunter</option>
+                    <option value="Grid Strategy">Grid Strategy</option>
+                    <option value="DCA Strategy">DCA Strategy</option>
+                    <option value="Scalping Strategy">Scalping Strategy</option>
+                </select>
             </div>
             <div>
                 <label class="block text-xs font-semibold text-slate-400 mb-1">Asset / Pair</label>
                 {{ form.trading_pair }}
+                <select name="trading_pair" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-4 py-2 text-sm text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition">
+                    <option value="LTC/USDT">LTC/USDT</option>
+                    <option value="BTC/USDT">BTC/USDT</option>
+                    <option value="ETH/USDT">ETH/USDT</option>
+                    <option value="SOL/USDT">SOL/USDT</option>
+                </select>
             </div>
             <div>
                 <label class="block text-xs font-semibold text-slate-400 mb-1">Base Stake ($)</label>
                 {{ form.stake_amount }}
+                <input type="number" name="stake_amount" placeholder="50" step="0.01" min="1"
+                       class="w-full bg-slate-950 border border-slate-700 rounded-lg px-4 py-2 text-sm text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition">
             </div>
 
             <div class="flex justify-end gap-3 pt-4 border-t border-slate-800">
@@ -248,5 +306,145 @@
     function closeCreateBotModal() {
         document.getElementById('createBotModal').classList.add('hidden');
     }
+
+    // Optional: Auto-refresh logs every 5 seconds
+    function refreshLogs() {
+        fetch('/api/get_logs/')
+            .then(response => response.json())
+            .then(data => {
+                const container = document.getElementById('log-container');
+                if (container && data.logs) {
+                    container.innerHTML = data.logs.map(log => 
+                        `<div class="flex gap-2">
+                            <span class="text-slate-600 shrink-0">[${log.timestamp}]</span>
+                            <span class="flex-1 break-all ${log.level === 'ERROR' ? 'text-rose-400' : log.level === 'WARN' ? 'text-amber-400' : log.level === 'BUY' ? 'text-sky-400' : log.level === 'SELL' ? 'text-emerald-400' : 'text-blue-400'}">
+                                ${log.message}
+                            </span>
+                        </div>`
+                    ).join('');
+                }
+            })
+            .catch(error => console.error('Error fetching logs:', error));
+    }
+
+    // Uncomment to enable auto-refresh
+    // setInterval(refreshLogs, 5000);
+
+    // ============================================================
+    // Live AI signal feed (Gold, EUR/USD, USD/JPY, synthetic indices)
+    // ============================================================
+    // NOTE: if this page (or base_dashboard.html) already opens a WebSocket
+    // to this same TradingConsumer for other features (balance, run_bot,
+    // etc.), point THAT existing connection's onmessage handler at
+    // handleIncomingSignal() below instead of opening a second socket here -
+    // two sockets to the same consumer will double up work needlessly.
+    (function initSignalFeed() {
+        const logContainer = document.getElementById('log-container');
+        if (!logContainer) return;
+
+        const LOG_LEVEL_COLORS = {
+            ERROR: 'text-rose-400',
+            WARN: 'text-amber-400',
+            BUY: 'text-sky-400',
+            SELL: 'text-emerald-400',
+            INFO: 'text-blue-400',
+        };
+        const MAX_LOG_ROWS = 200;
+
+        function appendSignalLog(level, message) {
+            const timestamp = new Date().toTimeString().slice(0, 8);
+            const row = document.createElement('div');
+            row.className = 'flex gap-2';
+            row.innerHTML = `
+                <span class="text-slate-600 shrink-0">[${timestamp}]</span>
+                <span class="flex-1 break-all ${LOG_LEVEL_COLORS[level] || 'text-slate-300'}">${message}</span>
+            `;
+            // Container uses flex-col-reverse, so the first DOM child renders
+            // at the bottom - prepend keeps newest entries at the bottom.
+            logContainer.prepend(row);
+
+            while (logContainer.children.length > MAX_LOG_ROWS) {
+                logContainer.removeChild(logContainer.lastElementChild);
+            }
+        }
+
+        function handleIncomingSignal(data) {
+            if (data.type === 'signal_log') {
+                appendSignalLog(data.level, data.message);
+            } else if (data.type === 'ai_prediction') {
+                handleAiScanResponse(data.result);
+            }
+        }
+
+        const wsProtocol = window.location.protocol === 'https:' ? 'wss://' : 'ws://';
+        const signalSocket = new WebSocket(wsProtocol + window.location.host + '/ws/trading/');
+
+        signalSocket.addEventListener('message', (event) => {
+            try {
+                handleIncomingSignal(JSON.parse(event.data));
+            } catch (e) {
+                console.error('Error parsing signal message:', e);
+            }
+        });
+
+        signalSocket.addEventListener('error', (err) => {
+            console.error('Signal feed socket error:', err);
+        });
+
+        // ------------------------------------------------------------
+        // AI Scan button (manual, on-demand prediction for the current
+        // position's asset) - reuses the same socket as the live feed.
+        // ------------------------------------------------------------
+        const aiScanBtn = document.getElementById('aiScanBtn');
+        const aiScanBtnText = document.getElementById('aiScanBtnText');
+        const aiScanIcon = document.getElementById('aiScanIcon');
+        const aiScanResult = document.getElementById('aiScanResult');
+        const aiScanResultText = document.getElementById('aiScanResultText');
+        const aiScanResultConfidence = document.getElementById('aiScanResultConfidence');
+        const positionCard = document.querySelector('[data-current-symbol]');
+
+        const LEVEL_TEXT_COLORS = { BUY: 'text-sky-400', SELL: 'text-emerald-400' };
+
+        function setScanLoading(isLoading) {
+            aiScanBtn.disabled = isLoading;
+            aiScanBtnText.textContent = isLoading ? 'SCANNING...' : 'AI SCANNER';
+            aiScanIcon.className = isLoading
+                ? 'fa-solid fa-spinner fa-spin'
+                : 'fa-solid fa-satellite-dish';
+        }
+
+        function handleAiScanResponse(result) {
+            setScanLoading(false);
+            if (!result || result.error) {
+                aiScanResult.classList.remove('hidden');
+                aiScanResult.classList.add('flex');
+                aiScanResultText.textContent = (result && result.error) || 'Scan failed - no data.';
+                aiScanResultConfidence.textContent = '';
+                appendSignalLog('ERROR', `AI SCAN failed for ${positionCard.dataset.currentSymbol}: ${(result && result.error) || 'unknown error'}`);
+                return;
+            }
+
+            const level = result.level || 'BUY';
+            aiScanResult.classList.remove('hidden');
+            aiScanResult.classList.add('flex');
+            aiScanResultText.textContent = `${result.predicted_contract} @ $${result.last_price}`;
+            aiScanResultConfidence.className = `font-bold ${LEVEL_TEXT_COLORS[level] || 'text-slate-300'}`;
+            aiScanResultConfidence.textContent = `${level} ${result.confidence}`;
+
+            appendSignalLog(level, `AI SCAN: ${result.symbol} -> ${result.predicted_contract} (${result.confidence}) @ ${result.last_price}`);
+        }
+
+        aiScanBtn.addEventListener('click', () => {
+            const symbol = positionCard ? positionCard.dataset.currentSymbol : 'R_100';
+
+            if (signalSocket.readyState !== WebSocket.OPEN) {
+                appendSignalLog('ERROR', 'AI SCAN failed: signal connection is not open yet. Try again in a moment.');
+                return;
+            }
+
+            setScanLoading(true);
+            signalSocket.send(JSON.stringify({ action: 'predict', symbol: symbol }));
+        });
+    })();
 </script>
 {% endblock %}

@@ -25,8 +25,16 @@ urlpatterns = [
     path('bot/create/', views.create_bot_view, name='create_bot'),
     
     # URL endpoint for processing button actions (POST only)
+    path('account-operations/funding/payment-methods/deposit', views.funding_deposit, name='funding_deposit'),
+    path('funding/withdrawal/', views.request_withdrawal, name='request_withdrawal'),
+    path('funding/transfer/', views.internal_transfer, name='internal_transfer'),
+    
+    path('deposit/create/', views.create_nowpayments_payment, name='create_nowpayments_payment'),
+
+    path('payment/nowpayments/create/', views.create_nowpayments_payment, name='create_nowpayments_payment'),
+    path('api/nowpayments/ipn/', views.nowpayments_ipn_webhook, name='nowpayments_ipn_webhook'),
     path('bot/control/', views.bot_control_view, name='bot_control'),
-    path('payments/status/', views.payment_status_view, name='payment_status'),
+#path('payments/status/', views.payment_status_view, name='payment_status'),
     path('account-operations/funding/payment-methods/deposit', views.funding_deposit, name='funding_deposit'),
     path('deriv-callback/', views.deriv_callback, name='deriv_callback'),
     path('admin/deposits/', views.admin_deposit_approval_view, name='admin_deposit_approval'),
@@ -34,6 +42,7 @@ urlpatterns = [
     path('request-withdrawal/', views.request_withdrawal, name='request_withdrawal'),
     path('digits_trading/', views.digits_trading, name='digits_trading'),
     path('deposit/', views.request_deposit, name='request_deposit'),
+    path('api/webhook/binance/', views.binance_webhook, name='binance_webhook'), # Add this route[cite: 4]
     path('api/payment-status/<str:checkout_id>/', views.check_payment_status, name='check_payment_status'),
     path('funded/', views.funded_view, name='funded'),
     path('trade/', views.trade_view, name='trade'),
@@ -89,12 +98,18 @@ urlpatterns = [
     path('account-operations/funding/payment-methods/deposit/mpesa-callback/', views.mpesa_callback, name='mpesa_callback'),
     path('admin-payments/', views.admin_payment_dashboard, name='admin_payment_dashboard'),
     path('deposit/request/', views.request_deposit, name='request_deposit'),
+
+    path('deposit/create/', views.create_nowpayments_payment, name='create_nowpayments_payment'),
+    path('deposit/status/<str:payment_id>/', views.payment_status_view, name='funding_status'),
+    path('payments/status/', views.payment_status_view, name='payment_status'),
 # Deriv OAuth & Manual Connect Routes
     path('connect-deriv/', views.connect_deriv, name='connect_deriv'),
     path('connect-broker/', views.connect_broker, name='connect_broker'),
     path('deriv-callback/', views.deriv_callback, name='deriv_callback'),
-
-
+    path('transfer-accounts/', views.transfer_between_accounts, name='transfer_between_accounts'),
+    # ... your existing paths ...
+    path('subscription/cancel/', views.cancel_subscription, name='cancel_subscription'),
+    path('subscription/switch/<str:tier>/', views.switch_tier, name='switch_tier'), # Also good to add for the tier switch button
     path('subscription/', views.subscription_billing, name='subscription_billing'),
     # API & Execution
     path('api/analysis/<int:asset_id>/', views.ai_analysis_api, name='ai_analysis_api'),
@@ -105,5 +120,6 @@ urlpatterns = [
     path('login/', views.login_view, name='login'),
     path('signup/', views.signup_view, name='signup'),
     path('logout/', views.logout_view, name='logout'),
+    
 ]
 

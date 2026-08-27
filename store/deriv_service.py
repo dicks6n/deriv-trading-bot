@@ -225,3 +225,40 @@ class DerivService:
         except Exception as e:
             logger.error(f"Deriv Trade Execution Error: {e}")
             return {"success": False, "error": str(e)}
+
+
+        # ... existing imports ...
+
+    # NEW HELPER METHOD
+    def aggregate_ticks_to_ohlc(self, ticks_response, interval_minutes=1):
+        """
+        Aggregates raw API tick data into OHLCV dictionaries for analysis.
+        Input: ticks_response from get_recent_ticks
+        Output: List of dictionaries: [{'open': x, 'high': x, 'low': x, 'close': x}, ...]
+        """
+        if not ticks_response or 'ticks' not in ticks_response:
+            return None
+
+        # Extract list of tick dictionaries
+        ticks = ticks_response['ticks']
+        
+        # Convert to Pandas Series for easy resampling
+        data = {'price': [float(t['quote']) for t in ticks]}
+        index = pd.to_datetime([t['epoch'] for t in ticks], unit='s')
+        series = pd.Series(data=data['price'], index=index)
+
+        # Resample into OHLC bars
+        ohlc_resampled = series.resample(f'{interval_minutes}min').ohlc()
+
+        # Clean up the DataFrame for analysis service
+        # Rename columns to lowercase expected by analysis_service
+        ohlc_resampled.columns = [col.lower() for col in ohlc_resampled.columns]
+        ohlc_resampled.reset_index(inplace=True) # Convert index to column
+
+        # Drop any rows with NaN (incomplete periods at start/end)
+        ohlc_resampled.dropna(inplace=True)
+
+        # Convert to list of dictionaries
+        return ohlc_resampled.to_dict(orient='records')
+
+# ... existing ai_engine = AIEngine ...

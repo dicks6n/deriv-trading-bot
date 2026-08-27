@@ -16,14 +16,14 @@
     <!-- Top Section: Personal Info & Account Summary -->
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         
-        <!-- Personal Information (Spans 2 cols) -->
+        <!-- Personal Information -->
         <div class="lg:col-span-2 bg-cardBg border border-cardBorder rounded-2xl p-6 shadow-sm">
             <div class="flex items-center gap-4 mb-6">
-                <div class="w-16 h-16 rounded-full bg-slate-800 flex items-center justify-center text-xl font-bold border border-cardBorder">
+                <div class="w-16 h-16 rounded-full bg-slate-800 flex items-center justify-center text-xl font-bold border border-cardBorder text-white">
                     {{ user.username|slice:":2"|upper }}
                 </div>
                 <div>
-                    <h3 class="text-lg font-bold">{{ user.username }}</h3>
+                    <h3 class="text-lg font-bold text-white">{{ user.username }}</h3>
                     <p class="text-slate-400 text-xs">Funded Trader • Member since 2026</p>
                 </div>
             </div>
@@ -33,69 +33,100 @@
                     <label class="block text-[10px] uppercase font-bold text-slate-500 mb-1">First Name</label>
                     <input type="text" value="{{ user.first_name }}" class="w-full bg-slate-900 border border-cardBorder rounded-xl px-4 py-2 text-sm text-white focus:border-brandGreen outline-none">
                 </div>
-                <!-- Add other fields here -->
+                <div>
+                    <label class="block text-[10px] uppercase font-bold text-slate-500 mb-1">Email Address</label>
+                    <input type="email" value="{{ user.email }}" class="w-full bg-slate-900 border border-cardBorder rounded-xl px-4 py-2 text-sm text-white focus:border-brandGreen outline-none">
+                </div>
             </div>
         </div>
 
         <!-- Account Summary -->
         <div class="bg-cardBg border border-cardBorder rounded-2xl p-6 shadow-sm">
-            <h3 class="text-sm font-bold mb-4">Account Summary</h3>
+            <h3 class="text-sm font-bold mb-4 text-white">Account Summary</h3>
             <div class="space-y-4">
                 <div class="flex justify-between py-2 border-b border-cardBorder/50">
                     <span class="text-slate-400 text-xs">Trader ID</span>
-                    <span class="text-xs font-mono font-bold">#TRD-4821</span>
+                    <span class="text-xs font-mono font-bold text-white">{{ trader_id }}</span>
                 </div>
                 <div class="flex justify-between py-2 border-b border-cardBorder/50">
                     <span class="text-slate-400 text-xs">Account Type</span>
-                    <span class="text-xs font-bold text-brandGreen">Funded $100K</span>
+                    <span class="text-xs font-bold text-emerald-400">{{ account_type }}</span>
                 </div>
-                <!-- Add other summary items -->
             </div>
         </div>
+    </div>
+
+    <!-- Binance Deposit Wallet Card Section -->
+    <div class="bg-cardBg border border-cardBorder rounded-2xl p-6 shadow-sm">
+        <h3 class="text-sm font-bold text-white mb-2 flex items-center gap-2">
+            <span class="w-2 h-2 rounded-full bg-amber-400"></span> Official Binance Deposit Wallet (USDT TRC20)
+        </h3>
+        <p class="text-xs text-slate-400 mb-4">Send your USDT deposits directly to the official platform wallet address below:</p>
+        
+        <div class="flex flex-col md:flex-row items-center gap-3">
+            <input type="text" id="profileBinanceWallet" readonly value="TQn9Y2khEsLJW1ChVWFMSMeRDow5KcbLSE" class="w-full bg-slate-900 border border-cardBorder rounded-xl px-4 py-2.5 text-xs font-mono text-slate-200 focus:outline-none">
+            <button type="button" onclick="copyProfileWallet()" class="w-full md:w-auto px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl transition whitespace-nowrap">
+                Copy Address
+            </button>
+        </div>
+        <p id="profileCopyFeedback" class="text-xs text-emerald-400 font-medium mt-2 hidden">Address copied successfully!</p>
     </div>
 
     <!-- Bottom Section: Security, Notifications, Preferences -->
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
         <!-- Security Card -->
         <div class="bg-cardBg border border-cardBorder rounded-2xl p-6">
-            <h3 class="text-sm font-bold mb-4 flex items-center gap-2">
-                <i class="fa-solid fa-lock text-slate-500"></i> Security
+            <h3 class="text-sm font-bold mb-4 text-white flex items-center gap-2">
+                Security
             </h3>
             <div class="space-y-4">
                 <div class="flex justify-between items-center">
                     <span class="text-xs text-slate-400">Password</span>
-                    <button class="text-brandGreen text-[10px] font-bold">Change</button>
+                    <button class="text-emerald-400 text-[10px] font-bold">Change</button>
                 </div>
-                <!-- 2FA Toggle -->
             </div>
         </div>
         
         <!-- Notifications Card -->
-<!-- Inside your Profile.html, within the Notifications Card -->
-<div class="bg-cardBg border border-cardBorder rounded-2xl p-6">
-    <h3 class="text-sm font-bold mb-4">Recent Notifications</h3>
-    <div class="space-y-4">
-        {% for note in notifications %}
-        <div class="flex items-start gap-3 border-b border-cardBorder pb-3 last:border-0">
-            <div class="mt-1 w-2 h-2 rounded-full {% if not note.is_read %}bg-emerald-500{% else %}bg-slate-700{% endif %}"></div>
-            <div>
-                <p class="text-xs font-bold text-white">{{ note.title }}</p>
-                <p class="text-[10px] text-slate-400">{{ note.message }}</p>
+        <div class="bg-cardBg border border-cardBorder rounded-2xl p-6">
+            <h3 class="text-sm font-bold mb-4 text-white">Recent Notifications</h3>
+            <div class="space-y-4">
+                {% for note in notifications %}
+                <div class="flex items-start gap-3 border-b border-cardBorder pb-3 last:border-0">
+                    <div class="mt-1 w-2 h-2 rounded-full {% if not note.is_read %}bg-emerald-500{% else %}bg-slate-700{% endif %}"></div>
+                    <div>
+                        <p class="text-xs font-bold text-white">{{ note.title }}</p>
+                        <p class="text-[10px] text-slate-400">{{ note.message }}</p>
+                    </div>
+                </div>
+                {% empty %}
+                <p class="text-xs text-slate-500 italic">No new notifications.</p>
+                {% endfor %}
             </div>
         </div>
-        {% empty %}
-        <p class="text-xs text-slate-500 italic">No new notifications.</p>
-        {% endfor %}
-    </div>
-</div>
 
         <!-- Preferences Card -->
         <div class="bg-cardBg border border-cardBorder rounded-2xl p-6">
-            <h3 class="text-sm font-bold mb-4 flex items-center gap-2">
-                <i class="fa-solid fa-gear text-slate-500"></i> Preferences
+            <h3 class="text-sm font-bold mb-4 text-white flex items-center gap-2">
+                Preferences
             </h3>
-            <!-- Add dropdowns here -->
+            <p class="text-xs text-slate-400">Platform theme and notification configurations are managed automatically.</p>
         </div>
     </div>
 </div>
+
+<script>
+function copyProfileWallet() {
+    const walletInput = document.getElementById('profileBinanceWallet');
+    walletInput.select();
+    walletInput.setSelectionRange(0, 99999);
+    navigator.clipboard.writeText(walletInput.value);
+    
+    const feedback = document.getElementById('profileCopyFeedback');
+    feedback.classList.remove('hidden');
+    setTimeout(() => {
+        feedback.classList.add('hidden');
+    }, 2500);
+}
+</script>
 {% endblock %}

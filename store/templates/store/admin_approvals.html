@@ -10,15 +10,15 @@
 <body class="bg-slate-950 text-white min-h-screen">
 
     <!-- Navigation/Header placeholder -->
-    <nav class="border-b border-slate-800 p-4 flex justify-between items-center">
-        <h1 class="text-xl font-bold text-emerald-500">Admin Control Panel</h1>
+    <nav class="border-b border-slate-800 p-4 flex flex-wrap gap-3 justify-between items-center">
+        <h1 class="text-lg sm:text-xl font-bold text-emerald-500">Admin Control Panel</h1>
         <a href="{% url 'dashboard' %}" class="text-slate-400 hover:text-white text-sm"><i class="fa-solid fa-arrow-left mr-2"></i>Back to Dashboard</a>
     </nav>
 
-    <main class="container mx-auto p-6 max-w-5xl">
-        <div class="flex items-center justify-between mb-8">
+    <main class="container mx-auto p-4 sm:p-6 max-w-5xl">
+        <div class="flex flex-wrap items-center justify-between gap-3 mb-6 sm:mb-8">
             <div>
-                <h2 class="text-2xl font-bold">Pending Approvals</h2>
+                <h2 class="text-xl sm:text-2xl font-bold">Pending Approvals</h2>
                 <p class="text-slate-400 text-sm">Manage user deposit requests.</p>
             </div>
             <div class="bg-slate-900 px-4 py-2 rounded-lg border border-slate-800">
@@ -27,9 +27,40 @@
             </div>
         </div>
 
-        <!-- Table -->
+        <!-- Table (desktop) / Cards (mobile) -->
         <div class="bg-slate-900 rounded-2xl border border-slate-800 overflow-hidden shadow-2xl">
-            <table class="w-full text-left">
+
+            {% if requests %}
+            <!-- Mobile: stacked cards, hidden on sm and up -->
+            <div class="divide-y divide-slate-800 sm:hidden">
+                {% for req in requests %}
+                <div class="p-4">
+                    <div class="flex justify-between items-start mb-2">
+                        <span class="font-medium">{{ req.user.username }}</span>
+                        <span class="font-mono text-emerald-400">${{ req.amount }}</span>
+                    </div>
+                    <div class="flex justify-between items-center text-xs text-slate-400 mb-4">
+                        <span class="text-slate-300">{{ req.payment_method }}</span>
+                        <span class="text-slate-500">{{ req.created_at|date:"M d, H:i" }}</span>
+                    </div>
+                    <form method="POST" class="flex space-x-2">
+                        {% csrf_token %}
+                        <input type="hidden" name="request_id" value="{{ req.id }}">
+
+                        <button name="action" value="APPROVE" class="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 rounded-lg text-xs font-bold transition">
+                            <i class="fa-solid fa-check mr-1"></i> Approve
+                        </button>
+
+                        <button name="action" value="REJECT" class="flex-1 bg-slate-800 hover:bg-red-900/30 hover:text-red-400 text-slate-400 px-4 py-2 rounded-lg text-xs font-bold transition border border-slate-700">
+                            <i class="fa-solid fa-xmark mr-1"></i> Reject
+                        </button>
+                    </form>
+                </div>
+                {% endfor %}
+            </div>
+
+            <!-- Desktop: table, hidden below sm -->
+            <table class="w-full text-left hidden sm:table">
                 <thead class="bg-slate-950 uppercase text-[10px] text-slate-500 tracking-wider">
                     <tr>
                         <th class="p-5">User</th>
@@ -50,27 +81,26 @@
                             <form method="POST" class="inline-flex space-x-2">
                                 {% csrf_token %}
                                 <input type="hidden" name="request_id" value="{{ req.id }}">
-                                
+
                                 <button name="action" value="APPROVE" class="bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-1.5 rounded-lg text-xs font-bold transition">
                                     <i class="fa-solid fa-check mr-1"></i> Approve
                                 </button>
-                                
+
                                 <button name="action" value="REJECT" class="bg-slate-800 hover:bg-red-900/30 hover:text-red-400 text-slate-400 px-4 py-1.5 rounded-lg text-xs font-bold transition border border-slate-700">
                                     <i class="fa-solid fa-xmark mr-1"></i> Reject
                                 </button>
                             </form>
                         </td>
                     </tr>
-                    {% empty %}
-                    <tr>
-                        <td colspan="5" class="p-10 text-center text-slate-500">
-                            <i class="fa-solid fa-check-double text-4xl mb-3 opacity-20"></i>
-                            <p>No pending deposit requests found.</p>
-                        </td>
-                    </tr>
                     {% endfor %}
                 </tbody>
             </table>
+            {% else %}
+            <div class="p-10 text-center text-slate-500">
+                <i class="fa-solid fa-check-double text-4xl mb-3 opacity-20"></i>
+                <p>No pending deposit requests found.</p>
+            </div>
+            {% endif %}
         </div>
     </main>
 

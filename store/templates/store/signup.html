@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sign Up - SignalAIX</title>
+    <title>Sign Up - PATREOAIX</title>
     <!-- Tailwind CSS & FontAwesome -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -18,7 +18,7 @@
                 <i class="fa-solid fa-brain"></i>
             </div>
             <div>
-                <h1 class="font-bold text-lg leading-tight tracking-wide text-white">SignalAIX</h1>
+                <h1 class="font-bold text-lg leading-tight tracking-wide text-white">PATREOAIX</h1>
                 <p class="text-xs text-slate-400">AI Prediction Engine</p>
             </div>
         </a>
@@ -40,7 +40,7 @@
                 <div class="absolute -top-10 -left-10 w-48 h-48 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none"></div>
                 <div class="absolute -bottom-10 -right-10 w-48 h-48 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none"></div>
 
-                <!-- SignalAIX Styled Signup Card -->
+                <!-- PATREOAIX Styled Signup Card -->
                 <div class="bg-[#0d1322] border border-slate-800 rounded-2xl p-8 shadow-2xl relative z-10">
                     
                     <div class="text-center mb-6">
@@ -48,7 +48,7 @@
                             <i class="fa-solid fa-user-plus"></i>
                         </div>
                         <h2 class="text-2xl font-bold text-white tracking-wide">Create Your Account</h2>
-                        <p class="text-xs text-slate-400 mt-1">Join SignalAIX to access automated AI trading predictions</p>
+                        <p class="text-xs text-slate-400 mt-1">Join PATREOAIX to access automated AI trading predictions</p>
                     </div>
 
                     <!-- Django Messages -->
@@ -171,15 +171,12 @@
 
                     <!-- Social Signup Options -->
                     <div class="flex items-center justify-center gap-3">
-                        <button class="w-10 h-10 rounded-xl bg-[#090d16] border border-slate-800 hover:border-slate-700 text-slate-300 hover:text-white transition flex items-center justify-center text-sm">
+                        <a href="{% url 'google_login' %}" class="w-10 h-10 rounded-xl bg-[#090d16] border border-slate-800 hover:border-slate-700 text-slate-300 hover:text-white transition flex items-center justify-center text-sm">
                             <i class="fa-brands fa-google"></i>
-                        </button>
-                        <button class="w-10 h-10 rounded-xl bg-[#090d16] border border-slate-800 hover:border-slate-700 text-slate-300 hover:text-white transition flex items-center justify-center text-sm">
-                            <i class="fa-brands fa-facebook-f"></i>
-                        </button>
-                        <button class="w-10 h-10 rounded-xl bg-[#090d16] border border-slate-800 hover:border-slate-700 text-slate-300 hover:text-white transition flex items-center justify-center text-sm">
-                            <i class="fa-brands fa-x-twitter"></i>
-                        </button>
+                        </a>
+                        <a href="{% url 'apple_login' %}" class="w-10 h-10 rounded-xl bg-[#090d16] border border-slate-800 hover:border-slate-700 text-slate-300 hover:text-white transition flex items-center justify-center text-sm">
+                            <i class="fa-brands fa-apple"></i>
+                        </a>
                     </div>
 
                     <!-- Card Footer Link -->
@@ -198,7 +195,7 @@
 
     <!-- Page Footer -->
     <footer class="border-t border-slate-800/80 bg-[#0d1322] px-6 py-4 text-center text-xs text-slate-500">
-        &copy; SignalAIX AI Prediction Engine. All rights reserved.
+        &copy; PATREOAIX AI Prediction Engine. All rights reserved.
     </footer>
 
     <!-- JavaScript Validations -->

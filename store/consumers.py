@@ -1,3 +1,4 @@
+import asyncio
 import json
 from decimal import Decimal
 from channels.generic.websocket import AsyncWebsocketConsumer
@@ -14,12 +15,29 @@ DIGIT_CONTRACTS = {'DIGITEVEN', 'DIGITODD', 'DIGITOVER', 'DIGITUNDER', 'DIGITMAT
 
 class TradingConsumer(AsyncWebsocketConsumer):
 
+    # Symbols the live signal feed polls in a loop: synthetic indices plus
+    # real markets (Gold, EUR/USD, USD/JPY). Edit this list to change what
+    # shows up in the log panel - no other code needs to change.
+    SIGNAL_WATCHLIST = [
+        'R_100', 'R_75',
+        'frxXAUUSD',   # Gold/USD
+        'frxEURUSD',
+        'frxUSDJPY',
+    ]
+    SIGNAL_INTERVAL_SECONDS = 15
+
     async def connect(self):
         self.deriv_service = DerivService()
         await self.accept()
+        # Background task: keeps polling the watchlist and pushing AI
+        # decisions to the client as log entries, independent of whatever
+        # request/response messages come through receive().
+        self.signal_task = asyncio.create_task(self.signal_feed_loop())
 
     async def disconnect(self, close_code):
-        pass
+        task = getattr(self, 'signal_task', None)
+        if task:
+            task.cancel()
 
     async def receive(self, text_data):
         try:
@@ -171,6 +189,52 @@ class TradingConsumer(AsyncWebsocketConsumer):
             return info
             
         return {'connected': True, 'balance': str(info or '0.00'), 'amount': str(info or '0.00')}
+
+    async def signal_feed_loop(self):
+        """
+        Runs for the lifetime of the connection: every SIGNAL_INTERVAL_SECONDS,
+        pulls fresh ticks for each symbol in SIGNAL_WATCHLIST and pushes the
+        AI's decision to the client as a log-style message ('signal_log').
+        """
+        try:
+            while True:
+                for symbol in self.SIGNAL_WATCHLIST:
+                    try:
+                        await self.push_signal_log(symbol)
+                    except Exception as e:
+                        print(f"⚠️ signal_feed_loop error for {symbol}: {e}")
+                await asyncio.sleep(self.SIGNAL_INTERVAL_SECONDS)
+        except asyncio.CancelledError:
+            # Expected on disconnect - just let the task end quietly.
+            pass
+
+    async def push_signal_log(self, symbol):
+        """Fetches ticks for one symbol, runs the AI engine, sends the result."""
+        ticks = await self.deriv_service.get_recent_ticks(symbol=symbol, count=50)
+        if not ticks:
+            return
+
+        result = ai_engine.predict_all_contracts(symbol, ticks)
+        if 'error' in result:
+            return
+
+        top = result['top_signal']
+        contract = top['contract_type']
+        # Reuses the same BUY/SELL/WARN/ERROR/INFO keyword coloring the log
+        # panel already applies - see bot.html's color-coding logic.
+        direction_word = 'BUY' if contract in ('CALL', 'DIGITOVER', 'DIGITEVEN') else 'SELL'
+        message = f"{direction_word}: {symbol} -> {contract} ({top['confidence']}) @ {result['last_price']}"
+
+        await self.send(text_data=json.dumps({
+            'type': 'signal_log',
+            'symbol': symbol,
+            'level': direction_word,
+            'message': message,
+            'contract_type': contract,
+            'confidence': top['raw_confidence'],
+            'last_price': result['last_price'],
+            'barrier': top['barrier'],
+        }))
 
     async def generate_ai_prediction(self, symbol):
         ticks = await self.deriv_service.get_recent_ticks(symbol=symbol, count=50)
