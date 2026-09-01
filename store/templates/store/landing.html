@@ -1,0 +1,447 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PATREOAIX - AI Prediction Engine & Trading Hub</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        darkBg: '#090d16',
+                        cardBg: '#0d1322',
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-darkBg text-slate-100 font-sans min-h-screen selection:bg-indigo-500 selection:text-white relative overflow-x-hidden">
+
+    <!-- Ambient Background Glow Accents -->
+    <div class="absolute top-0 left-1/4 w-[500px] h-[500px] bg-indigo-500/10 rounded-full blur-[120px] pointer-events-none"></div>
+    <div class="absolute top-1/3 right-10 w-[400px] h-[400px] bg-emerald-500/5 rounded-full blur-[100px] pointer-events-none"></div>
+
+    <!-- Navigation Bar -->
+    <header class="border-b border-slate-800/80 bg-[#0d1322]/80 backdrop-blur-md px-6 py-4 flex items-center justify-between sticky top-0 z-50">
+        <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400 font-bold text-lg shadow-inner">
+                <i class="fa-solid fa-brain"></i>
+            </div>
+            <span class="font-bold text-base tracking-wider text-white">PATREOAIX</span>
+        </div>
+        
+        <nav class="hidden md:flex items-center gap-8 text-xs font-medium text-slate-300">
+            <a href="#home" class="hover:text-white transition text-indigo-400 font-bold">Home</a>
+            <a href="#features" class="hover:text-white transition">Features</a>
+            <a href="#pricing" class="hover:text-white transition">Pricing</a>
+            <a href="#faq" class="hover:text-white transition">FAQ</a>
+            <a href="#contact" class="hover:text-white transition">Contact</a>
+        </nav>
+
+        <div class="flex items-center gap-3">
+            <a href="{% url 'login' %}" class="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-xs text-white font-bold transition shadow-lg shadow-indigo-600/20">Get Started</a>
+            <button class="w-9 h-9 rounded-xl bg-slate-800 border border-slate-700 flex items-center justify-center text-slate-300 hover:text-white transition">
+                <i class="fa-solid fa-sun text-xs"></i>
+            </button>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section id="home" class="pt-20 pb-16 px-6 max-w-7xl mx-auto text-center relative z-10">
+        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-300 text-xs font-mono font-medium mb-6">
+            <i class="fa-solid fa-sparkles text-[10px]"></i> Next-Gen AI Financial & Predictive Intelligence
+        </div>
+        
+        <h1 class="text-4xl sm:text-6xl font-extrabold text-white tracking-tight max-w-4xl mx-auto leading-tight">
+            Predict Markets with <span class="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 via-purple-400 to-emerald-400">Advanced AI Precision</span>
+        </h1>
+        
+        <p class="text-slate-400 text-sm sm:text-base max-w-2xl mx-auto mt-6">
+            Create powerful trading algorithms, run digital asset analytics, and automate execution effortlessly. From idea to profitable execution in minutes.
+        </p>
+
+        <div class="flex flex-wrap items-center justify-center gap-4 mt-8">
+            <a href="{% url 'login' %}" class="px-6 py-3 rounded-xl bg-gradient-to-r from-indigo-600 to-emerald-600 hover:opacity-90 text-sm text-white font-bold transition shadow-xl shadow-indigo-600/25 flex items-center gap-2">
+                Get started for free <i class="fa-solid fa-arrow-right text-xs"></i>
+            </a>
+            <a href="#features" class="px-6 py-3 rounded-xl bg-slate-800/80 border border-slate-700 hover:bg-slate-700 text-sm text-slate-200 font-bold transition">
+                Explore Platform
+            </a>
+        </div>
+
+        <!-- Social Proof Rating -->
+        <div class="mt-12 flex flex-col items-center gap-3">
+            <div class="flex -space-x-2 overflow-hidden">
+                <img class="inline-block h-8 w-8 rounded-full ring-2 ring-darkBg" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100" alt="User">
+                <img class="inline-block h-8 w-8 rounded-full ring-2 ring-darkBg" src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100" alt="User">
+                <img class="inline-block h-8 w-8 rounded-full ring-2 ring-darkBg" src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100" alt="User">
+                <img class="inline-block h-8 w-8 rounded-full ring-2 ring-darkBg" src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100" alt="User">
+            </div>
+            <div class="flex text-amber-400 text-xs gap-1">
+                <i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i>
+            </div>
+            <span class="text-xs text-slate-400">Trusted by thousands of professional traders & enterprises</span>
+        </div>
+
+        <!-- Platform Preview Mockup Box -->
+        <div class="mt-12 bg-cardBg border border-slate-800 rounded-3xl p-4 shadow-2xl relative">
+            <div class="absolute inset-0 bg-gradient-to-t from-darkBg/80 via-transparent to-transparent rounded-3xl pointer-events-none"></div>
+            <div class="bg-[#090d16] rounded-2xl border border-slate-800 p-6 text-left flex flex-col gap-4">
+                <div class="flex items-center justify-between border-b border-slate-800 pb-4">
+                    <div class="flex items-center gap-2">
+                        <span class="w-3 h-3 rounded-full bg-rose-500"></span>
+                        <span class="w-3 h-3 rounded-full bg-amber-500"></span>
+                        <span class="w-3 h-3 rounded-full bg-emerald-500"></span>
+                    </div>
+                    <span class="text-[11px] font-mono text-slate-500">PATREOAIX Terminal v3.2</span>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 py-4">
+                    <div class="bg-cardBg p-4 rounded-xl border border-slate-800">
+                        <span class="text-[10px] text-slate-400 font-bold uppercase">Active Bot Yield</span>
+                        <p class="text-2xl font-mono font-bold text-emerald-400 mt-1">+34.8%</p>
+                    </div>
+                    <div class="bg-cardBg p-4 rounded-xl border border-slate-800">
+                        <span class="text-[10px] text-slate-400 font-bold uppercase">Prediction Accuracy</span>
+                        <p class="text-2xl font-mono font-bold text-indigo-400 mt-1">94.2%</p>
+                    </div>
+                    <div class="bg-cardBg p-4 rounded-xl border border-slate-800">
+                        <span class="text-[10px] text-slate-400 font-bold uppercase">Total Volume Handled</span>
+                        <p class="text-2xl font-mono font-bold text-white mt-1">$4.2M</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Trusted Brands Section -->
+    <section class="py-12 border-y border-slate-800/60 bg-cardBg/30">
+        <div class="max-w-7xl mx-auto px-6 text-center">
+            <p class="text-[11px] uppercase tracking-widest text-slate-500 font-bold mb-8">Trusted by leading financial networks & partners</p>
+            <div class="flex flex-wrap items-center justify-center gap-10 sm:gap-16 opacity-60 text-slate-400 font-bold text-lg tracking-wider">
+                <span><i class="fa-brands fa-uber"></i> UBERFIN</span>
+                <span><i class="fa-brands fa-google"></i> GOOGLE CLOUD</span>
+                <span><i class="fa-brands fa-apple"></i> APPLE PAY</span>
+                <span><i class="fa-solid fa-rocket"></i> SPACEX LABS</span>
+                <span><i class="fa-solid fa-brain"></i> OPENAI PARTNER</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- How It Works Section -->
+    <section class="py-20 px-6 max-w-7xl mx-auto">
+        <div class="text-center max-w-2xl mx-auto mb-16">
+            <span class="text-xs font-mono font-bold text-indigo-400 uppercase tracking-widest">Easy Setup</span>
+            <h2 class="text-3xl font-extrabold text-white mt-2">How PATREOAIX Works</h2>
+            <p class="text-slate-400 text-xs sm:text-sm mt-3">Our streamlined framework gets you up and running quickly with smart AI doing the heavy lifting.</p>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-4 gap-6">
+            <div class="bg-cardBg border border-slate-800 rounded-2xl p-6 relative">
+                <div class="w-10 h-10 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400 font-bold mb-4">1</div>
+                <h3 class="font-bold text-sm text-white mb-2">Connect Your Data</h3>
+                <p class="text-xs text-slate-400 leading-relaxed">Integrate your exchange API keys or custom feeds securely with military-grade encryption.</p>
+            </div>
+            <div class="bg-cardBg border border-slate-800 rounded-2xl p-6 relative">
+                <div class="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 font-bold mb-4">2</div>
+                <h3 class="font-bold text-sm text-white mb-2">AI-Powered Analysis</h3>
+                <p class="text-xs text-slate-400 leading-relaxed">Our neural network scans market digits and price ticks in real-time to locate optimum win windows.</p>
+            </div>
+            <div class="bg-cardBg border border-slate-800 rounded-2xl p-6 relative">
+                <div class="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400 font-bold mb-4">3</div>
+                <h3 class="font-bold text-sm text-white mb-2">Configure & Optimize</h3>
+                <p class="text-xs text-slate-400 leading-relaxed">Fine-tune risk parameters, stop-loss ratios, and automated target execution settings.</p>
+            </div>
+            <div class="bg-cardBg border border-slate-800 rounded-2xl p-6 relative">
+                <div class="w-10 h-10 rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-400 font-bold mb-4">4</div>
+                <h3 class="font-bold text-sm text-white mb-2">Deploy & Scale</h3>
+                <p class="text-xs text-slate-400 leading-relaxed">Launch your bots into live execution and watch your portfolio compound automatically.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Key Features Section -->
+    <section id="features" class="py-20 px-6 max-w-7xl mx-auto bg-cardBg/20 rounded-3xl border border-slate-800/50">
+        <div class="text-center max-w-2xl mx-auto mb-16">
+            <span class="text-xs font-mono font-bold text-emerald-400 uppercase tracking-widest">Key Features</span>
+            <h2 class="text-3xl font-extrabold text-white mt-2">Built for Maximum Performance</h2>
+            <p class="text-slate-400 text-xs sm:text-sm mt-3">Our platform provides all the advanced tools you need to build, scale, and secure your financial operations.</p>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            <div class="bg-cardBg border border-slate-800 rounded-2xl p-8">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="w-10 h-10 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400"><i class="fa-solid fa-bolt"></i></div>
+                    <span class="text-xs font-mono font-bold text-indigo-400 bg-indigo-500/10 px-2.5 py-1 rounded-full">10x Faster</span>
+                </div>
+                <h3 class="text-base font-bold text-white mb-2">Lightning Workflows</h3>
+                <p class="text-xs text-slate-400 leading-relaxed">Supercharge your daily trading execution with automated routines that instantly adapt to market shifts.</p>
+            </div>
+            <div class="bg-cardBg border border-slate-800 rounded-2xl p-8">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="w-10 h-10 rounded-xl bg-rose-500/10 border border-rose-500/20 flex items-center justify-center text-rose-400"><i class="fa-solid fa-shield-halved"></i></div>
+                    <span class="text-xs font-mono font-bold text-rose-400 bg-rose-500/10 px-2.5 py-1 rounded-full">99.9% Uptime</span>
+                </div>
+                <h3 class="text-base font-bold text-white mb-2">Adaptive Safeguards</h3>
+                <p class="text-xs text-slate-400 leading-relaxed">Protect your funds with real-time AI security checks, preventing abnormal drawdowns automatically.</p>
+            </div>
+            <div class="bg-cardBg border border-slate-800 rounded-2xl p-8">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400"><i class="fa-solid fa-users"></i></div>
+                    <span class="text-xs font-mono font-bold text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded-full">10k+ Active</span>
+                </div>
+                <h3 class="text-base font-bold text-white mb-2">Smart Team Sync</h3>
+                <p class="text-xs text-slate-400 leading-relaxed">Collaborate with co-traders, share bot configurations, and manage permissions securely from one dashboard.</p>
+            </div>
+            <div class="bg-cardBg border border-slate-800 rounded-2xl p-8">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="w-10 h-10 rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-400"><i class="fa-solid fa-chart-line"></i></div>
+                    <span class="text-xs font-mono font-bold text-purple-400 bg-purple-500/10 px-2.5 py-1 rounded-full">+25% Boost</span>
+                </div>
+                <h3 class="text-base font-bold text-white mb-2">Predictive Insights</h3>
+                <p class="text-xs text-slate-400 leading-relaxed">Leverage deep-learning analytics to uncover market anomalies and trading opportunities before anyone else.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Testimonials Section -->
+    <section class="py-20 px-6 max-w-7xl mx-auto">
+        <div class="text-center max-w-2xl mx-auto mb-16">
+            <span class="text-xs font-mono font-bold text-indigo-400 uppercase tracking-widest">Testimonials</span>
+            <h2 class="text-3xl font-extrabold text-white mt-2">Loved by Thousands of Traders</h2>
+            <p class="text-slate-400 text-xs sm:text-sm mt-3">Discover why users trust PATREOAIX to power their automated financial strategies.</p>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
+            <div class="bg-cardBg border border-slate-800 rounded-2xl p-6 flex flex-col justify-between">
+                <p class="text-xs text-slate-300 leading-relaxed italic mb-6">"Switching to PATREOAIX was the best trading decision we made. The AI prediction accuracy is genuinely game-changing."</p>
+                <div class="flex items-center gap-3">
+                    <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100" class="w-10 h-10 rounded-full object-cover" alt="Marcus">
+                    <div>
+                        <h4 class="font-bold text-xs text-white">Marcus Johnson</h4>
+                        <p class="text-[10px] text-slate-400">CTO, InnovateLab</p>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-cardBg border border-slate-800 rounded-2xl p-6 flex flex-col justify-between">
+                <p class="text-xs text-slate-300 leading-relaxed italic mb-6">"Incredible platform. Our team productivity and automated bot returns increased by over 250% in the first quarter."</p>
+                <div class="flex items-center gap-3">
+                    <img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100" class="w-10 h-10 rounded-full object-cover" alt="Emily">
+                    <div>
+                        <h4 class="font-bold text-xs text-white">Emily Rodriguez</h4>
+                        <p class="text-[10px] text-slate-400">Founder, GrowthCo</p>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-cardBg border border-slate-800 rounded-2xl p-6 flex flex-col justify-between">
+                <p class="text-xs text-slate-300 leading-relaxed italic mb-6">"Seamless integration, powerful analytics. The risk management tools gave our capital unprecedented safety."</p>
+                <div class="flex items-center gap-3">
+                    <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100" class="w-10 h-10 rounded-full object-cover" alt="David">
+                    <div>
+                        <h4 class="font-bold text-xs text-white">David Kim</h4>
+                        <p class="text-[10px] text-slate-400">VP, ScaleUp Inc</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Pricing Section -->
+    <section id="pricing" class="py-20 px-6 max-w-7xl mx-auto">
+        <div class="text-center max-w-2xl mx-auto mb-16">
+            <span class="text-xs font-mono font-bold text-emerald-400 uppercase tracking-widest">Pricing</span>
+            <h2 class="text-3xl font-extrabold text-white mt-2">Simple & Transparent Pricing</h2>
+            <p class="text-slate-400 text-xs sm:text-sm mt-3">Choose the perfect plan for your business. All plans include a 14-day free trial.</p>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-8">
+            <!-- Starter Plan -->
+            <div class="bg-cardBg border border-slate-800 rounded-3xl p-8 flex flex-col justify-between">
+                <div>
+                    <h3 class="font-bold text-sm text-white uppercase tracking-wider">Starter</h3>
+                    <p class="text-xs text-slate-400 mt-1">Perfect for getting started</p>
+                    <div class="my-6">
+                        <span class="text-4xl font-extrabold text-white font-mono">$29</span>
+                        <span class="text-slate-400 text-xs">/month</span>
+                    </div>
+                    <ul class="space-y-3 text-xs text-slate-300">
+                        <li class="flex items-center gap-2"><i class="fa-solid fa-check text-emerald-400"></i> Up to 5 team members</li>
+                        <li class="flex items-center gap-2"><i class="fa-solid fa-check text-emerald-400"></i> 10GB secure storage</li>
+                        <li class="flex items-center gap-2"><i class="fa-solid fa-check text-emerald-400"></i> Lightning workflows</li>
+                        <li class="flex items-center gap-2"><i class="fa-solid fa-check text-emerald-400"></i> Basic analytics</li>
+                    </ul>
+                </div>
+                <a href="{% url 'login' %}?next={% url 'subscription_billing' %}" class="mt-8 w-full py-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-center text-xs text-white font-bold transition">Get Started</a>            </div>
+
+            <!-- Professional Plan -->
+            <div class="bg-cardBg border-2 border-indigo-500 rounded-3xl p-8 flex flex-col justify-between relative shadow-2xl shadow-indigo-500/10">
+                <div class="absolute -top-3 left-1/2 -translate-x-1/2 bg-indigo-600 text-white text-[10px] font-mono font-bold uppercase px-3 py-1 rounded-full">Most Popular</div>
+                <div>
+                    <h3 class="font-bold text-sm text-white uppercase tracking-wider">Professional</h3>
+                    <p class="text-xs text-slate-400 mt-1">Ideal for growing businesses</p>
+                    <div class="my-6">
+                        <span class="text-4xl font-extrabold text-white font-mono">$99</span>
+                        <span class="text-slate-400 text-xs">/month</span>
+                    </div>
+                    <ul class="space-y-3 text-xs text-slate-300">
+                        <li class="flex items-center gap-2"><i class="fa-solid fa-check text-emerald-400"></i> Up to 25 team members</li>
+                        <li class="flex items-center gap-2"><i class="fa-solid fa-check text-emerald-400"></i> 100GB secure storage</li>
+                        <li class="flex items-center gap-2"><i class="fa-solid fa-check text-emerald-400"></i> Professional AI workflows</li>
+                        <li class="flex items-center gap-2"><i class="fa-solid fa-check text-emerald-400"></i> Advanced analytics & predictions</li>
+                    </ul>
+                </div>
+                <a href="{% url 'login' %}?next={% url 'subscription_billing' %}" class="mt-8 w-full py-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-center text-xs text-white font-bold transition">Get Started</a>            </div>
+
+            <!-- Enterprise Plan -->
+            <div class="bg-cardBg border border-slate-800 rounded-3xl p-8 flex flex-col justify-between">
+                <div>
+                    <h3 class="font-bold text-sm text-white uppercase tracking-wider">Enterprise</h3>
+                    <p class="text-xs text-slate-400 mt-1">For large organizations</p>
+                    <div class="my-6">
+                        <span class="text-4xl font-extrabold text-white font-mono">$299</span>
+                        <span class="text-slate-400 text-xs">/month</span>
+                    </div>
+                    <ul class="space-y-3 text-xs text-slate-300">
+                        <li class="flex items-center gap-2"><i class="fa-solid fa-check text-emerald-400"></i> Unlimited team members</li>
+                        <li class="flex items-center gap-2"><i class="fa-solid fa-check text-emerald-400"></i> 1TB secure storage</li>
+                        <li class="flex items-center gap-2"><i class="fa-solid fa-check text-emerald-400"></i> Enterprise AI workflows</li>
+                        <li class="flex items-center gap-2"><i class="fa-solid fa-check text-emerald-400"></i> Dedicated account manager</li>
+                    </ul>
+                </div>
+                <a href="{% url 'login' %}?next={% url 'subscription_billing' %}" class="mt-8 w-full py-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-center text-xs text-white font-bold transition">Get Started</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- FAQ Section -->
+    <section id="faq" class="py-20 px-6 max-w-4xl mx-auto">
+        <div class="text-center max-w-2xl mx-auto mb-16">
+            <span class="text-xs font-mono font-bold text-indigo-400 uppercase tracking-widest">FAQ</span>
+            <h2 class="text-3xl font-extrabold text-white mt-2">Frequently Asked Questions</h2>
+            <p class="text-slate-400 text-xs sm:text-sm mt-3">Got questions? We've got answers to help you get started smoothly.</p>
+        </div>
+
+        <div class="space-y-4">
+            <div class="bg-cardBg border border-slate-800 rounded-2xl p-5">
+                <h4 class="font-bold text-xs text-white flex justify-between items-center cursor-pointer">What's included in the free trial? <i class="fa-solid fa-chevron-down text-slate-500 text-xs"></i></h4>
+                <p class="text-xs text-slate-400 mt-3 leading-relaxed">You get full access to all professional features, AI predictive engines, and automated trading bots for 14 days with zero commitment.</p>
+            </div>
+            <div class="bg-cardBg border border-slate-800 rounded-2xl p-5">
+                <h4 class="font-bold text-xs text-white flex justify-between items-center cursor-pointer">Can I change my plan anytime? <i class="fa-solid fa-chevron-down text-slate-500 text-xs"></i></h4>
+                <p class="text-xs text-slate-400 mt-3 leading-relaxed">Yes, you can upgrade, downgrade, or cancel your subscription at any time directly from your user control dashboard.</p>
+            </div>
+            <div class="bg-cardBg border border-slate-800 rounded-2xl p-5">
+                <h4 class="font-bold text-xs text-white flex justify-between items-center cursor-pointer">What payment methods do you accept? <i class="fa-solid fa-chevron-down text-slate-500 text-xs"></i></h4>
+                <p class="text-xs text-slate-400 mt-3 leading-relaxed">We support all major credit cards, crypto deposits (USDT, BTC, ETH), and secure bank transfers via our control hub.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Call to Action Banner -->
+    <section class="py-20 px-6 max-w-7xl mx-auto">
+        <div class="bg-cardBg border border-slate-800 rounded-3xl p-12 text-center relative overflow-hidden shadow-2xl">
+            <div class="absolute inset-0 bg-gradient-to-r from-indigo-500/10 via-emerald-500/10 to-purple-500/10 pointer-events-none"></div>
+            <h2 class="text-3xl font-extrabold text-white relative z-10">Start your free trial today.</h2>
+            <p class="text-slate-400 text-xs sm:text-sm mt-3 relative z-10 max-w-lg mx-auto">Join thousands of successful traders leveraging AI predictions to optimize their portfolio returns.</p>
+            <div class="mt-8 relative z-10">
+                <a href="{% url 'admin_dashboard_hub' %}" class="px-8 py-3.5 rounded-xl bg-white text-slate-900 hover:bg-slate-200 text-xs font-bold transition shadow-xl inline-block">Get started for free</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Contact Section -->
+    <section id="contact" class="py-20 px-6 max-w-7xl mx-auto">
+        <div class="text-center max-w-2xl mx-auto mb-16">
+            <span class="text-xs font-mono font-bold text-indigo-400 uppercase tracking-widest">Get in Touch</span>
+            <h2 class="text-3xl font-extrabold text-white mt-2">Contact Us</h2>
+            <p class="text-slate-400 text-xs sm:text-sm mt-3">Have questions or ready to get started? Send us a message and we'll respond promptly.</p>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-10">
+            <div class="bg-cardBg border border-slate-800 rounded-3xl p-8 flex flex-col justify-between">
+                <div>
+                    <h3 class="text-base font-bold text-white mb-3">Let's Start a Conversation</h3>
+                    <p class="text-xs text-slate-400 leading-relaxed mb-8">Whether you're looking to streamline your workflow or boost productivity, we're here to help you succeed.</p>
+                    
+                    <div class="space-y-4 text-xs text-slate-300">
+                        <div class="flex items-center gap-3"><i class="fa-solid fa-envelope text-indigo-400 w-5"></i> support@patreoaiix.com</div>
+                        <div class="flex items-center gap-3"><i class="fa-solid fa-phone text-emerald-400 w-5"></i> +1 (555) 123-4567</div>
+                        <div class="flex items-center gap-3"><i class="fa-solid fa-location-dot text-rose-400 w-5"></i> 123 Business St, Suite 100, San Francisco, CA</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-cardBg border border-slate-800 rounded-3xl p-8">
+                <form method="POST" class="space-y-4 text-xs">
+                    {% csrf_token %}
+                    <div>
+                        <label class="block text-slate-400 mb-1 font-bold">Your Name</label>
+                        <input type="text" placeholder="John Doe" class="w-full bg-[#090d16] border border-slate-800 rounded-xl p-3 text-white focus:border-indigo-500 focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-slate-400 mb-1 font-bold">Email Address</label>
+                        <input type="email" placeholder="john@example.com" class="w-full bg-[#090d16] border border-slate-800 rounded-xl p-3 text-white focus:border-indigo-500 focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-slate-400 mb-1 font-bold">Message</label>
+                        <textarea rows="4" placeholder="Tell us about your inquiry..." class="w-full bg-[#090d16] border border-slate-800 rounded-xl p-3 text-white focus:border-indigo-500 focus:outline-none"></textarea>
+                    </div>
+                    <button type="submit" class="w-full py-3.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold transition shadow-lg shadow-indigo-600/25">Send Message</button>
+                </form>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="border-t border-slate-800 bg-[#0d1322] py-12 px-6 mt-20">
+        <div class="max-w-7xl mx-auto grid grid-cols-1 sm:grid-cols-4 gap-8 text-xs text-slate-400">
+            <div>
+                <div class="flex items-center gap-2 mb-4">
+                    <div class="w-8 h-8 rounded-lg bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400 font-bold">
+                        <i class="fa-solid fa-brain"></i>
+                    </div>
+                    <span class="font-bold text-white text-sm">PATREOAIX</span>
+                </div>
+                <p class="text-[11px] leading-relaxed">Transform your business and trading operations with our powerful AI prediction platform.</p>
+                <div class="flex gap-3 mt-4 text-slate-300">
+                    <a href="#" class="w-8 h-8 rounded-lg bg-slate-800 flex items-center justify-center hover:bg-slate-700"><i class="fa-brands fa-x-twitter"></i></a>
+                    <a href="#" class="w-8 h-8 rounded-lg bg-slate-800 flex items-center justify-center hover:bg-slate-700"><i class="fa-brands fa-github"></i></a>
+                    <a href="#" class="w-8 h-8 rounded-lg bg-slate-800 flex items-center justify-center hover:bg-slate-700"><i class="fa-brands fa-linkedin"></i></a>
+                </div>
+            </div>
+            <div>
+                <h4 class="font-bold text-white text-xs uppercase tracking-wider mb-3">Product</h4>
+                <ul class="space-y-2 text-[11px]">
+                    <li><a href="#features" class="hover:text-white transition">Features</a></li>
+                    <li><a href="#pricing" class="hover:text-white transition">Pricing</a></li>
+                    <li><a href="#" class="hover:text-white transition">API Documentation</a></li>
+                </ul>
+            </div>
+            <div>
+                <h4 class="font-bold text-white text-xs uppercase tracking-wider mb-3">Company</h4>
+                <ul class="space-y-2 text-[11px]">
+                    <li><a href="#" class="hover:text-white transition">About Us</a></li>
+                    <li><a href="#" class="hover:text-white transition">Careers</a></li>
+                    <li><a href="#contact" class="hover:text-white transition">Contact</a></li>
+                </ul>
+            </div>
+            <div>
+                <h4 class="font-bold text-white text-xs uppercase tracking-wider mb-3">Support</h4>
+                <ul class="space-y-2 text-[11px]">
+                    <li><a href="#" class="hover:text-white transition">Help Center</a></li>
+                    <li><a href="#" class="hover:text-white transition">Community</a></li>
+                    <li><a href="#" class="hover:text-white transition">Security</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="max-w-7xl mx-auto border-t border-slate-800/80 mt-10 pt-6 text-center text-[11px] text-slate-500">
+            &copy; 2026 PATREOAIX AI Prediction & Administration Terminal. All rights reserved.
+        </div>
+    </footer>
+
+</body>
+</html>

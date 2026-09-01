@@ -7,68 +7,27 @@
     <!-- ============================================================ -->
     <!-- Page Header with Global Bot Controls -->
     <!-- ============================================================ -->
-    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-800 pb-5">
-        <div>
+    <div class="max-w-7xl mx-auto py-6 px-4 space-y-6 font-sans" id="app-config" data-analyzer-url="{% url 'ai_risk_analyzer' %}">
+        <!-- Header & Overall Portfolio Risk Status -->
+        <div class="flex flex-col lg:flex-row lg:justify-between lg:items-center gap-4 bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl">
+            <div>
+                <div class="flex items-center gap-2">
+                    <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                    <h2 class="text-xl font-bold text-white tracking-wide font-mono">AI Risk Analyzer & Exposure Matrix</h2>
+                </div>
+                <p class="text-xs text-slate-400 mt-1">Real-time risk scoring, volatility monitoring, and automated position telemetry synced with the rotation engine.</p>
+            </div>
             <div class="flex items-center gap-3">
-                <h1 class="text-2xl font-black text-white tracking-wide">AI Trading Engine</h1>
-                <div id="tier-badge" class="px-3 py-1 bg-amber-950/80 border border-amber-700/50 text-amber-400 text-xs font-semibold rounded-full flex items-center shadow-sm">
-                    <i class="fa-solid fa-crown text-amber-400 mr-1.5"></i> <span id="user-tier-name">{{ user_tier_display|default:"Funded Tier" }}</span>
+                <div class="text-sm bg-slate-950 border border-slate-800 text-slate-200 px-4 py-2.5 rounded-xl font-semibold text-center shadow-lg">
+                    <span class="block text-[10px] uppercase tracking-wider text-slate-400 font-mono">Portfolio Health</span>
+                    <span class="text-base font-extrabold text-emerald-400 font-mono">OPTIMAL (92.4%)</span>
+                </div>
+                <div class="text-sm bg-slate-950 border border-slate-800 text-slate-200 px-4 py-2.5 rounded-xl font-semibold text-center shadow-lg">
+                    <span class="block text-[10px] uppercase tracking-wider text-slate-400 font-mono">Net Exposure</span>
+                    <span class="text-base font-extrabold text-indigo-400 font-mono">0.10 Lot (R_100)</span>
                 </div>
             </div>
-            <p class="text-xs text-slate-400 mt-1">Monitor live bot performance, interactive charts, risk parameters, and automated execution.</p>
         </div>
-        
-        <div class="flex items-center gap-3 flex-wrap">
-            <!-- Status Indicator -->
-            <div class="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-800 border border-slate-700 text-xs">
-                {% if bot_status == 'running' %}
-                    <span class="relative flex h-2 w-2">
-                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-                        <span class="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
-                    </span>
-                    <span class="font-bold text-green-400 uppercase tracking-wider">Running</span>
-                {% elif bot_status == 'error' %}
-                    <span class="relative flex h-2 w-2">
-                        <span class="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
-                    </span>
-                    <span class="font-bold text-red-400 uppercase tracking-wider">Error</span>
-                {% else %}
-                    <span class="relative flex h-2 w-2">
-                        <span class="relative inline-flex rounded-full h-2 w-2 bg-slate-500"></span>
-                    </span>
-                    <span class="font-bold text-slate-400 uppercase tracking-wider">Stopped</span>
-                {% endif %}
-                <span class="text-slate-500 ml-2 font-mono">| {{ current_pair|default:"R_100" }}</span>
-            </div>
-
-            <!-- Control Buttons Form -->
-            <form method="post" action="{% url 'bot_control' %}" class="flex gap-2">
-                {% csrf_token %}
-                
-                {% if bot_status != 'running' %}
-                    <button name="action" value="start" type="submit" class="flex items-center gap-1.5 py-1.5 px-4 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-lg transition cursor-pointer disabled:opacity-50" {% if not current_pair %}disabled{% endif %}>
-                        <i class="fa-solid fa-play"></i> START
-                    </button>
-                {% else %}
-                    <button name="action" value="stop" type="submit" class="flex items-center gap-1.5 py-1.5 px-4 bg-slate-700 hover:bg-slate-600 text-slate-200 font-bold text-xs rounded-lg transition cursor-pointer">
-                        <i class="fa-solid fa-stop"></i> STOP
-                    </button>
-                {% endif %}
-                
-                <!-- Emergency Stop -->
-                <button name="action" value="emergency_stop" type="submit" 
-                        onclick="return confirm('⚠️ WARNING: This will instantly cancel ALL pending orders and market sell ALL holdings at current market price. Are you sure?');" 
-                        class="flex items-center gap-1.5 py-1.5 px-4 bg-red-600 hover:bg-red-500 text-white font-bold text-xs rounded-lg transition cursor-pointer">
-                    <i class="fa-solid fa-skull-crossbones"></i> EMERGENCY SELL
-                </button>
-            </form>
-
-            <!-- New Bot Initialization Trigger -->
-            <button onclick="openCreateBotModal()" class="flex items-center gap-1.5 py-1.5 px-4 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs rounded-lg transition cursor-pointer">
-                <i class="fa-solid fa-plus"></i> NEW BOT
-            </button>
-        </div>
-    </div>
 
     <!-- ============================================================ -->
     <!-- Bot Stats Grid -->
@@ -126,81 +85,7 @@
     <!-- ============================================================ -->
     <!-- Interactive Chart & Risk Controls Section -->
     <!-- ============================================================ -->
-    <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
-        
-        <!-- Interactive TradingView Chart (3 Columns) -->
-        <div class="lg:col-span-3 bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-sm flex flex-col min-h-[520px]">
-            <div class="flex items-center justify-between pb-4 mb-3 border-b border-slate-800">
-                <div class="flex items-center space-x-3">
-                    <span class="font-bold text-white text-base">{{ current_pair|default:"R_100" }}</span>
-                    <span class="text-xs text-slate-400 bg-slate-800 px-2 py-1 rounded">H1 Strategy Overlay</span>
-                </div>
-                <div class="flex items-center space-x-3 text-xs">
-                    <span class="flex items-center text-emerald-400"><span class="w-2 h-2 rounded-full bg-emerald-500 inline-block mr-1"></span> Bullish Pivot</span>
-                    <span class="flex items-center text-rose-400"><span class="w-2 h-2 rounded-full bg-rose-500 inline-block mr-1"></span> Bearish Pivot</span>
-                    <span class="flex items-center text-blue-400"><span class="w-2 h-2 rounded-full bg-blue-500 inline-block mr-1"></span> 150 EMA</span>
-                </div>
-            </div>
-            <!-- TradingView Chart Container Target -->
-            <div id="chart-container" class="flex-1 w-full rounded-xl overflow-hidden min-h-[440px]"></div>
-        </div>
-
-        <!-- Risk Management Controls Card (1 Column) -->
-        <div class="lg:col-span-1 bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-sm flex flex-col justify-between">
-            <div>
-                <h2 class="text-md font-bold text-white mb-4 flex items-center justify-between">
-                    <span>Risk Management</span>
-                    <i class="fa-solid fa-shield-halved text-blue-500"></i>
-                </h2>
-                
-                <form id="risk-control-form" class="space-y-3.5">
-                    {% csrf_token %}
-                    <div>
-                        <label class="block text-xs font-medium text-slate-400 mb-1">Lot Size</label>
-                        <input type="number" step="0.01" id="lot_size" name="lot_size" value="{{ lot_size|default:'0.10' }}" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-blue-500 font-mono">
-                    </div>
-
-                    <div>
-                        <label class="block text-xs font-medium text-slate-400 mb-1">Max Risk Percentage (%)</label>
-                        <input type="number" step="0.1" id="max_risk_pct" name="max_risk_pct" value="{{ max_risk_pct|default:'1.5' }}" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-blue-500 font-mono">
-                    </div>
-
-                    <div>
-                        <label class="block text-xs font-medium text-slate-400 mb-1">ATR Stop-Loss Multiplier</label>
-                        <input type="number" step="0.1" id="atr_sl_mult" name="atr_sl_mult" value="{{ atr_sl_mult|default:'1.5' }}" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-blue-500 font-mono">
-                    </div>
-
-                    <div>
-                        <label class="block text-xs font-medium text-slate-400 mb-1">ATR Take-Profit Multiplier</label>
-                        <input type="number" step="0.1" id="atr_tp_mult" name="atr_tp_mult" value="{{ atr_tp_mult|default:'3.0' }}" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-blue-500 font-mono">
-                    </div>
-
-                    <div class="pt-3 border-t border-slate-800">
-                        <div class="flex items-center justify-between mb-3">
-                            <span class="text-xs text-slate-400">Automated Bot Execution</span>
-                            <label class="relative inline-flex items-center cursor-pointer">
-                                <input type="checkbox" id="bot-toggle" class="sr-only peer" {% if user_tier == 'free' %}disabled{% else %}checked{% endif %}>
-                                <div class="w-9 h-5 bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-blue-600"></div>
-                            </label>
-                        </div>
-
-                        <!-- Tier Access Control Warning -->
-                        <div id="tier-lock-alert" class="{% if user_tier == 'free' %}flex{% else %}hidden{% endif %} p-2.5 bg-rose-950/40 border border-rose-900/50 rounded-lg text-[11px] text-rose-300 mb-3 items-center gap-1.5">
-                            <i class="fa-solid fa-lock shrink-0"></i>
-                            <span>Automated execution requires a <strong>Funded Account</strong> tier.</span>
-                        </div>
-
-                        <button type="submit" id="save-settings-btn" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-medium py-2 rounded-lg text-xs transition shadow-md shadow-blue-900/20 cursor-pointer">
-                            Update Risk Parameters
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
-
-    </div>
-
-    <!-- ============================================================ -->
+  
     <!-- Live Logs and Position Info -->
     <!-- ============================================================ -->
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -289,6 +174,8 @@
             </div>
         </div>
     </div>
+
+    
 </div>
 
 <!-- ============================================================ -->

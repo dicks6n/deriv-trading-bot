@@ -11,9 +11,12 @@ class UserProfile(models.Model):
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     subscription_tier = models.CharField(max_length=50, default='free')
     is_active_subscription = models.BooleanField(default=False)
+    is_kyc_verified = models.BooleanField(default=False)
+    kyc_submitted_at = models.DateTimeField(null=True, blank=True)
 
     def __str__(self):
         return self.user.username
+
 
 
 class UserBot(models.Model):
@@ -183,6 +186,59 @@ class UserBrokerAccount(models.Model):
 
     def __str__(self):
         return f"{self.user.username} - {self.get_broker_display()} ({self.account_number})"
+
+
+
+# ==========================================
+# ADMIN HUB APPROVAL MODELS (ADDED)
+# ==========================================
+
+class Deposit(models.Model):
+    STATUS_CHOICES = [
+        ('pending', 'Pending'),
+        ('approved', 'Approved'),
+        ('rejected', 'Rejected'),
+    ]
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='deposits')
+    amount = models.DecimalField(max_digits=12, decimal_places=2)
+    reference = models.CharField(max_length=255, unique=True, blank=True, null=True)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Deposit #{self.id} - {self.user.username} (${self.amount})"
+
+
+class Withdrawal(models.Model):
+    STATUS_CHOICES = [
+        ('pending', 'Pending'),
+        ('approved', 'Approved'),
+        ('rejected', 'Rejected'),
+    ]
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='withdrawals')
+    amount = models.DecimalField(max_digits=12, decimal_places=2)
+    destination = models.CharField(max_length=255, blank=True, null=True)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Withdrawal #{self.id} - {self.user.username} (${self.amount})"
+
+
+class KYCVerification(models.Model):
+    STATUS_CHOICES = [
+        ('pending', 'Pending'),
+        ('verified', 'Verified'),
+        ('rejected', 'Rejected'),
+    ]
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='kyc_verifications')
+    document_type = models.CharField(max_length=100, default='National ID')
+    document_file = models.FileField(upload_to='kyc_documents/', blank=True, null=True)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+    submitted_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"KYC - {self.user.username} ({self.document_type})"
 
 
 class Account(models.Model):
@@ -460,3 +516,283 @@ class ClientAIToggle(models.Model):
     
     def __str__(self):
         return f"{self.user.username} - Active: {self.is_active}"
+
+
+class SurveyReward(models.Model):
+    TIER_CHOICES = [
+        ('PRO', 'Pro'),
+        ('VIP', 'VIP'),
+    ]
+    
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='survey_rewards')
+    title = models.CharField(max_length=255)
+    description = models.TextField(blank=True, null=True)
+    amount = models.DecimalField(max_digits=12, decimal_places=2)
+    tier_required = models.CharField(max_length=10, choices=TIER_CHOICES, default='PRO')
+    is_claimed = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.title} - ${self.amount} ({self.user.username})"
+
+
+
+import logging
+import pandas as pd
+import pandas_ta as ta
+
+logger = logging.getLogger(__name__)
+
+# Complete asset universe: Gold, US Oil, EUR/GBP/JPY crosses, and Bitcoin
+ASSET_UNIVERSE = {
+    "commodities": ["XAUUSD", "USOIL"],
+    "forex_pairs": [
+        "EURUSD",
+        "GBPUSD",
+        "USDJPY",
+        "EURGBP",
+        "EURJPY",
+        "GBPJPY",
+    ],
+    "crypto": ["BTCUSD"],
+}
+
+
+def fetch_market_data(symbol, timeframe="1h", limit=100):
+  """Fetch historical OHLCV data for the specified symbol."""
+  # TODO: Integrate with broker API (e.g., MetaTrader, Deriv, Pepperstone, or CCXT)
+  pass
+
+
+def calculate_broker_parameters(symbol, current_price):
+  """Calculate precise broker-grade Stop Loss, Take Profit, and Lot sizing based on asset class volatility."""
+  if "XAU" in symbol:
+    volume = 1.00
+    sl_distance = 15.00  # $15.00 price distance for Gold
+    tp_distance = 30.00
+    spread = "1.2 pips"
+  elif "BTC" in symbol:
+    volume = 0.10
+    sl_distance = 500.00  # $500 price distance for Bitcoin
+    tp_distance = 1200.00
+    spread = "12.0 pts"
+  elif "OIL" in symbol:
+    volume = 1.00
+    sl_distance = 1.20  # $1.20 price distance for WTI Oil
+    tp_distance = 2.50
+    spread = "0.03 pts"
+  else:  # Forex Majors & Crosses (EUR, GBP, JPY)
+    volume = 0.50
+    sl_distance = 0.0035  # 35 pips
+    tp_distance = 0.0070  # 70 pips
+    spread = "1.0 pip"
+
+  # Determine exact SL and TP price triggers for Buy orders
+  sl_price = round(current_price - sl_distance, 5)
+  tp_price = round(current_price + tp_distance, 5)
+
+  return {
+      "volume": volume,
+      "sl": sl_price,
+      "tp": tp_price,
+      "spread": spread,
+  }
+
+
+def analyze_market_conditions(df, symbol):
+  """Generate professional technical signals using pandas-ta indicators."""
+  if df is None or len(df) < 200:
+    return "HOLD"
+
+  # Technical Analysis indicators computation
+  df["rsi"] = ta.rsi(df["close"], length=14)
+  df["sma_50"] = ta.sma(df["close"], length=50)
+  df["sma_200"] = ta.sma(df["close"], length=200)
+
+  last = df.iloc[-1]
+  prev = df.iloc[-2]
+
+  is_bullish_trend = last["close"] > last["sma_50"] > last["sma_200"]
+  is_bearish_trend = last["close"] < last["sma_50"] < last["sma_200"]
+
+  rsi_bullish = prev["rsi"] <= 45 and last["rsi"] > 45
+  rsi_bearish = prev["rsi"] >= 55 and last["rsi"] < 55
+
+  if is_bullish_trend and rsi_bullish:
+    return "BUY"
+  elif is_bearish_trend and rsi_bearish:
+    return "SELL"
+
+  return "HOLD"
+
+
+def execute_broker_order(symbol, order_type, current_price, params):
+  """Simulates broker execution ticket logging with full risk parameters."""
+  logger.info(
+      f"[BROKER EXECUTION] Ticket Created | Symbol: {symbol} | Type:"
+      f" {order_type} | Volume: {params['volume']} | Entry: {current_price} |"
+      f" SL: {params['sl']} | TP: {params['tp']} | Spread: {params['spread']}"
+  )
+  # TODO: Insert Django ORM order logging and broker API integration here
+  return {
+      "ticket_id": "#ORD-" + str(pd.Timestamp.now().timestamp())[-6:],
+      "symbol": symbol,
+      "type": order_type,
+      "volume": params["volume"],
+      "entry": current_price,
+      "sl": params["sl"],
+      "tp": params["tp"],
+      "status": "FILLED",
+  }
+
+
+def run_daily_ai_gold_engine():
+  """Main multi-asset automated engine handling commodities, forex, and crypto with full broker specs."""
+  logger.info("Initializing institutional multi-asset trading engine...")
+
+  all_symbols = (
+      ASSET_UNIVERSE["commodities"]
+      + ASSET_UNIVERSE["forex_pairs"]
+      + ASSET_UNIVERSE["crypto"]
+  )
+  active_portfolio = list(set(all_symbols))
+  engine_report = {}
+
+  for symbol in active_portfolio:
+    try:
+      df = fetch_market_data(symbol)
+      signal = analyze_market_conditions(df, symbol)
+      engine_report[symbol] = signal
+
+      if signal in ["BUY", "SELL"]:
+        current_price = df.iloc[-1]["close"]
+        params = calculate_broker_parameters(symbol, current_price)
+
+        # Invert SL/TP logic if a SELL signal is triggered
+        if signal == "SELL":
+          params["sl"] = round(current_price + (current_price - params["sl"]), 5)
+          params["tp"] = round(current_price - (params["tp"] - current_price), 5)
+
+        order_receipt = execute_broker_order(
+            symbol, signal, current_price, params
+        )
+        logger.info(f"Successfully processed order for {symbol}: {order_receipt}")
+
+    except Exception as e:
+      logger.error(
+          f"Execution error encountered for asset group {symbol}: {str(e)}"
+      )
+
+  logger.info("Multi-asset trading engine run completed successfully.")
+  return engine_report
+
+
+
+from django.contrib.auth.models import User
+from django.db import models
+
+
+class KYCProfile(models.Model):
+  STATUS_CHOICES = [
+      ('PENDING', 'Pending'),
+      ('APPROVED', 'Approved'),
+      ('REJECTED', 'Rejected'),
+  ]
+  user = models.ForeignKey(User, on_delete=models.CASCADE)
+  status = models.CharField(
+      max_length=20, choices=STATUS_CHOICES, default='PENDING'
+  )
+  document_type = models.CharField(max_length=50)
+  document_number = models.CharField(max_length=100)
+  document_image = models.ImageField(upload_to='kyc_documents/')
+  submitted_at = models.DateTimeField(auto_now_add=True)
+
+  def __str__(self):
+    return f'{self.user.username} - {self.document_type} ({self.status})'
+
+
+class TradingAccount(models.Model):
+  user = models.ForeignKey(User, on_delete=models.CASCADE)
+  account_id = models.CharField(
+      max_length=50, unique=True, blank=True, null=True
+  )
+  type = models.CharField(max_length=50, default='Live')
+  balance = models.DecimalField(max_digits=12, decimal_places=2, default=0.00)
+  leverage = models.IntegerField(default=100)
+  margin_level = models.FloatField(default=150.0)
+
+  def __str__(self):
+    return (
+        f'{self.user.username} - {self.account_id or self.id}'
+        f' (${self.balance})'
+    )
+
+
+class TradePosition(models.Model):
+  BOOK_CHOICES = [('A_BOOK', 'A-Book'), ('B_BOOK', 'B-Book')]
+  STATUS_CHOICES = [('OPEN', 'Open'), ('CLOSED', 'Closed')]
+
+  user = models.ForeignKey(User, on_delete=models.CASCADE)
+  notional_value = models.DecimalField(max_digits=12, decimal_places=2)
+  liability = models.DecimalField(max_digits=12, decimal_places=2, default=0.00)
+  execution_book = models.CharField(
+      max_length=20, choices=BOOK_CHOICES, default='B_BOOK'
+  )
+  status = models.CharField(
+      max_length=20, choices=STATUS_CHOICES, default='OPEN'
+  )
+  created_at = models.DateTimeField(auto_now_add=True)
+
+
+class TransactionLog(models.Model):
+  STATUS_CHOICES = [
+      ('SUCCESS', 'Success'),
+      ('PENDING', 'Pending'),
+      ('DISCREPANCY', 'Discrepancy'),
+  ]
+  user = models.ForeignKey(
+      User, on_delete=models.SET_NULL, null=True, blank=True
+  )
+  reference_id = models.CharField(max_length=100, unique=True)
+  gateway_name = models.CharField(max_length=50)
+  transaction_type = models.CharField(max_length=50)
+  amount = models.DecimalField(max_digits=12, decimal_places=2)
+  status = models.CharField(
+      max_length=20, choices=STATUS_CHOICES, default='PENDING'
+  )
+  created_at = models.DateTimeField(auto_now_add=True)
+
+
+class KYCProfile(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    status = models.CharField(max_length=20, default='PENDING')
+    document_type = models.CharField(max_length=50, default='National ID')
+    id_number = models.CharField(max_length=50, blank=True, null=True)
+    document_file = models.FileField(upload_to='kyc_documents/', blank=True, null=True)
+    selfie_image = models.ImageField(upload_to='kyc_selfies/', blank=True, null=True)
+    submitted_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.user.username} - {self.status}"
+
+
+from django.db import models
+from django.contrib.auth.models import User
+
+class SupportTicket(models.Model):
+    CATEGORY_CHOICES = [
+        ('AI Signals & Execution', 'AI Signals & Execution'),
+        ('Subscription & Billing', 'Subscription & Billing'),
+        ('Webhook & Bot Integration', 'Webhook & Bot Integration'),
+        ('Account & Security', 'Account & Security'),
+    ]
+    
+    user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
+    category = models.CharField(max_length=100, choices=CATEGORY_CHOICES)
+    subject = models.CharField(max_length=200)
+    description = models.TextField()
+    status = models.CharField(max_length=50, default='Open')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"[{self.category}] {self.subject} ({self.status})"

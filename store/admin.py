@@ -1,11 +1,25 @@
 from django.contrib import admin
-from .models import UserProfile, Asset, Trade, PriceAlert, PriceTick, AITradingStrategy
+from .models import UserProfile, Asset, Trade, PriceAlert, PriceTick, AITradingStrategy , SurveyReward ,Account
+
+
 
 
 @admin.register(UserProfile)
 class UserProfileAdmin(admin.ModelAdmin):
-    list_display = ('user', 'subscription_tier')
+    list_display = ('user', 'subscription_tier', 'is_active_subscription')
+    search_fields = ('user__username', 'user__email', 'subscription_tier')
 
+@admin.register(SurveyReward)
+class SurveyRewardAdmin(admin.ModelAdmin):
+    list_display = ('title', 'user', 'amount', 'tier_required', 'is_claimed', 'created_at')
+    list_filter = ('tier_required', 'is_claimed')
+    search_fields = ('title', 'user__username')
+
+@admin.register(Account)
+class AccountAdmin(admin.ModelAdmin):
+    list_display = ('user', 'account_type', 'balance', 'updated_at')
+    list_filter = ('account_type',)
+    search_fields = ('user__username',)
 
 @admin.register(Asset)
 class AssetAdmin(admin.ModelAdmin):
@@ -38,10 +52,6 @@ class PriceAlertAdmin(admin.ModelAdmin):
 
 from .models import Account, Transaction  # Ensure these are imported
 
-# Register your models here
-@admin.register(Account)
-class AccountAdmin(admin.ModelAdmin):
-    list_display = ('user', 'balance')
 
 @admin.register(Transaction)
 class TransactionAdmin(admin.ModelAdmin):
@@ -81,3 +91,12 @@ class SiteSettingsAdmin(admin.ModelAdmin):
         return not SiteSettings.objects.exists()  # enforce singleton in the UI too
     def has_delete_permission(self, request, obj=None):
         return False
+
+
+from .models import KYCProfile
+
+@admin.register(KYCProfile)
+class KYCProfileAdmin(admin.ModelAdmin):
+    list_display = ('user', 'document_type', 'id_number', 'status', 'submitted_at')
+    list_filter = ('status', 'document_type')
+    search_fields = ('user__username', 'id_number')

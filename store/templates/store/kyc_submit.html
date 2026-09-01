@@ -1,0 +1,40 @@
+{% extends 'base_dashboard.html' %}
+
+{% block title %}KYC Verification Submission - PATREOAIX{% endblock %}
+
+{% block content %}
+<div class="max-w-xl mx-auto py-6 px-4">
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl">
+        <div class="mb-5 pb-4 border-b border-slate-800">
+            <h2 class="text-xl font-bold text-white tracking-wide">KYC Verification Submission</h2>
+            <p class="text-xs text-slate-400 mt-0.5">Please provide your identification details and upload documents to verify your trading account</p>
+        </div>
+        <form method="POST" enctype="multipart/form-data" class="space-y-4 text-xs">
+            {% csrf_token %}
+            <div>
+                <label for="document_type" class="block text-slate-400 font-bold uppercase mb-1.5">Document Type</label>
+                <select name="document_type" id="document_type" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-white font-mono focus:outline-none focus:border-indigo-500 cursor-pointer" required>
+                    <option value="passport">Passport</option>
+                    <option value="national_id">National ID</option>
+                    <option value="drivers_license">Driver's License</option>
+                </select>
+            </div>
+            <div>
+                <label for="id_number" class="block text-slate-400 font-bold uppercase mb-1.5">ID / Document Number</label>
+                <input type="text" name="id_number" id="id_number" placeholder="Enter ID or Passport number" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-white font-mono focus:outline-none focus:border-indigo-500" required>
+            </div>
+            <div>
+                <label for="document_file" class="block text-slate-400 font-bold uppercase mb-1.5">Upload Document (Front & Back)</label>
+                <input type="file" name="document_file" id="document_file" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-slate-300 font-mono focus:outline-none focus:border-indigo-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-indigo-600 file:text-white hover:file:bg-indigo-500 cursor-pointer" required>
+            </div>
+            <div>
+                <label for="selfie_image" class="block text-slate-400 font-bold uppercase mb-1.5">Selfie Verification / Photo</label>
+                <input type="file" name="selfie_image" id="selfie_image" accept="image/*" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-slate-300 font-mono focus:outline-none focus:border-indigo-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-indigo-600 file:text-white hover:file:bg-indigo-500 cursor-pointer">
+            </div>
+            <button type="submit" class="w-full py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl transition shadow-lg cursor-pointer">
+                Submit Verification
+            </button>
+        </form>
+    </div>
+</div>
+{% endblock %}

@@ -13,6 +13,8 @@ from .ai_engine import ai_engine
 DIGIT_CONTRACTS = {'DIGITEVEN', 'DIGITODD', 'DIGITOVER', 'DIGITUNDER', 'DIGITMATCH', 'DIGITDIFF'}
 
 
+
+
 class TradingConsumer(AsyncWebsocketConsumer):
 
     # Symbols the live signal feed polls in a loop: synthetic indices plus

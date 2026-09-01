@@ -48,67 +48,53 @@
                             <i class="fa-solid fa-shield-halved"></i>
                         </div>
                         <h2 class="text-2xl font-bold text-white tracking-wide">Welcome Back</h2>
-                        <p class="text-xs text-slate-400 mt-1">Sign in to access your AI trading dashboard</p>
+                        <p class="text-xs text-slate-400 mt-1">Sign in with your password or secure email OTP</p>
                     </div>
 
-                    <!-- Login Method Toggle Tabs -->
+                    <!-- Login Mode Switch Tabs: Password vs Email OTP -->
                     <div class="flex p-1 bg-[#090d16] border border-slate-800 rounded-xl mb-6">
-                        <button type="button" id="tab-email-btn" onclick="switchLoginMethod('email')" class="flex-1 py-2 text-xs font-bold rounded-lg transition bg-indigo-600 text-white shadow-sm flex items-center justify-center gap-2">
-                            <i class="fa-solid fa-envelope text-[11px]"></i> Email / Username
+                        <button type="button" id="tab-password-btn" onclick="switchAuthMode('password')" class="flex-1 py-2 text-xs font-bold rounded-lg transition bg-indigo-600 text-white shadow-sm flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-lock text-[11px]"></i> Password
                         </button>
-                        <button type="button" id="tab-phone-btn" onclick="switchLoginMethod('phone')" class="flex-1 py-2 text-xs font-bold rounded-lg transition text-slate-400 hover:text-white flex items-center justify-center gap-2">
-                            <i class="fa-solid fa-phone text-[11px]"></i> Phone Number
+                        <button type="button" id="tab-otp-btn" onclick="switchAuthMode('otp')" class="flex-1 py-2 text-xs font-bold rounded-lg transition text-slate-400 hover:text-white flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-envelope-circle-check text-[11px]"></i> Email OTP
                         </button>
                     </div>
 
-                    <!-- Django Error Message Alert -->
+                    <!-- Django Messages / Errors -->
+                    {% if messages %}
+                        {% for message in messages %}
+                        <div class="mb-5 p-3.5 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-300 text-xs flex items-center gap-2.5 font-medium">
+                            <i class="fa-solid fa-circle-info text-sm"></i>
+                            <span>{{ message }}</span>
+                        </div>
+                        {% endfor %}
+                    {% endif %}
+
                     {% if form.errors or error %}
                     <div class="mb-5 p-3.5 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-400 text-xs flex items-center gap-2.5 font-medium">
                         <i class="fa-solid fa-circle-exclamation text-sm"></i>
-                        <span>Please check your credentials and try again.</span>
+                        <span>Please check your credentials or code and try again.</span>
                     </div>
                     {% endif %}
 
-                    <!-- Login Form -->
-                    <form method="POST" action="{% url 'account_login' %}" class="space-y-4">
+                    <!-- MODE 1: Standard Password Login Form -->
+                    <form id="form-password" method="POST" action="{% url 'login' %}" class="space-y-4">
                         {% csrf_token %}
-
-                        <!-- Email / Username Input Group -->
-                        <div id="group-email" class="space-y-4">
-                            <div>
-                                <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Username or Email</label>
-                                <div class="relative">
-                                    <span class="absolute inset-y-0 left-0 flex items-center pl-3.5 text-slate-500">
-                                        <i class="fa-solid fa-user text-xs"></i>
-                                    </span>
-                                    <input type="text" 
-                                           name="login" 
-                                           id="input-login"
-                                           class="w-full bg-[#090d16] border border-slate-800 rounded-xl py-3 pl-10 pr-4 text-xs text-slate-100 placeholder-slate-600 focus:outline-none focus:border-indigo-500 transition font-mono" 
-                                           placeholder="Enter your username or email">
-                                </div>
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Username or Email</label>
+                            <div class="relative">
+                                <span class="absolute inset-y-0 left-0 flex items-center pl-3.5 text-slate-500">
+                                    <i class="fa-solid fa-user text-xs"></i>
+                                </span>
+                                <input type="text" 
+                                       name="login" 
+                                       class="w-full bg-[#090d16] border border-slate-800 rounded-xl py-3 pl-10 pr-4 text-xs text-slate-100 placeholder-slate-600 focus:outline-none focus:border-indigo-500 transition font-mono" 
+                                       placeholder="Enter your username or email" 
+                                       required>
                             </div>
                         </div>
 
-                        <!-- Phone Number Input Group (Hidden by default) -->
-                        <div id="group-phone" class="space-y-4 hidden">
-                            <div>
-                                <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Phone Number</label>
-                                <div class="relative flex">
-                                    <div class="absolute inset-y-0 left-0 flex items-center pl-3.5 text-slate-500 pointer-events-none">
-                                        <i class="fa-solid fa-phone text-xs"></i>
-                                    </div>
-                                    <input type="tel" 
-                                           name="phone_number" 
-                                           id="input-phone"
-                                           class="w-full bg-[#090d16] border border-slate-800 rounded-xl py-3 pl-10 pr-4 text-xs text-slate-100 placeholder-slate-600 focus:outline-none focus:border-indigo-500 transition font-mono" 
-                                           placeholder="+1 (555) 000-0000">
-                                </div>
-                                <p class="text-[10px] text-slate-500 mt-1.5">We will send an OTP verification code to your phone.</p>
-                            </div>
-                        </div>
-
-                        <!-- Password Field -->
                         <div>
                             <div class="flex items-center justify-between mb-1.5">
                                 <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">Password</label>
@@ -126,16 +112,39 @@
                             </div>
                         </div>
 
-                        <!-- Submit Button -->
                         <button type="submit" 
                                 class="w-full py-3 px-4 mt-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs transition shadow-lg shadow-indigo-600/20 flex items-center justify-center gap-2">
                             <i class="fa-solid fa-right-to-bracket"></i> Sign In to Account
                         </button>
                     </form>
 
+                    <!-- MODE 2: Email OTP Login Request Form -->
+                    <form id="form-otp" method="POST" action="{% url 'request_email_otp' %}" class="space-y-4 hidden">
+                        {% csrf_token %}
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Registered Email Address</label>
+                            <div class="relative">
+                                <span class="absolute inset-y-0 left-0 flex items-center pl-3.5 text-slate-500">
+                                    <i class="fa-solid fa-envelope text-xs"></i>
+                                </span>
+                                <input type="email" 
+                                       name="email" 
+                                       class="w-full bg-[#090d16] border border-slate-800 rounded-xl py-3 pl-10 pr-4 text-xs text-slate-100 placeholder-slate-600 focus:outline-none focus:border-indigo-500 transition font-mono" 
+                                       placeholder="your@email.com" 
+                                       required>
+                            </div>
+                            <p class="text-[10px] text-slate-500 mt-1.5">We will generate and email a secure 6-digit login code to you.</p>
+                        </div>
+
+                        <button type="submit" 
+                                class="w-full py-3 px-4 mt-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs transition shadow-lg shadow-emerald-600/20 flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-paper-plane"></i> Send Verification Code
+                        </button>
+                    </form>
+
                     <!-- Divider -->
                     <div class="relative my-6 text-center">
-                        <span class="bg-[#0d1322] px-3 text-[10px] text-slate-500 uppercase font-bold relative z-10">or sign in with</span>
+                        <span class="bg-[#0d1322] px-3 text-[10px] text-slate-500 uppercase font-bold relative z-10">or continue with</span>
                         <div class="absolute inset-0 flex items-center"><div class="w-full border-t border-slate-800"></div></div>
                     </div>
 
@@ -168,30 +177,24 @@
         &copy; PATREOAIX AI Prediction Engine. All rights reserved.
     </footer>
 
-    <!-- Interactive Tab Script -->
+    <!-- Interactive Script to switch between Password and OTP Login Forms -->
     <script>
-        function switchLoginMethod(method) {
-            const emailBtn = document.getElementById('tab-email-btn');
-            const phoneBtn = document.getElementById('tab-phone-btn');
-            const groupEmail = document.getElementById('group-email');
-            const groupPhone = document.getElementById('group-phone');
-            const inputLogin = document.getElementById('input-login');
-            const inputPhone = document.getElementById('input-phone');
+        function switchAuthMode(mode) {
+            const passBtn = document.getElementById('tab-password-btn');
+            const otpBtn = document.getElementById('tab-otp-btn');
+            const formPass = document.getElementById('form-password');
+            const formOtp = document.getElementById('form-otp');
 
-            if (method === 'email') {
-                emailBtn.className = "flex-1 py-2 text-xs font-bold rounded-lg transition bg-indigo-600 text-white shadow-sm flex items-center justify-center gap-2";
-                phoneBtn.className = "flex-1 py-2 text-xs font-bold rounded-lg transition text-slate-400 hover:text-white flex items-center justify-center gap-2";
-                groupEmail.classList.remove('hidden');
-                groupPhone.classList.add('hidden');
-                inputLogin.setAttribute('required', 'true');
-                inputPhone.removeAttribute('required');
+            if (mode === 'password') {
+                passBtn.className = "flex-1 py-2 text-xs font-bold rounded-lg transition bg-indigo-600 text-white shadow-sm flex items-center justify-center gap-2";
+                otpBtn.className = "flex-1 py-2 text-xs font-bold rounded-lg transition text-slate-400 hover:text-white flex items-center justify-center gap-2";
+                formPass.classList.remove('hidden');
+                formOtp.classList.add('hidden');
             } else {
-                phoneBtn.className = "flex-1 py-2 text-xs font-bold rounded-lg transition bg-indigo-600 text-white shadow-sm flex items-center justify-center gap-2";
-                emailBtn.className = "flex-1 py-2 text-xs font-bold rounded-lg transition text-slate-400 hover:text-white flex items-center justify-center gap-2";
-                groupPhone.classList.remove('hidden');
-                groupEmail.classList.add('hidden');
-                inputPhone.setAttribute('required', 'true');
-                inputLogin.removeAttribute('required');
+                otpBtn.className = "flex-1 py-2 text-xs font-bold rounded-lg transition bg-indigo-600 text-white shadow-sm flex items-center justify-center gap-2";
+                passBtn.className = "flex-1 py-2 text-xs font-bold rounded-lg transition text-slate-400 hover:text-white flex items-center justify-center gap-2";
+                formOtp.classList.remove('hidden');
+                formPass.classList.add('hidden');
             }
         }
     </script>

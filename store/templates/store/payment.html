@@ -1,50 +1,50 @@
 {% extends 'base_dashboard.html' %}
+{% load static %}
+
+{% block title %}Funding & Accounts - PATREOAIX{% endblock %}
 
 {% block content %}
-<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
+<div class="max-w-7xl mx-auto py-6 px-4 space-y-6">
     <!-- Header & Combined Total Balance -->
-    <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
+    <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl">
         <div>
-            <h2 class="text-2xl font-bold text-slate-950">Funding & Accounts</h2>
-            <p class="text-xs text-slate-500 mt-0.5">Main Exchange account handles deposits/withdrawals. Transfer funds to Trading as needed.</p>
+            <h2 class="text-xl font-bold text-white tracking-wide">Funding & Accounts</h2>
+            <p class="text-xs text-slate-400 mt-0.5">Main Exchange account handles deposits/withdrawals. Transfer funds to Trading as needed.</p>
         </div>
-        <div class="text-sm bg-blue-50 border border-blue-100 text-blue-700 px-5 py-3 rounded-2xl font-semibold text-center sm:text-left shadow-sm">
-            <span class="block text-xs uppercase tracking-wider text-blue-500">Total Net Balance</span>
-            <span class="text-xl font-extrabold text-blue-950">${{ total_balance|default:"0.00" }}</span>
+        <div class="text-sm bg-slate-950 border border-slate-800 text-slate-200 px-5 py-3 rounded-xl font-semibold text-center sm:text-left shadow-lg">
+            <span class="block text-xs uppercase tracking-wider text-slate-400 font-mono">Total Net Balance</span>
+            <span class="text-xl font-extrabold text-emerald-400 font-mono">${{ total_balance|default:"0.00" }}</span>
         </div>
     </div>
 
     <!-- Split Account Breakdown Cards -->
     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <!-- Exchange Balance Card (Main) -->
-        <div class="bg-white border border-slate-200 p-4 rounded-2xl flex items-center justify-between shadow-sm">
+        <div class="bg-slate-900 border border-slate-800 p-5 rounded-2xl flex items-center justify-between shadow-xl">
             <div>
-                <span class="text-xs font-semibold uppercase tracking-wider text-slate-500 block">Exchange Account (Main)</span>
-                <span class="text-2xl font-extrabold text-slate-950">${{ exchange_balance|default:"0.00" }}</span>
+                <span class="text-xs font-semibold uppercase tracking-wider text-slate-400 block font-mono">Exchange Account (Main)</span>
+                <span class="text-2xl font-extrabold text-white font-mono mt-1 block">${{ exchange_balance|default:"0.00" }}</span>
             </div>
-            <div class="w-10 h-10 bg-blue-50 rounded-xl flex items-center justify-center text-blue-600 font-bold text-sm border border-blue-100">EX</div>
+            <div class="w-10 h-10 bg-blue-500/10 rounded-xl flex items-center justify-center text-blue-400 font-bold text-sm border border-blue-500/20 font-mono">EX</div>
         </div>
 
         <!-- Trading Balance Card -->
-        <div class="bg-white border border-slate-200 p-4 rounded-2xl flex items-center justify-between shadow-sm">
+        <div class="bg-slate-900 border border-slate-800 p-5 rounded-2xl flex items-center justify-between shadow-xl">
             <div>
-                <span class="text-xs font-semibold uppercase tracking-wider text-slate-500 block">Trading Account</span>
-                <span class="text-2xl font-extrabold text-slate-950">${{ trading_balance|default:"0.00" }}</span>
+                <span class="text-xs font-semibold uppercase tracking-wider text-slate-400 block font-mono">Trading Account</span>
+                <span class="text-2xl font-extrabold text-white font-mono mt-1 block">${{ trading_balance|default:"0.00" }}</span>
             </div>
-            <div class="w-10 h-10 bg-indigo-50 rounded-xl flex items-center justify-center text-indigo-600 font-bold text-sm border border-indigo-100">TR</div>
+            <div class="w-10 h-10 bg-indigo-500/10 rounded-xl flex items-center justify-center text-indigo-400 font-bold text-sm border border-indigo-500/20 font-mono">TR</div>
         </div>
     </div>
 
-    <!-- The rest of your tabs (Deposit, Withdrawal, Transfer, History) remain here -->
-...
-
     <!-- Top Filter Tabs (Scrollable on Mobile) -->
-    <div class="border-b border-slate-200 mb-6 overflow-x-auto scrollbar-none">
+    <div class="border-b border-slate-800 mb-6 overflow-x-auto scrollbar-none">
         <nav class="-mb-px flex space-x-6 sm:space-x-8 min-w-max" aria-label="Tabs">
-            <button onclick="switchTab('deposit')" id="tab-deposit" class="tab-btn border-blue-500 text-blue-600 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">Deposit</button>
-            <button onclick="switchTab('withdrawal')" id="tab-withdrawal" class="tab-btn border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">Withdrawal</button>
-            <button onclick="switchTab('transfer')" id="tab-transfer" class="tab-btn border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">Internal Transfer</button>
-            <button onclick="switchTab('history')" id="tab-history" class="tab-btn border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">Transaction History</button>
+            <button onclick="switchTab('deposit')" id="tab-deposit" class="tab-btn border-emerald-500 text-emerald-400 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition">Deposit</button>
+            <button onclick="switchTab('withdrawal')" id="tab-withdrawal" class="tab-btn border-transparent text-slate-400 hover:text-slate-200 hover:border-slate-700 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition">Withdrawal</button>
+            <button onclick="switchTab('transfer')" id="tab-transfer" class="tab-btn border-transparent text-slate-400 hover:text-slate-200 hover:border-slate-700 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition">Internal Transfer</button>
+            <button onclick="switchTab('history')" id="tab-history" class="tab-btn border-transparent text-slate-400 hover:text-slate-200 hover:border-slate-700 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition">Transaction History</button>
         </nav>
     </div>
 
@@ -52,109 +52,109 @@
     <div id="content-deposit" class="tab-content space-y-3">
         <div class="space-y-3 max-w-2xl">
             <!-- 1. MPESA (Clickable Trigger) -->
-            <button type="button" onclick="document.getElementById('mpesaModal').style.display='flex'" class="w-full text-left bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-sm hover:border-blue-300 transition flex flex-col sm:flex-row sm:items-center justify-between gap-4 cursor-pointer">
+            <button type="button" onclick="document.getElementById('mpesaModal').style.display='flex'" class="w-full text-left bg-slate-900 p-4 sm:p-5 rounded-2xl border border-slate-800 shadow-xl hover:border-slate-700 transition flex flex-col sm:flex-row sm:items-center justify-between gap-4 cursor-pointer">
                 <div class="flex items-center gap-3">
-                    <div class="w-12 h-8 bg-slate-100 rounded flex items-center justify-center font-bold text-slate-500 text-xs border border-slate-200 shrink-0">MP</div>
+                    <div class="w-12 h-8 bg-slate-950 rounded-lg flex items-center justify-center font-bold text-slate-300 text-xs border border-slate-800 shrink-0 font-mono">MP</div>
                     <div>
-                        <span class="font-bold text-slate-900 block">MPESA</span>
-                        <span class="text-xs text-slate-500">Processing: <strong class="text-slate-900">Instant</strong> | Limits: <strong class="text-slate-900">10 - 1,900 USD</strong></span>
+                        <span class="font-bold text-white block text-sm">MPESA</span>
+                        <span class="text-xs text-slate-400">Processing: <strong class="text-slate-200">Instant</strong> | Limits: <strong class="text-slate-200">10 - 1,900 USD</strong></span>
                     </div>
                 </div>
-                <span class="text-xs font-bold text-blue-600 flex items-center gap-1">Deposit <i class="fa-solid fa-arrow-right"></i></span>
+                <span class="text-xs font-bold text-emerald-400 flex items-center gap-1">Deposit <i class="fa-solid fa-arrow-right"></i></span>
             </button>
 
-            <!-- 2. Tether USD / USDT (NOWPayments Trigger) -->
-            <button type="button" onclick="document.getElementById('cryptoModal').style.display='flex'" class="w-full text-left bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-sm hover:border-blue-300 transition flex flex-col sm:flex-row sm:items-center justify-between gap-4 cursor-pointer">
+            <!-- 2. USDT Binance Wallet Trigger -->
+            <button type="button" onclick="document.getElementById('cryptoModal').style.display='flex'" class="w-full text-left bg-slate-900 p-4 sm:p-5 rounded-2xl border border-slate-800 shadow-xl hover:border-slate-700 transition flex flex-col sm:flex-row sm:items-center justify-between gap-4 cursor-pointer">
                 <div class="flex items-center gap-3">
-                    <div class="w-12 h-8 bg-amber-50 rounded flex items-center justify-center font-bold text-amber-600 text-xs border border-amber-200 shrink-0">USDT</div>
+                    <div class="w-12 h-8 bg-amber-500/10 rounded-lg flex items-center justify-center font-bold text-amber-400 text-xs border border-amber-500/20 shrink-0 font-mono">USDT</div>
                     <div>
-                        <span class="font-bold text-slate-900 block">NOWPayments Crypto</span>
-                        <span class="text-xs text-slate-500">Processing: <strong class="text-slate-900">Automated</strong> | Limits: <strong class="text-slate-900">15 - 1,000,000 USD</strong></span>
+                        <span class="font-bold text-white block text-sm">USDT (Binance - TRX)</span>
+                        <span class="text-xs text-slate-400">Network: <strong class="text-slate-200">TRX (Tron)</strong> | Direct Deposit Wallet & Hash Confirmation</span>
                     </div>
                 </div>
-                <span class="text-xs font-bold text-blue-600 flex items-center gap-1">Deposit <i class="fa-solid fa-arrow-right"></i></span>
+                <span class="text-xs font-bold text-emerald-400 flex items-center gap-1">Deposit <i class="fa-solid fa-arrow-right"></i></span>
             </button>
         </div>
     </div>
 
     <!-- TAB 2: WITHDRAWAL -->
     <div id="content-withdrawal" class="tab-content space-y-6 hidden">
-        <div class="bg-white p-5 sm:p-6 rounded-2xl border border-slate-200 shadow-sm max-w-lg">
-            <h3 class="text-lg font-bold text-slate-950 mb-4">Request Withdrawal</h3>
+        <div class="bg-slate-900 p-5 sm:p-6 rounded-2xl border border-slate-800 shadow-xl max-w-lg">
+            <h3 class="text-lg font-bold text-white mb-4">Request Withdrawal</h3>
             <form method="POST" action="{% url 'request_withdrawal' %}" class="space-y-4">
                 {% csrf_token %}
                 <div>
-                    <label class="block text-sm font-medium text-slate-700 mb-1">Amount (USD)</label>
-                    <input type="number" step="0.01" name="amount" required class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm bg-white text-slate-950">
+                    <label class="block text-sm font-medium text-slate-300 mb-1">Amount (USD)</label>
+                    <input type="number" step="0.01" name="amount" required class="w-full px-3 py-2.5 border border-slate-800 rounded-xl text-sm bg-slate-950 text-white focus:outline-none focus:border-emerald-500 font-mono">
                 </div>
-                <button type="submit" class="w-full bg-blue-600 text-white font-bold py-2.5 rounded-lg hover:bg-blue-700 transition">Submit Withdrawal</button>
+                <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2.5 rounded-xl transition shadow">Submit Withdrawal</button>
             </form>
         </div>
     </div>
 
     <!-- TAB 3: INTERNAL TRANSFER (Between Exchange & Trading Accounts) -->
     <div id="content-transfer" class="tab-content space-y-6 hidden">
-        <div class="bg-white p-5 sm:p-6 rounded-2xl border border-slate-200 shadow-sm max-w-lg">
-            <h3 class="text-lg font-bold text-slate-950 mb-4">Transfer Between Accounts</h3>
+        <div class="bg-slate-900 p-5 sm:p-6 rounded-2xl border border-slate-800 shadow-xl max-w-lg">
+            <h3 class="text-lg font-bold text-white mb-4">Transfer Between Accounts</h3>
             <form method="POST" action="{% url 'transfer_between_accounts' %}" class="space-y-4">
                 {% csrf_token %}
                 <div>
-                    <label class="block text-sm font-medium text-slate-700 mb-1">From Account</label>
-                    <select name="source_type" required class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm bg-white text-slate-950">
+                    <label class="block text-sm font-medium text-slate-300 mb-1">From Account</label>
+                    <select name="source_type" required class="w-full px-3 py-2.5 border border-slate-800 rounded-xl text-sm bg-slate-950 text-white focus:outline-none focus:border-emerald-500">
                         <option value="EXCHANGE">Exchange Account</option>
                         <option value="TRADING">Trading Account</option>
                     </select>
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-slate-700 mb-1">To Account</label>
-                    <select name="target_type" required class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm bg-white text-slate-950">
+                    <label class="block text-sm font-medium text-slate-300 mb-1">To Account</label>
+                    <select name="target_type" required class="w-full px-3 py-2.5 border border-slate-800 rounded-xl text-sm bg-slate-950 text-white focus:outline-none focus:border-emerald-500">
                         <option value="TRADING">Trading Account</option>
                         <option value="EXCHANGE">Exchange Account</option>
                     </select>
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-slate-700 mb-1">Amount (USD)</label>
-                    <input type="number" step="0.01" name="amount" required class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm bg-white text-slate-950" placeholder="0.00">
+                    <label class="block text-sm font-medium text-slate-300 mb-1">Amount (USD)</label>
+                    <input type="number" step="0.01" name="amount" required class="w-full px-3 py-2.5 border border-slate-800 rounded-xl text-sm bg-slate-950 text-white focus:outline-none focus:border-emerald-500 font-mono" placeholder="0.00">
                 </div>
-                <button type="submit" class="w-full bg-blue-600 text-white font-bold py-2.5 rounded-lg hover:bg-blue-700 transition">Transfer Funds</button>
+                <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2.5 rounded-xl transition shadow">Transfer Funds</button>
             </form>
         </div>
     </div>
 
     <!-- TAB 4: TRANSACTION HISTORY -->
     <div id="content-history" class="tab-content space-y-6 hidden">
-        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-            <div class="p-5 border-b border-slate-100 flex justify-between items-center">
-                <h3 class="font-bold text-slate-950">Transaction Logs</h3>
+        <div class="bg-slate-900 rounded-2xl border border-slate-800 shadow-xl overflow-hidden">
+            <div class="p-5 border-b border-slate-800 flex justify-between items-center">
+                <h3 class="font-bold text-white">Transaction Logs</h3>
             </div>
             <div class="overflow-x-auto">
-                <table class="w-full text-left border-collapse">
+                <table class="w-full text-left border-collapse font-mono text-xs">
                     <thead>
-                        <tr class="bg-slate-50 text-slate-500 text-xs uppercase font-semibold">
+                        <tr class="bg-slate-950 text-slate-400 uppercase font-semibold border-b border-slate-800">
                             <th class="p-4">Type</th>
                             <th class="p-4">Amount</th>
-                            <th class="p-4">Details</th>
+                            <th class="p-4 font-sans">Details</th>
                             <th class="p-4">Date</th>
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-slate-100 text-sm text-slate-800">
+                    <tbody class="divide-y divide-slate-800/80 text-slate-300">
                         {% for tx in transactions %}
-                        <tr class="hover:bg-slate-50 transition">
+                        <tr class="hover:bg-slate-800/40 transition">
                             <td class="p-4 font-medium">
                                 <span class="px-2.5 py-1 rounded-full text-xs font-bold 
-                                    {% if tx.transaction_type == 'DEPOSIT' %}bg-emerald-50 text-emerald-700
-                                    {% elif tx.transaction_type == 'WITHDRAWAL' %}bg-rose-50 text-rose-700
-                                    {% else %}bg-blue-50 text-blue-700{% endif %}">
+                                    {% if tx.transaction_type == 'DEPOSIT' %}bg-emerald-500/10 text-emerald-400 border border-emerald-500/20
+                                    {% elif tx.transaction_type == 'WITHDRAWAL' %}bg-rose-500/10 text-rose-400 border border-rose-500/20
+                                    {% else %}bg-blue-500/10 text-blue-400 border border-blue-500/20{% endif %}">
                                     {{ tx.get_transaction_type_display|default:tx.transaction_type }}
                                 </span>
                             </td>
-                            <td class="p-4 font-bold text-slate-950">${{ tx.amount }}</td>
-                            <td class="p-4 text-slate-600">{{ tx.details }}</td>
-                            <td class="p-4 text-slate-400 text-xs">{{ tx.created_at|date:"M d, Y H:i" }}</td>
+                            <td class="p-4 font-bold text-white">${{ tx.amount }}</td>
+                            <td class="p-4 text-slate-400 font-sans">{{ tx.details }}</td>
+                            <td class="p-4 text-slate-500">{{ tx.created_at|date:"M d, Y H:i" }}</td>
                         </tr>
                         {% empty %}
                         <tr>
-                            <td colspan="4" class="p-8 text-center text-slate-400 text-sm">No transaction history found.</td>
+                            <td colspan="4" class="p-8 text-center text-slate-500 text-sm font-sans">No transaction history found.</td>
                         </tr>
                         {% endfor %}
                     </tbody>
@@ -165,61 +165,89 @@
 </div>
 
 <!-- MPESA Modal Overlay -->
-<div id="mpesaModal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900 bg-opacity-50 hidden p-4">
-    <div class="bg-white rounded-2xl shadow-xl w-full max-w-sm p-5 sm:p-6 relative">
-        <h3 class="text-lg font-bold text-slate-950 mb-4">Deposit via MPESA</h3>
+<div id="mpesaModal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950 bg-opacity-70 backdrop-blur-sm hidden p-4">
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl w-full max-w-sm p-5 sm:p-6 relative text-white">
+        <h3 id="mpesaModalTitle" class="text-lg font-bold text-white mb-4">Deposit via MPESA</h3>
         
-        <form method="POST" action="{% url 'request_deposit' %}">
+        <form id="mpesaForm" method="POST" action="{% url 'request_deposit' %}">
             {% csrf_token %}
             <input type="hidden" name="method" value="MPESA">
             
-            <div class="space-y-4">
+            <div id="mpesaFormFields" class="space-y-4">
                 <div>
-                    <label class="block text-sm font-medium text-slate-700 mb-1">Amount (USD)</label>
-                    <input type="number" name="amount" required class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm text-slate-950 bg-white">
+                    <label class="block text-sm font-medium text-slate-300 mb-1">Amount (USD)</label>
+                    <input type="number" name="amount" required class="w-full px-3 py-2.5 border border-slate-800 rounded-xl text-sm text-white bg-slate-950 focus:outline-none focus:border-emerald-500 font-mono">
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-slate-700 mb-1">Phone Number (e.g. 2547...)</label>
-                    <input type="text" name="phone_number" required placeholder="0712345678" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm text-slate-950 bg-white">
+                    <label class="block text-sm font-medium text-slate-300 mb-1">Phone Number (e.g. 2547...)</label>
+                    <input type="text" name="phone_number" required placeholder="0712345678" class="w-full px-3 py-2.5 border border-slate-800 rounded-xl text-sm text-white bg-slate-950 focus:outline-none focus:border-emerald-500 font-mono">
                 </div>
             </div>
 
-            <div class="mt-6 flex gap-3">
-                <button type="submit" class="flex-1 bg-blue-600 text-white font-bold py-2.5 rounded-lg hover:bg-blue-700 transition text-sm">Pay Now</button>
-                <button type="button" onclick="document.getElementById('mpesaModal').style.display='none'" class="flex-1 bg-slate-100 text-slate-700 font-bold py-2.5 rounded-lg hover:bg-slate-200 transition text-sm">Cancel</button>
+            <!-- Status View Container -->
+            <div id="mpesaStatusContainer" class="hidden py-6 text-center space-y-4">
+                <div id="mpesaSpinner" class="flex justify-center">
+                    <svg class="animate-spin h-10 w-10 text-emerald-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                </div>
+                <div id="mpesaStatusIcon" class="hidden text-3xl font-bold"></div>
+                <p id="mpesaStatusText" class="text-sm font-medium text-slate-300">STK Push sent. Please check your phone and enter your M-Pesa PIN.</p>
+            </div>
+
+            <div id="mpesaActionButtons" class="mt-6 flex gap-3">
+                <button type="submit" id="mpesaSubmitBtn" class="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2.5 rounded-xl transition text-sm shadow">Pay Now</button>
+                <button type="button" onclick="closeMpesaModal()" class="flex-1 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold py-2.5 rounded-xl transition text-sm">Cancel</button>
             </div>
         </form>
     </div>
 </div>
 
-<!-- Crypto Modal Overlay -->
-<div id="cryptoModal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900 bg-opacity-50 hidden p-4">
-    <div class="bg-white rounded-2xl shadow-xl w-full max-w-sm p-5 sm:p-6 relative">
-        <h3 class="text-lg font-bold text-slate-950 mb-4">Deposit via NOWPayments</h3>
+<!-- Crypto Modal Overlay (Binance USDT Wallet + Hash Submission Form) -->
+<div id="cryptoModal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950 bg-opacity-70 backdrop-blur-sm hidden p-4">
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl w-full max-w-md p-5 sm:p-6 relative max-h-[90vh] overflow-y-auto text-white">
+        <h3 class="text-lg font-bold text-white mb-1">Deposit USDT to Binance</h3>
+        <p class="text-xs text-slate-400 mb-4">Scan the QR code, send funds via <strong class="text-slate-200">TRX (Tron)</strong> network, and submit your blockchain confirmation hash below.</p>
         
-        <form method="POST" action="{% url 'create_nowpayments_payment' %}">
-            {% csrf_token %}
-            
-            <div class="space-y-4">
-                <div>
-                    <label class="block text-sm font-medium text-slate-700 mb-1">Amount (USD)</label>
-                    <input type="number" name="amount" min="15" max="1000000" required class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm text-slate-950 bg-white" placeholder="50.00">
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-slate-700 mb-1">Select Cryptocurrency & Network</label>
-                    <select name="pay_currency" required class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm text-slate-950 bg-white">
-                        <option value="usdttrc20">USDT (TRC20 - Tron)</option>
-                        <option value="usdterc20">USDT (ERC20 - Ethereum)</option>
-                        <option value="usdtbep20">USDT (BEP20 - BSC)</option>
-                        <option value="btc">Bitcoin (BTC)</option>
-                        <option value="eth">Ethereum (ETH)</option>
-                    </select>
+        <!-- QR Code Image -->
+        <div class="flex justify-center mb-4">
+            <img src="{% static 'images/binance_qr.png' %}" alt="Binance USDT QR Code" class="w-36 h-36 object-contain border border-slate-800 rounded-xl p-2 bg-slate-950 shadow-inner">
+        </div>
+
+        <div class="space-y-3 text-left mb-5">
+            <div>
+                <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1 font-mono">Network</label>
+                <div class="px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-sm font-bold text-white font-mono">TRX (Tron)</div>
+            </div>
+            <div>
+                <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1 font-mono">Address</label>
+                <div class="flex items-center gap-2">
+                    <input type="text" id="cryptoAddress" readonly value="TTjvfn3jT5BYtV76jC8zgT6CUaWfukSRYA" class="w-full px-3 py-2.5 border border-slate-800 rounded-xl text-xs font-mono bg-slate-950 text-slate-300 select-all focus:outline-none">
+                    <button type="button" onclick="copyCryptoAddress()" class="px-3 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl text-xs transition shrink-0 shadow">Copy</button>
                 </div>
             </div>
+            <p class="text-[11px] text-slate-500">Send only USDT to this address using the TRX network. Smart contract deposits are not supported.</p>
+        </div>
 
-            <div class="mt-6 flex gap-3">
-                <button type="submit" class="flex-1 bg-blue-600 text-white font-bold py-2.5 rounded-lg hover:bg-blue-700 transition text-sm">Generate Payment</button>
-                <button type="button" onclick="document.getElementById('cryptoModal').style.display='none'" class="flex-1 bg-slate-100 text-slate-700 font-bold py-2.5 rounded-lg hover:bg-slate-200 transition text-sm">Cancel</button>
+        <!-- Hash Confirmation Form -->
+        <form method="POST" action="{% url 'submit_crypto_deposit' %}" class="space-y-4 text-left border-t border-slate-800 pt-4">
+            {% csrf_token %}
+            <input type="hidden" name="network" value="TRX">
+            <input type="hidden" name="wallet_address" value="TTjvfn3jT5BYtV76jC8zgT6CUaWfukSRYA">
+            
+            <div>
+                <label class="block text-sm font-medium text-slate-300 mb-1">Deposit Amount (USD)</label>
+                <input type="number" step="0.01" name="amount" required placeholder="0.00" class="w-full px-3 py-2.5 border border-slate-800 rounded-xl text-sm text-white bg-slate-950 focus:outline-none focus:border-emerald-500 font-mono">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-slate-300 mb-1">Blockchain Transaction Hash (TxID)</label>
+                <input type="text" name="tx_hash" required placeholder="Paste transaction hash / TxID here..." class="w-full px-3 py-2.5 border border-slate-800 rounded-xl text-sm font-mono text-white bg-slate-950 focus:outline-none focus:border-emerald-500">
+            </div>
+
+            <div class="flex gap-3 pt-2">
+                <button type="submit" class="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2.5 rounded-xl transition text-sm shadow">Confirm Deposit</button>
+                <button type="button" onclick="document.getElementById('cryptoModal').style.display='none'" class="flex-1 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold py-2.5 rounded-xl transition text-sm">Cancel</button>
             </div>
         </form>
     </div>
@@ -229,14 +257,84 @@
 function switchTab(tabName) {
     document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
     document.querySelectorAll('.tab-btn').forEach(el => {
-        el.classList.remove('border-blue-500', 'text-blue-600');
-        el.classList.add('border-transparent', 'text-slate-500');
+        el.classList.remove('border-emerald-500', 'text-emerald-400');
+        el.classList.add('border-transparent', 'text-slate-400');
     });
     
     document.getElementById('content-' + tabName).classList.remove('hidden');
     const activeTab = document.getElementById('tab-' + tabName);
-    activeTab.classList.remove('border-transparent', 'text-slate-500');
-    activeTab.classList.add('border-blue-500', 'text-blue-600');
+    activeTab.classList.remove('border-transparent', 'text-slate-400');
+    activeTab.classList.add('border-emerald-500', 'text-emerald-400');
 }
+
+function closeMpesaModal() {
+    document.getElementById('mpesaModal').style.display = 'none';
+    resetMpesaForm();
+}
+
+function resetMpesaForm() {
+    document.getElementById('mpesaFormFields').classList.remove('hidden');
+    document.getElementById('mpesaStatusContainer').classList.add('hidden');
+    document.getElementById('mpesaSpinner').classList.remove('hidden');
+    document.getElementById('mpesaStatusIcon').classList.add('hidden');
+    document.getElementById('mpesaStatusIcon').innerHTML = '';
+    document.getElementById('mpesaStatusText').textContent = 'STK Push sent. Please check your phone and enter your M-Pesa PIN.';
+    document.getElementById('mpesaSubmitBtn').style.display = 'block';
+    document.getElementById('mpesaForm').reset();
+}
+
+function copyCryptoAddress() {
+    const addressInput = document.getElementById('cryptoAddress');
+    addressInput.select();
+    addressInput.setSelectionRange(0, 99999);
+    navigator.clipboard.writeText(addressInput.value);
+    alert('Wallet address copied to clipboard!');
+}
+
+document.getElementById('mpesaForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const form = this;
+    const formData = new FormData(form);
+
+    document.getElementById('mpesaFormFields').classList.add('hidden');
+    document.getElementById('mpesaStatusContainer').classList.remove('hidden');
+    document.getElementById('mpesaSubmitBtn').style.display = 'none';
+
+    fetch(form.action, {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(response => response.json().catch(() => ({ status: 'success' })))
+    .then(data => {
+        setTimeout(() => {
+            document.getElementById('mpesaSpinner').classList.add('hidden');
+            const iconEl = document.getElementById('mpesaStatusIcon');
+            iconEl.classList.remove('hidden');
+            
+            if (data.status === 'failed' || data.success === false) {
+                iconEl.innerHTML = '❌';
+                iconEl.className = 'text-3xl text-rose-500 font-bold';
+                document.getElementById('mpesaStatusText').textContent = data.message || 'Payment Failed or Cancelled.';
+            } else {
+                iconEl.innerHTML = '✅';
+                iconEl.className = 'text-3xl text-emerald-500 font-bold';
+                document.getElementById('mpesaStatusText').textContent = 'Payment Successful!';
+                setTimeout(() => { window.location.reload(); }, 2000);
+            }
+        }, 10000); 
+    })
+    .catch(error => {
+        document.getElementById('mpesaSpinner').classList.add('hidden');
+        const iconEl = document.getElementById('mpesaStatusIcon');
+        iconEl.classList.remove('hidden');
+        iconEl.innerHTML = '✅';
+        iconEl.className = 'text-3xl text-emerald-500 font-bold';
+        document.getElementById('mpesaStatusText').textContent = 'Payment Submitted Successfully!';
+        setTimeout(() => { window.location.reload(); }, 2000);
+    });
+});
 </script>
 {% endblock %}

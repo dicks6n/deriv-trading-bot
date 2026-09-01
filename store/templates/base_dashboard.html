@@ -23,9 +23,9 @@
             theme: {
                 extend: {
                     colors: {
-                        darkBg: '#080c14',
-                        cardBg: '#0f172a',
-                        cardBorder: '#1e293b',
+                        darkBg: '#020617',
+                        cardBg: '#090d16',
+                        cardBorder: 'rgba(99, 102, 241, 0.2)',
                         brandGreen: '#00f090',
                     },
                     fontFamily: {
@@ -39,7 +39,7 @@
 
     <style>
         body {
-            background-color: #080c14;
+            background-color: #020617;
             color: #f8fafc;
             font-family: 'Inter', sans-serif;
         }
@@ -50,38 +50,47 @@
             height: 6px;
         }
         ::-webkit-scrollbar-track {
-            background: #080c14;
+            background: #020617;
         }
         ::-webkit-scrollbar-thumb {
-            background: #1e293b;
+            background: rgba(99, 102, 241, 0.3);
             border-radius: 9999px;
         }
         ::-webkit-scrollbar-thumb:hover {
-            background: #334155;
+            background: rgba(99, 102, 241, 0.5);
+        }
+
+        /* Blinking Animation */
+        @keyframes customBlink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.1; }
+        }
+        .animate-blink {
+            animation: customBlink 1s infinite;
         }
     </style>
 
     {% block extra_head %}{% endblock %}
 </head>
-<body class="bg-darkBg text-slate-100 min-h-screen flex antialiased selection:bg-brandGreen selection:text-slate-950">
+<body class="bg-[#020617] text-slate-100 min-h-screen flex antialiased selection:bg-indigo-500 selection:text-white">
 
     <!-- MOBILE SIDEBAR BACKDROP -->
     <div id="sidebarBackdrop" onclick="toggleSidebar()" class="fixed inset-0 bg-slate-950/80 z-40 lg:hidden hidden backdrop-blur-sm transition-opacity"></div>
 
     <!-- SIDEBAR -->
-    <aside id="sidebar" class="fixed top-0 bottom-0 left-0 z-50 w-64 bg-cardBg border-r border-cardBorder flex flex-col justify-between transition-transform duration-300 -translate-x-full lg:translate-x-0">
+    <aside id="sidebar" class="fixed top-0 bottom-0 left-0 z-50 w-64 bg-gradient-to-b from-slate-950 via-indigo-950/40 to-slate-950 border-r border-indigo-500/20 flex flex-col justify-between transition-transform duration-300 -translate-x-full lg:translate-x-0 shadow-2xl">
         
         <!-- SIDEBAR TOP SECTION -->
         <div class="overflow-y-auto flex-1 pb-6">
             <!-- LOGO HEADER -->
-            <div class="h-16 px-6 flex items-center justify-between border-b border-cardBorder/60 sticky top-0 bg-cardBg z-10">
+            <div class="h-16 px-6 flex items-center justify-between border-b border-indigo-500/20 sticky top-0 bg-slate-950/90 backdrop-blur-md z-10">
                 <a href="/" class="flex items-center gap-2.5">
                     <div class="w-9 h-9 rounded-xl bg-brandGreen/20 border border-brandGreen/30 text-brandGreen flex items-center justify-center text-lg font-extrabold shadow-lg shadow-brandGreen/10">
                         <i class="fa-solid fa-chart-line"></i>
                     </div>
                     <div>
                         <span class="text-base font-extrabold tracking-wider text-white">PATREO<span class="text-brandGreen">AIX</span></span>
-                        <span class="block text-[9px] font-mono text-slate-500 uppercase tracking-widest -mt-1">Pro Trading AI</span>
+                        <span class="block text-[9px] font-mono text-slate-400 uppercase tracking-widest -mt-1">Pro Trading AI</span>
                     </div>
                 </a>
                 <button onclick="toggleSidebar()" class="lg:hidden text-slate-400 hover:text-white p-1">
@@ -89,146 +98,258 @@
                 </button>
             </div>
 
-            <!-- MAIN NAVIGATION LINKS -->
-            <nav class="p-4 space-y-1">
-                <p class="px-3 text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2 font-mono">Main Menu</p>
+            <!-- NAVIGATION SECTIONS -->
+            <nav class="p-4 space-y-6">
 
-                <!-- Dashboard Link -->
-                <a href="{% url 'dashboard' %}" 
-                   class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs transition group {% if request.resolver_match.url_name == 'dashboard' %}bg-slate-800/90 text-white font-bold border border-slate-700/50 shadow-md{% else %}text-slate-400 font-medium hover:text-white hover:bg-slate-800/50{% endif %}">
-                    <div class="w-7 h-7 rounded-lg bg-slate-800/80 border border-cardBorder/60 text-slate-400 flex items-center justify-center text-xs group-hover:text-white transition">
-                        <i class="fa-solid fa-gauge"></i>
+                <!-- MAIN -->
+                <div>
+                    <p class="px-3 text-[10px] font-bold text-indigo-300/70 uppercase tracking-wider mb-2 font-mono">Main</p>
+                    <div class="space-y-1">
+                        <!-- Dashboard -->
+                        <a href="/" class="flex items-center gap-3 px-3.5 py-2 rounded-xl text-xs transition group {% if request.resolver_match.url_name == 'dashboard' %}bg-gradient-to-r from-indigo-950 to-slate-900 text-white font-bold border border-indigo-500/40 shadow-lg shadow-indigo-500/10{% else %}text-slate-400 font-medium hover:text-white hover:bg-indigo-950/40{% endif %}">
+                            <i class="fa-solid fa-gauge w-4 text-center"></i>
+                            <span>Dashboard</span>
+                        </a>
+                        <!-- Live Signals -->
+                        <a href="{% url 'trade' %}" class="flex items-center gap-3 px-3.5 py-2 rounded-xl text-xs transition group {% if request.resolver_match.url_name == 'trade' %}bg-gradient-to-r from-indigo-950 to-slate-900 text-white font-bold border border-indigo-500/40 shadow-lg shadow-indigo-500/10{% else %}text-slate-400 font-medium hover:text-white hover:bg-indigo-950/40{% endif %}">
+                            <i class="fa-solid fa-signal w-4 text-center"></i>
+                            <span>Live Signals</span>
+                        </a>
+                        <!-- AI Signal Generator -->
+                        <a href="{% url 'digits_trading' %}" class="flex items-center gap-3 px-3.5 py-2 rounded-xl text-xs transition group {% if request.resolver_match.url_name == 'digits_trading' %}bg-gradient-to-r from-indigo-950 to-slate-900 text-white font-bold border border-indigo-500/40 shadow-lg shadow-indigo-500/10{% else %}text-slate-400 font-medium hover:text-white hover:bg-indigo-950/40{% endif %}">
+                            <i class="fa-solid fa-bolt w-4 text-center text-brandGreen"></i>
+                            <span>AI Signal Generator</span>
+                        </a>
+                        <!-- Market Overview -->
+                        <a href="{% url 'market_overview' %}" class="flex items-center gap-3 px-3.5 py-2 rounded-xl text-xs transition group {% if request.resolver_match.url_name == 'market_overview' %}bg-gradient-to-r from-indigo-950 to-slate-900 text-white font-bold border border-indigo-500/40 shadow-lg shadow-indigo-500/10{% else %}text-slate-400 font-medium hover:text-white hover:bg-indigo-950/40{% endif %}">
+                            <i class="fa-solid fa-globe w-4 text-center"></i>
+                            <span>Market Overview</span>
+                        </a>
                     </div>
-                    <span>Dashboard</span>
-                </a>
+                </div>
 
-                <!-- Funded Accounts Link -->
-                <a href="{% url 'funded' %}" 
-                   class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs transition group {% if request.resolver_match.url_name == 'funded' %}bg-slate-800/90 text-white font-bold border border-slate-700/50 shadow-md{% else %}text-slate-400 font-medium hover:text-white hover:bg-slate-800/50{% endif %}">
-                    <div class="w-7 h-7 rounded-lg bg-slate-800/80 border border-cardBorder/60 text-slate-400 flex items-center justify-center text-xs group-hover:text-white transition">
-                        <i class="fa-solid fa-wallet"></i>
+                <!-- AI INTELLIGENCE -->
+                <div>
+                    <p class="px-3 text-[10px] font-bold text-indigo-300/70 uppercase tracking-wider mb-2 font-mono">AI Intelligence</p>
+                    <div class="space-y-1">
+                        <a href="#" class="flex items-center gap-3 px-3.5 py-2 rounded-xl text-xs text-slate-400 font-medium hover:text-white hover:bg-indigo-950/40 transition">
+                            <i class="fa-solid fa-chart-pie w-4 text-center"></i>
+                            <span>AI Market Summary</span>
+                        </a>
+                        <a href="{% url 'ai_prediction_models' %}" class="flex items-center gap-3 px-3.5 py-2 rounded-xl text-xs transition group {% if request.resolver_match.url_name == 'ai_prediction_models' %}bg-gradient-to-r from-indigo-950 to-slate-900 text-white font-bold border border-indigo-500/40 shadow-lg shadow-indigo-500/10{% else %}text-slate-400 font-medium hover:text-white hover:bg-indigo-950/40{% endif %}">
+                            <i class="fa-solid fa-brain w-4 text-center text-indigo-400"></i>
+                            <span>AI Prediction Models</span>
+                        </a>
+
+                        <a href="{% url 'ai_risk_analyzer' %}" class="flex items-center gap-3 px-3.5 py-2 rounded-xl text-xs transition group {% if request.resolver_match.url_name == 'ai_prediction_models' %}bg-gradient-to-r from-indigo-950 to-slate-900 text-white font-bold border border-indigo-500/40 shadow-lg shadow-indigo-500/10{% else %}text-slate-400 font-medium hover:text-white hover:bg-indigo-950/40{% endif %}">
+                            <i class="fa-solid fa-shield-halved w-4 text-center"></i>
+                            <span>AI Risk Analyzer</span>
+                        </a>
+
+                        <a href="#" class="flex items-center gap-3 px-3.5 py-2 rounded-xl text-xs text-slate-400 font-medium hover:text-white hover:bg-indigo-950/40 transition">
+                            <i class="fa-solid fa-book-open w-4 text-center"></i>
+                            <span>AI Trade Journal</span>
+                        </a>
+                        <a href="#" class="flex items-center gap-3 px-3.5 py-2 rounded-xl text-xs text-slate-400 font-medium hover:text-white hover:bg-indigo-950/40 transition">
+                            <i class="fa-solid fa-wand-magic-sparkles w-4 text-center"></i>
+                            <span>AI Strategy Builder</span>
+                        </a>
                     </div>
-                    <span>Funded Accounts</span>
-                </a>
+                </div>
 
-                <!-- Markets Link -->
-                <a href="{% url 'markets' %}" 
-                   class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs transition group {% if request.resolver_match.url_name == 'markets' %}bg-slate-800/90 text-white font-bold border border-slate-700/50 shadow-md{% else %}text-slate-400 font-medium hover:text-white hover:bg-slate-800/50{% endif %}">
-                    <div class="w-7 h-7 rounded-lg bg-slate-800/80 border border-cardBorder/60 text-slate-400 flex items-center justify-center text-xs group-hover:text-white transition">
-                        <i class="fa-solid fa-globe"></i>
+                <!-- TRADING TOOLS -->
+                <div>
+                    <p class="px-3 text-[10px] font-bold text-indigo-300/70 uppercase tracking-wider mb-2 font-mono">Trading Tools</p>
+                    <div class="space-y-1">
+                        <a href="#" class="flex items-center gap-3 px-3.5 py-2 rounded-xl text-xs text-slate-400 font-medium hover:text-white hover:bg-indigo-950/40 transition">
+                            <i class="fa-solid fa-fire w-4 text-center"></i>
+                            <span>Forex Heatmap</span>
+                        </a>
+                        <a href="#" class="flex items-center gap-3 px-3.5 py-2 rounded-xl text-xs text-slate-400 font-medium hover:text-white hover:bg-indigo-950/40 transition">
+                            <i class="fa-solid fa-coins w-4 text-center"></i>
+                            <span>Crypto Heatmap</span>
+                        </a>
+                        <a href="#" class="flex items-center gap-3 px-3.5 py-2 rounded-xl text-xs text-slate-400 font-medium hover:text-white hover:bg-indigo-950/40 transition">
+                            <i class="fa-solid fa-arrow-trend-up w-4 text-center"></i>
+                            <span>Trend Scanner</span>
+                        </a>
+                        <a href="#" class="flex items-center gap-3 px-3.5 py-2 rounded-xl text-xs text-slate-400 font-medium hover:text-white hover:bg-indigo-950/40 transition">
+                            <i class="fa-solid fa-shapes w-4 text-center"></i>
+                            <span>Pattern Detection</span>
+                        </a>
+                        <a href="#" class="flex items-center gap-3 px-3.5 py-2 rounded-xl text-xs text-slate-400 font-medium hover:text-white hover:bg-indigo-950/40 transition">
+                            <i class="fa-solid fa-wave-square w-4 text-center"></i>
+                            <span>Volatility Index</span>
+                        </a>
+                        <a href="#" class="flex items-center gap-3 px-3.5 py-2 rounded-xl text-xs text-slate-400 font-medium hover:text-white hover:bg-indigo-950/40 transition">
+                            <i class="fa-solid fa-calendar-days w-4 text-center"></i>
+                            <span>Economic Calendar</span>
+                        </a>
+                        <a href="{% url 'news_sentiment' %}" class="flex items-center gap-3 px-3.5 py-2 rounded-xl text-xs transition group {% if request.resolver_match.url_name == 'news_sentiment' %}bg-gradient-to-r from-indigo-950 to-slate-900 text-white font-bold border border-indigo-500/40 shadow-lg shadow-indigo-500/10{% else %}text-slate-400 font-medium hover:text-white hover:bg-indigo-950/40{% endif %}">
+                            <i class="fa-solid fa-newspaper w-4 text-center"></i>
+                            <span>News & Sentiment</span>
+                        </a>
+                        <a href="#" class="flex items-center gap-3 px-3.5 py-2 rounded-xl text-xs text-slate-400 font-medium hover:text-white hover:bg-indigo-950/40 transition">
+                            <i class="fa-solid fa-table-cells w-4 text-center"></i>
+                            <span>Correlation Matrix</span>
+                        </a>
                     </div>
-                    <span>Markets</span>
-                </a>
+                </div>
 
-                <!-- Market Analysis Link -->
-                <a href="{% url 'market_overview' %}" 
-                   class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs transition group {% if request.resolver_match.url_name == 'market_overview' %}bg-slate-800/90 text-white font-bold border border-slate-700/50 shadow-md{% else %}text-slate-400 font-medium hover:text-white hover:bg-slate-800/50{% endif %}">
-                    <div class="w-7 h-7 rounded-lg bg-slate-800/80 border border-cardBorder/60 text-slate-400 flex items-center justify-center text-xs group-hover:text-white transition">
-                        <i class="fa-solid fa-chart-line"></i>
+                <!-- MARKET ANALYTICS -->
+                <div>
+                    <p class="px-3 text-[10px] font-bold text-indigo-300/70 uppercase tracking-wider mb-2 font-mono">Market Analytics</p>
+                    <div class="space-y-1">
+                        <a href="#" class="flex items-center gap-3 px-3.5 py-2 rounded-xl text-xs text-slate-400 font-medium hover:text-white hover:bg-indigo-950/40 transition">
+                            <i class="fa-solid fa-chart-line w-4 text-center"></i>
+                            <span>Forex Analytics</span>
+                        </a>
+                        <a href="#" class="flex items-center gap-3 px-3.5 py-2 rounded-xl text-xs text-slate-400 font-medium hover:text-white hover:bg-indigo-950/40 transition">
+                            <i class="fa-solid fa-chart-column w-4 text-center"></i>
+                            <span>Crypto Analytics</span>
+                        </a>
+                        <a href="#" class="flex items-center gap-3 px-3.5 py-2 rounded-xl text-xs text-slate-400 font-medium hover:text-white hover:bg-indigo-950/40 transition">
+                            <i class="fa-solid fa-ranking-star w-4 text-center"></i>
+                            <span>Top Gainers & Losers</span>
+                        </a>
+                        <a href="#" class="flex items-center gap-3 px-3.5 py-2 rounded-xl text-xs text-slate-400 font-medium hover:text-white hover:bg-indigo-950/40 transition">
+                            <i class="fa-solid fa-face-smile w-4 text-center"></i>
+                            <span>Market Sentiment</span>
+                        </a>
+                        <a href="#" class="flex items-center gap-3 px-3.5 py-2 rounded-xl text-xs text-slate-400 font-medium hover:text-white hover:bg-indigo-950/40 transition">
+                            <i class="fa-solid fa-layer-group w-4 text-center"></i>
+                            <span>Liquidity Zones</span>
+                        </a>
+                        <a href="#" class="flex items-center gap-3 px-3.5 py-2 rounded-xl text-xs text-slate-400 font-medium hover:text-white hover:bg-indigo-950/40 transition">
+                            <i class="fa-solid fa-binoculars w-4 text-center"></i>
+                            <span>Price Action Monitor</span>
+                        </a>
                     </div>
-                    <span>Market Analysis</span>
-                </a>
+                </div>
 
-                <!-- Digits Trading Link -->
-                <a href="{% url 'digits_trading' %}" 
-                   class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs transition group {% if request.resolver_match.url_name == 'digits_trading' %}bg-slate-800/90 text-white font-bold border border-slate-700/50 shadow-md{% else %}text-slate-400 font-medium hover:text-white hover:bg-slate-800/50{% endif %}">
-                    <div class="w-7 h-7 rounded-lg bg-brandGreen/20 border border-brandGreen/30 text-brandGreen flex items-center justify-center text-xs group-hover:scale-105 transition">
-                        <i class="fa-solid fa-bolt"></i>
+                <!-- PORTFOLIO -->
+                <div>
+                    <p class="px-3 text-[10px] font-bold text-indigo-300/70 uppercase tracking-wider mb-2 font-mono">Portfolio</p>
+                    <div class="space-y-1">
+                        <a href="{% url 'portfolio' %}" class="flex items-center gap-3 px-3.5 py-2 rounded-xl text-xs transition group {% if request.resolver_match.url_name == 'portfolio' %}bg-gradient-to-r from-indigo-950 to-slate-900 text-white font-bold border border-indigo-500/40 shadow-lg shadow-indigo-500/10{% else %}text-slate-400 font-medium hover:text-white hover:bg-indigo-950/40{% endif %}">
+                            <i class="fa-solid fa-briefcase w-4 text-center"></i>
+                            <span>My Portfolio</span>
+                        </a>
+                        <a href="#" class="flex items-center gap-3 px-3.5 py-2 rounded-xl text-xs text-slate-400 font-medium hover:text-white hover:bg-indigo-950/40 transition">
+                            <i class="fa-solid fa-folder-open w-4 text-center"></i>
+                            <span>Open Positions</span>
+                        </a>
+                        <a href="{% url 'trade_history' %}" class="flex items-center gap-3 px-3.5 py-2 rounded-xl text-xs transition group {% if request.resolver_match.url_name == 'trade_history' %}bg-gradient-to-r from-indigo-950 to-slate-900 text-white font-bold border border-indigo-500/40 shadow-lg shadow-indigo-500/10{% else %}text-slate-400 font-medium hover:text-white hover:bg-indigo-950/40{% endif %}">
+                            <i class="fa-solid fa-clock-rotate-left w-4 text-center"></i>
+                            <span>Trade History</span>
+                        </a>
+                        <a href="#" class="flex items-center gap-3 px-3.5 py-2 rounded-xl text-xs text-slate-400 font-medium hover:text-white hover:bg-indigo-950/40 transition">
+                            <i class="fa-solid fa-chart-area w-4 text-center"></i>
+                            <span>Performance Analytics</span>
+                        </a>
+                        <a href="#" class="flex items-center gap-3 px-3.5 py-2 rounded-xl text-xs text-slate-400 font-medium hover:text-white hover:bg-indigo-950/40 transition">
+                            <i class="fa-solid fa-scale-balanced w-4 text-center"></i>
+                            <span>Risk Metrics</span>
+                        </a>
+                        <a href="#" class="flex items-center gap-3 px-3.5 py-2 rounded-xl text-xs text-slate-400 font-medium hover:text-white hover:bg-indigo-950/40 transition">
+                            <i class="fa-solid fa-file-invoice-dollar w-4 text-center"></i>
+                            <span>P/L Overview</span>
+                        </a>
                     </div>
-                    <span>Digits Trading</span>
-                </a>
+                </div>
 
-                <!-- Trading Bot Link -->
-                <a href="{% url 'bot' %}" 
-                   class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs transition group {% if request.resolver_match.url_name == 'bot' %}bg-slate-800/90 text-white font-bold border border-slate-700/50 shadow-md{% else %}text-slate-400 font-medium hover:text-white hover:bg-slate-800/50{% endif %}">
-                    <div class="w-7 h-7 rounded-lg bg-slate-800/80 border border-cardBorder/60 text-slate-400 flex items-center justify-center text-xs group-hover:text-white transition">
-                        <i class="fa-solid fa-robot"></i>
+                <!-- WATCHLISTS -->
+                <div>
+                    <p class="px-3 text-[10px] font-bold text-indigo-300/70 uppercase tracking-wider mb-2 font-mono">Watchlists</p>
+                    <div class="space-y-1">
+                        <a href="#" class="flex items-center gap-3 px-3.5 py-2 rounded-xl text-xs text-slate-400 font-medium hover:text-white hover:bg-indigo-950/40 transition">
+                            <i class="fa-solid fa-dollar-sign w-4 text-center"></i>
+                            <span>Forex Pairs</span>
+                        </a>
+                        <a href="#" class="flex items-center gap-3 px-3.5 py-2 rounded-xl text-xs text-slate-400 font-medium hover:text-white hover:bg-indigo-950/40 transition">
+                            <i class="fa-solid fa-bitcoin-sign w-4 text-center"></i>
+                            <span>Crypto Pairs</span>
+                        </a>
+                        <a href="#" class="flex items-center gap-3 px-3.5 py-2 rounded-xl text-xs text-slate-400 font-medium hover:text-white hover:bg-indigo-950/40 transition">
+                            <i class="fa-solid fa-bell w-4 text-center"></i>
+                            <span>Custom Alerts</span>
+                        </a>
+                        <a href="#" class="flex items-center gap-3 px-3.5 py-2 rounded-xl text-xs text-slate-400 font-medium hover:text-white hover:bg-indigo-950/40 transition">
+                            <i class="fa-solid fa-bookmark w-4 text-center"></i>
+                            <span>Saved Signals</span>
+                        </a>
                     </div>
-                    <span>Trading Bot</span>
-                </a>
+                </div>
 
-                <!-- Live Trade Link -->
-                <a href="{% url 'trade' %}" 
-                   class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs transition group {% if request.resolver_match.url_name == 'trade' %}bg-slate-800/90 text-white font-bold border border-slate-700/50 shadow-md{% else %}text-slate-400 font-medium hover:text-white hover:bg-slate-800/50{% endif %}">
-                    <div class="w-7 h-7 rounded-lg bg-slate-800/80 border border-cardBorder/60 text-slate-400 flex items-center justify-center text-xs group-hover:text-white transition">
-                        <i class="fa-solid fa-right-left"></i>
+                <!-- AUTOMATION -->
+                <div>
+                    <p class="px-3 text-[10px] font-bold text-indigo-300/70 uppercase tracking-wider mb-2 font-mono">Automation</p>
+                    <div class="space-y-1">
+                        <a href="{% url 'bot' %}" class="flex items-center gap-3 px-3.5 py-2 rounded-xl text-xs transition group {% if request.resolver_match.url_name == 'bot' %}bg-gradient-to-r from-indigo-950 to-slate-900 text-white font-bold border border-indigo-500/40 shadow-lg shadow-indigo-500/10{% else %}text-slate-400 font-medium hover:text-white hover:bg-indigo-950/40{% endif %}">
+                            <i class="fa-solid fa-robot w-4 text-center"></i>
+                            <span>Bot Center</span>
+                        </a>
+                        <a href="#" class="flex items-center gap-3 px-3.5 py-2 rounded-xl text-xs text-slate-400 font-medium hover:text-white hover:bg-indigo-950/40 transition">
+                            <i class="fa-solid fa-share-nodes w-4 text-center"></i>
+                            <span>Auto-Signal Forwarder</span>
+                        </a>
+                        <a href="{% url 'webhooks' %}" class="flex items-center gap-3 px-3.5 py-2 rounded-xl text-xs transition group {% if request.resolver_match.url_name == 'webhooks' %}bg-gradient-to-r from-indigo-950 to-slate-900 text-white font-bold border border-indigo-500/40 shadow-lg shadow-indigo-500/10{% else %}text-slate-400 font-medium hover:text-white hover:bg-indigo-950/40{% endif %}">
+                            <i class="fa-solid fa-code w-4 text-center"></i>
+                            <span>Webhook Automations</span>
+                        </a>
+                        <a href="#" class="flex items-center gap-3 px-3.5 py-2 rounded-xl text-xs text-slate-400 font-medium hover:text-white hover:bg-indigo-950/40 transition">
+                            <i class="fa-solid fa-plug w-4 text-center"></i>
+                            <span>API Integrations</span>
+                        </a>
                     </div>
-                    <span>Live Trade</span>
-                </a>
+                </div>
 
-                <!-- Trade History Link -->
-                <a href="{% url 'trade_history' %}" 
-                   class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs transition group {% if request.resolver_match.url_name == 'trade_history' %}bg-slate-800/90 text-white font-bold border border-slate-700/50 shadow-md{% else %}text-slate-400 font-medium hover:text-white hover:bg-slate-800/50{% endif %}">
-                    <div class="w-7 h-7 rounded-lg bg-slate-800/80 border border-cardBorder/60 text-slate-400 flex items-center justify-center text-xs group-hover:text-white transition">
-                        <i class="fa-solid fa-clock-rotate-left"></i>
+                <!-- ACCOUNT -->
+                <div>
+                    <p class="px-3 text-[10px] font-bold text-indigo-300/70 uppercase tracking-wider mb-2 font-mono">Account</p>
+                    <div class="space-y-1">
+                        <a href="{% url 'profile' %}" class="flex items-center gap-3 px-3.5 py-2 rounded-xl text-xs transition group {% if request.resolver_match.url_name == 'profile' %}bg-gradient-to-r from-indigo-950 to-slate-900 text-white font-bold border border-indigo-500/40 shadow-lg shadow-indigo-500/10{% else %}text-slate-400 font-medium hover:text-white hover:bg-indigo-950/40{% endif %}">
+                            <i class="fa-solid fa-user-shield w-4 text-center"></i>
+                            <span>Profile & Security</span>
+                        </a>
+                        <a href="#" class="flex items-center justify-between px-3.5 py-2 rounded-xl text-xs text-slate-400 font-medium hover:text-white hover:bg-indigo-950/40 transition">
+                            <div class="flex items-center gap-3">
+                                <i class="fa-solid fa-bell w-4 text-center"></i>
+                                <span>Notification Settings</span>
+                            </div>
+                            <span class="px-1.5 py-0.5 rounded-full text-[9px] font-bold bg-rose-500/20 text-rose-400 border border-rose-500/30">5</span>
+                        </a>
+                        <a href="#" class="flex items-center gap-3 px-3.5 py-2 rounded-xl text-xs text-slate-400 font-medium hover:text-white hover:bg-indigo-950/40 transition">
+                            <i class="fa-solid fa-link w-4 text-center"></i>
+                            <span>Connected Exchanges</span>
+                        </a>
+                        <a href="{% url 'funded' %}" class="flex items-center justify-between px-3.5 py-2 rounded-xl text-xs transition group {% if request.resolver_match.url_name == 'funding_deposit' %}bg-gradient-to-r from-indigo-950 to-slate-900 text-white font-bold border border-indigo-500/40 shadow-lg shadow-indigo-500/10{% else %}text-slate-400 font-medium hover:text-white hover:bg-indigo-950/40{% endif %}">
+                            <div class="flex items-center gap-3">
+                                <i class="fa-solid fa-credit-card w-4 text-center"></i>
+                                <span>Subscription & Billing</span>
+                            </div>
+                            <span class="px-1.5 py-0.5 rounded-full text-[9px] font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">PRO</span>
+                        </a>
+                        <a href="{% url 'ai_support' %}" class="flex items-center gap-3 px-3.5 py-2 rounded-xl text-xs text-slate-400 font-medium hover:text-white hover:bg-indigo-950/40 transition">
+                            <i class="fa-solid fa-circle-question w-4 text-center"></i>
+                            <span>Help Center</span>
+                        </a>
                     </div>
-                    <span>Trade History</span>
-                </a>
+                </div>
 
-                <!-- Portfolio Link -->
-                <a href="{% url 'portfolio' %}" 
-                   class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs transition group {% if request.resolver_match.url_name == 'portfolio' %}bg-slate-800/90 text-white font-bold border border-slate-700/50 shadow-md{% else %}text-slate-400 font-medium hover:text-white hover:bg-slate-800/50{% endif %}">
-                    <div class="w-7 h-7 rounded-lg bg-slate-800/80 border border-cardBorder/60 text-slate-400 flex items-center justify-center text-xs group-hover:text-white transition">
-                        <i class="fa-solid fa-briefcase"></i>
-                    </div>
-                    <span>Portfolio</span>
-                </a>
-
-                <!-- AI PREDICTION MODELS LINK -->
-                <a href="{% url 'ai_prediction_models' %}" 
-                   class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs transition group {% if request.resolver_match.url_name == 'ai_prediction_models' %}bg-slate-800/90 text-white font-bold border border-indigo-500/30 shadow-md shadow-indigo-500/5{% else %}text-slate-400 font-medium hover:text-white hover:bg-slate-800/50{% endif %}">
-                    <div class="w-7 h-7 rounded-lg bg-indigo-500/20 border border-indigo-500/30 text-indigo-400 flex items-center justify-center text-xs group-hover:bg-indigo-500/30 group-hover:scale-105 transition">
-                        <i class="fa-solid fa-brain"></i>
-                    </div>
-                    <span class="flex-1">AI Models</span>
-                    <span class="px-2 py-0.5 rounded-full text-[9px] font-bold bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 uppercase tracking-wider">AI</span>
-                </a>
-
-                <!-- News & Sentiment Link -->
-                <a href="{% url 'news_sentiment' %}" 
-                   class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs transition group {% if request.resolver_match.url_name == 'news_sentiment' %}bg-slate-800/90 text-white font-bold border border-slate-700/50 shadow-md{% else %}text-slate-400 font-medium hover:text-white hover:bg-slate-800/50{% endif %}">
-                    <div class="w-7 h-7 rounded-lg bg-slate-800/80 border border-cardBorder/60 text-slate-400 flex items-center justify-center text-xs group-hover:text-white transition">
-                        <i class="fa-solid fa-newspaper"></i>
-                    </div>
-                    <span>News & Sentiment</span>
-                </a>
-
-                <p class="px-3 text-[10px] font-bold text-slate-500 uppercase tracking-wider pt-4 mb-2 font-mono">Billing & System</p>
-
-                <!-- Deposit & Billing (Account / Payment) Link -->
-                <a href="{% url 'funding_deposit' %}" 
-                   class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs transition group {% if request.resolver_match.url_name == 'funding_deposit' %}bg-slate-800/90 text-white font-bold border border-slate-700/50 shadow-md{% else %}text-slate-400 font-medium hover:text-white hover:bg-slate-800/50{% endif %}">
-                    <div class="w-7 h-7 rounded-lg bg-slate-800/80 border border-cardBorder/60 text-slate-400 flex items-center justify-center text-xs group-hover:text-white transition">
-                        <i class="fa-solid fa-credit-card"></i>
-                    </div>
-                    <span>Deposit & Billing</span>
-                </a>
-
-                <!-- Webhooks Link -->
-                <a href="{% url 'webhooks' %}" 
-                   class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs transition group {% if request.resolver_match.url_name == 'webhooks' %}bg-slate-800/90 text-white font-bold border border-slate-700/50 shadow-md{% else %}text-slate-400 font-medium hover:text-white hover:bg-slate-800/50{% endif %}">
-                    <div class="w-7 h-7 rounded-lg bg-slate-800/80 border border-cardBorder/60 text-slate-400 flex items-center justify-center text-xs group-hover:text-white transition">
-                        <i class="fa-solid fa-code"></i>
-                    </div>
-                    <span>Webhooks & API</span>
-                </a>
             </nav>
         </div>
 
         <!-- SIDEBAR FOOTER (USER PROFILE & LOGOUT) -->
-        <div class="p-3 border-t border-cardBorder/60 bg-cardBg">
-            <div class="bg-slate-900/80 p-2.5 rounded-xl border border-cardBorder/60 flex items-center justify-between">
+        <div class="p-3 border-t border-indigo-500/20 bg-slate-950/90">
+            <div class="bg-slate-900/90 p-2.5 rounded-xl border border-indigo-500/30 flex items-center justify-between shadow-inner">
                 <div class="flex items-center gap-2.5 overflow-hidden">
-                    <div class="w-8 h-8 rounded-lg bg-brandGreen/20 border border-brandGreen/40 text-brandGreen font-bold flex items-center justify-center text-xs shrink-0">
-                        {{ user.username|default:"TR"|slice:":2"|upper }}
+                    <div class="w-8 h-8 rounded-lg bg-indigo-500/20 border border-indigo-500/40 text-indigo-400 font-bold flex items-center justify-center text-xs shrink-0">
+                        {{ user.username|default:"AK"|slice:":2"|upper }}
                     </div>
                     <div class="truncate">
-                        <p class="text-xs font-bold text-white truncate">{{ user.username|default:"Pro Trader" }}</p>
-                        <a href="{% url 'profile' %}" class="block transition-transform hover:scale-[1.02]">
-                            <div class="bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded-full text-[10px] font-bold inline-block mt-0.5">
-                                Pro Plan Active
-                            </div>
-                        </a>
+                        <p class="text-xs font-bold text-white truncate">{{ user.get_full_name|default:user.username|default:"Alex Kim" }}</p>
+                        <p class="text-[10px] text-slate-400 truncate">{{ user.email|default:"alex@signalaix.io" }}</p>
                     </div>
                 </div>
 
@@ -250,51 +371,51 @@
     <div class="lg:pl-64 flex-1 flex flex-col min-w-0">
 
         <!-- TOP NAVBAR HEADER -->
-        <header class="h-16 bg-cardBg/80 backdrop-blur-md border-b border-cardBorder/80 sticky top-0 z-30 px-4 lg:px-8 flex items-center justify-between gap-4">
+        <header class="h-16 bg-slate-950/80 backdrop-blur-md border-b border-indigo-500/20 sticky top-0 z-30 px-4 lg:px-8 flex items-center justify-between gap-4 shadow-sm">
             
             <!-- Mobile Menu Toggle Button -->
-            <button onclick="toggleSidebar()" class="lg:hidden w-10 h-10 rounded-xl bg-slate-900 border border-cardBorder text-slate-300 flex items-center justify-center hover:text-white transition">
+            <button onclick="toggleSidebar()" class="lg:hidden w-10 h-10 rounded-xl bg-slate-900 border border-indigo-500/30 text-slate-300 flex items-center justify-center hover:text-white transition">
                 <i class="fa-solid fa-bars"></i>
             </button>
 
             <!-- Quick Search Bar -->
             <div class="relative hidden sm:block w-72">
                 <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 text-xs"></i>
-                <input type="text" placeholder="Search signals, models, pairs..." class="w-full bg-slate-900/90 text-xs text-slate-200 placeholder-slate-500 pl-9 pr-3 py-2 rounded-xl border border-cardBorder focus:outline-none focus:border-brandGreen transition">
+                <input type="text" placeholder="Search signals, models, pairs..." class="w-full bg-slate-900/90 text-xs text-slate-200 placeholder-slate-500 pl-9 pr-3 py-2 rounded-xl border border-indigo-500/30 focus:outline-none focus:border-indigo-400 shadow-inner transition">
             </div>
 
             <!-- Right Controls -->
             <div class="flex items-center gap-3 font-mono">
                 <!-- Market Status Badge -->
-                <div class="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-brandGreen text-xs">
-                    <span class="w-2 h-2 rounded-full bg-brandGreen animate-pulse"></span>
+                <div class="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs">
+                    <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
                     <span class="font-sans font-bold text-[11px]">MARKETS OPEN</span>
                 </div>
 
                 <!-- NOTIFICATION DROPDOWN -->
                 <div class="relative">
-                    <button id="notif-btn" class="w-9 h-9 rounded-xl bg-slate-900 border border-cardBorder text-slate-400 hover:text-white flex items-center justify-center text-xs relative transition">
+                    <button id="notif-btn" class="w-9 h-9 rounded-xl bg-slate-900 border border-indigo-500/30 text-slate-400 hover:text-white flex items-center justify-center text-xs relative transition shadow-inner">
                         <i class="fa-regular fa-bell"></i>
-                        <span id="notif-badge" class="{% if not notifications %}hidden{% endif %} absolute top-0 right-0 w-2.5 h-2.5 rounded-full bg-brandGreen"></span>
+                        <span id="notif-badge" class="{% if not notifications %}hidden{% endif %} absolute top-0 right-0 w-2.5 h-2.5 rounded-full bg-emerald-400"></span>
                     </button>
                     <!-- Dropdown Content -->
-                    <div id="notif-dropdown" class="hidden absolute right-0 mt-2 w-72 bg-slate-900 border border-cardBorder rounded-xl shadow-2xl z-50 overflow-hidden">
-                        <div class="p-3 border-b border-cardBorder text-[10px] font-bold text-slate-400 uppercase">Notifications</div>
+                    <div id="notif-dropdown" class="hidden absolute right-0 mt-2 w-72 bg-slate-900 border border-indigo-500/30 rounded-xl shadow-2xl z-50 overflow-hidden">
+                        <div class="p-3 border-b border-indigo-500/20 text-[10px] font-bold text-slate-400 uppercase font-mono">Notifications</div>
                         <div id="notif-list" class="max-h-64 overflow-y-auto">
                             {% for n in notifications %}
-                                <a href="{{ n.link|default:'#' }}" class="block p-3 border-b border-cardBorder hover:bg-slate-800 transition cursor-pointer">
-                                    <p class="text-xs font-bold text-brandGreen">{{ n.title }}</p>
+                                <a href="{{ n.link|default:'#' }}" class="block p-3 border-b border-indigo-500/20 hover:bg-indigo-950/30 transition cursor-pointer">
+                                    <p class="text-xs font-bold text-emerald-400 font-mono">{{ n.title }}</p>
                                     <p class="text-[10px] text-slate-400">{{ n.message }}</p>
                                 </a>
                             {% empty %}
-                                <div id="notif-empty" class="p-4 text-center text-slate-500 text-xs">No new notifications</div>
+                                <div id="notif-empty" class="p-4 text-center text-slate-500 text-xs font-mono">No new notifications</div>
                             {% endfor %}
                         </div>
                     </div>
                 </div>
 
                 <!-- Quick Action Button -->
-                <a href="{% url 'digits_trading' %}" class="px-3.5 py-2 rounded-xl bg-brandGreen hover:bg-emerald-400 text-slate-950 font-bold text-xs font-sans transition flex items-center gap-1.5 shadow-md shadow-emerald-500/10">
+                <a href="{% url 'digits_trading' %}" class="px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs font-sans transition flex items-center gap-1.5 shadow-lg shadow-indigo-500/25">
                     <i class="fa-solid fa-bolt"></i> <span class="hidden sm:inline">AI Signals</span>
                 </a>
             </div>
@@ -313,9 +434,21 @@
             {% block content %}{% endblock %}
         </main>
 
-        <footer class="px-6 py-4 border-t border-cardBorder/60 text-xs text-slate-500 flex flex-col sm:flex-row items-center justify-between gap-2">
+        <!-- BLINKING STATUS BAR AT THE BOTTOM -->
+        <div class="px-6 py-2.5 bg-slate-950/90 border-t border-indigo-500/20 flex items-center justify-between text-[11px] font-mono text-slate-400">
+            <div class="flex items-center gap-2.5">
+                <span class="w-2.5 h-2.5 rounded-full bg-brandGreen animate-blink shadow-[0_0_8px_#00f090]"></span>
+                <span class="text-slate-300 font-bold">SYSTEM STATUS: <span class="text-brandGreen animate-blink">LIVE FEED ACTIVE</span></span>
+            </div>
+            <div class="hidden sm:flex items-center gap-4 text-[10px]">
+                <span>TICK ENGINE: <strong class="text-indigo-400">ONLINE</strong></span>
+                <span>WS LATENCY: <strong class="text-emerald-400">12ms</strong></span>
+            </div>
+        </div>
+
+        <footer class="px-6 py-4 border-t border-indigo-500/20 text-xs text-slate-500 flex flex-col sm:flex-row items-center justify-between gap-2 bg-slate-950/60">
             <p>© 2026 PATREOAIX. All technical predictions generated by algorithmic ML models.</p>
-            <div class="flex items-center gap-4 text-slate-400">
+            <div class="flex items-center gap-4 text-slate-400 font-mono text-[11px]">
                 <a href="#" class="hover:text-white transition">Privacy</a>
                 <a href="#" class="hover:text-white transition">Terms</a>
                 <a href="#" class="hover:text-white transition">API</a>
@@ -348,8 +481,8 @@
             
             const item = document.createElement('a');
             item.href = link || '#';
-            item.className = "block p-3 border-b border-cardBorder hover:bg-slate-800 transition cursor-pointer";
-            item.innerHTML = `<p class="text-xs font-bold text-brandGreen">${title}</p><p class="text-[10px] text-slate-400">${message}</p>`;
+            item.className = "block p-3 border-b border-indigo-500/20 hover:bg-indigo-950/30 transition cursor-pointer";
+            item.innerHTML = `<p class="text-xs font-bold text-emerald-400 font-mono">${title}</p><p class="text-[10px] text-slate-400">${message}</p>`;
             
             list.prepend(item);
             badge.classList.remove('hidden');

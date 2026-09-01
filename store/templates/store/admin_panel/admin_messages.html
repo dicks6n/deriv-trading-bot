@@ -1,0 +1,126 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Message Center - PATREOAIX</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        darkBg: '#090d16',
+                        cardBg: '#0d1322',
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-darkBg text-slate-100 font-sans min-h-screen selection:bg-indigo-500 selection:text-white relative overflow-x-hidden flex flex-col">
+
+    <!-- Header Navigation -->
+    <header class="border-b border-slate-800/80 bg-[#0d1322]/80 backdrop-blur-md px-6 py-4 flex items-center justify-between sticky top-0 z-50">
+        <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400 font-bold text-lg shadow-inner">
+                <i class="fa-solid fa-shield-halved"></i>
+            </div>
+            <div>
+                <span class="font-bold text-sm tracking-wider text-white">PATREOAIX ADMIN</span>
+                <span class="block text-[10px] font-mono text-indigo-400">Support Message Center</span>
+            </div>
+        </div>
+        
+        <div class="flex items-center gap-3">
+            <a href="{% url 'dashboard' %}" class="px-4 py-2 rounded-xl bg-slate-800 border border-slate-700 hover:bg-slate-700 text-xs text-slate-200 font-bold transition flex items-center gap-2">
+                <i class="fa-solid fa-arrow-left text-xs"></i> Back to Hub
+            </a>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="flex-1 max-w-7xl w-full mx-auto p-6 flex flex-col gap-6">
+        
+        <!-- Header Banner -->
+        <div class="bg-cardBg border border-slate-800 rounded-3xl p-6 flex items-center justify-between">
+            <div>
+                <h1 class="text-xl font-bold text-white">Support Tickets & Complaints</h1>
+                <p class="text-xs text-slate-400 mt-1">Manage user issues, view detailed logs, and update status seamlessly.</p>
+            </div>
+            <div class="px-4 py-2 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-300 font-mono text-xs">
+                Total Tickets: {{ tickets|length }}
+            </div>
+        </div>
+
+        {% if messages %}
+            {% for message in messages %}
+                <div class="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        <!-- Tickets Table Container -->
+        <div class="bg-cardBg border border-slate-800 rounded-3xl overflow-hidden shadow-2xl">
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse text-xs">
+                    <thead>
+                        <tr class="border-b border-slate-800 bg-[#090d16] text-slate-400 uppercase tracking-wider text-[10px]">
+                            <th class="p-4">ID</th>
+                            <th class="p-4">User</th>
+                            <th class="p-4">Category</th>
+                            <th class="p-4">Subject</th>
+                            <th class="p-4">Description</th>
+                            <th class="p-4">Status</th>
+                            <th class="p-4">Date</th>
+                            <th class="p-4 text-right">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-800">
+                        {% for ticket in tickets %}
+                        <tr class="hover:bg-slate-800/30 transition">
+                            <td class="p-4 font-mono text-indigo-400">#{{ ticket.id }}</td>
+                            <td class="p-4 text-slate-300">{% if ticket.user %}{{ ticket.user.username }}{% else %}Anonymous{% endif %}</td>
+                            <td class="p-4"><span class="px-2.5 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-300 text-[10px]">{{ ticket.category }}</span></td>
+                            <td class="p-4 font-bold text-white">{{ ticket.subject }}</td>
+                            <td class="p-4 text-slate-400 max-w-xs truncate">{{ ticket.description }}</td>
+                            <td class="p-4">
+                                <span class="px-2.5 py-1 rounded-full text-[10px] font-bold {% if ticket.status == 'Open' %}bg-amber-500/10 text-amber-400 border border-amber-500/20{% else %}bg-emerald-500/10 text-emerald-400 border border-emerald-500/20{% endif %}">
+                                    {{ ticket.status }}
+                                </span>
+                            </td>
+                            <td class="p-4 text-slate-500 text-[11px]">{{ ticket.created_at|date:"M d, Y H:i" }}</td>
+                            <td class="p-4 text-right">
+                                <form method="POST" class="inline-flex items-center gap-2">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="ticket_id" value="{{ ticket.id }}">
+                                    <select name="status" class="bg-[#090d16] border border-slate-700 rounded-lg p-1 text-[10px] text-white focus:outline-none">
+                                        <option value="Open" {% if ticket.status == 'Open' %}selected{% endif %}>Open</option>
+                                        <option value="Resolved" {% if ticket.status == 'Resolved' %}selected{% endif %}>Resolved</option>
+                                    </select>
+                                    <button type="submit" class="px-3 py-1 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-[10px] transition">Update</button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="8" class="p-8 text-center text-slate-500">No support tickets or complaints have been submitted yet.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="border-t border-slate-800 bg-[#0d1322] py-6 px-6 text-center text-[11px] text-slate-500 mt-20">
+        &copy; 2026 PATREOAIX Admin Message Center. All rights reserved.
+    </footer>
+
+</body>
+</html>
