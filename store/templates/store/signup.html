@@ -9,7 +9,33 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
+
 <body class="bg-[#090d16] text-slate-100 font-sans min-h-screen flex flex-col justify-between">
+<!-- ========================================== -->
+<!-- CUSTOM WEB3 LOADING SPINNER OVERLAY -->
+<!-- ========================================== -->
+<div id="loading-spinner" class="fixed inset-0 z-[9999] bg-slate-950/90 backdrop-blur-md flex flex-col items-center justify-center transition-opacity duration-500">
+    <div class="relative flex items-center justify-center">
+        <!-- Outer Glowing Ring -->
+        <div class="w-20 h-20 rounded-full border-4 border-indigo-500/20 border-t-indigo-500 animate-spin"></div>
+        <!-- Inner Pulsing Node -->
+        <div class="absolute w-8 h-8 rounded-full bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center animate-pulse">
+            <div class="w-2.5 h-2.5 rounded-full bg-emerald-400"></div>
+        </div>
+    </div>
+    <div class="mt-5 text-center space-y-1">
+        <p class="text-xs font-mono tracking-widest text-indigo-300 uppercase animate-pulse">Connecting Web3 Vault</p>
+        <p class="text-[10px] font-mono text-slate-500">Synchronizing live oracles & AI signals...</p>
+    </div>
+</div>
+
+<style>
+    .spinner-hidden {
+        opacity: 0;
+        pointer-events: none;
+        visibility: hidden;
+    }
+</style>
 
     <!-- Top Header Navigation -->
     <header class="border-b border-slate-800/80 bg-[#0d1322] px-6 py-4 flex items-center justify-between sticky top-0 z-50">
@@ -198,7 +224,7 @@
         &copy; PATREOAIX AI Prediction Engine. All rights reserved.
     </footer>
 
-    <!-- JavaScript Validations -->
+    <!-- JavaScript Validations & Spinner Logic -->
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const password = document.getElementById('password');
@@ -268,6 +294,26 @@
                     setTimeout(function() { alert.remove(); }, 500);
                 }, 5000);
             });
+        });
+
+        // Hide spinner once full page assets load, and show it again when submitting the form
+        window.addEventListener('load', function() {
+            setTimeout(() => {
+                const spinner = document.getElementById('loading-spinner');
+                if (spinner) {
+                    spinner.classList.add('spinner-hidden');
+                }
+            }, 300);
+        });
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.querySelector('form');
+            const spinner = document.getElementById('loading-spinner');
+            if (form && spinner) {
+                form.addEventListener('submit', function() {
+                    spinner.classList.remove('spinner-hidden');
+                });
+            }
         });
     </script>
 </body>

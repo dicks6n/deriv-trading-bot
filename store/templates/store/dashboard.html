@@ -3,6 +3,32 @@
 {% block title %}PATREOAIX - Crypto & Trading Dashboard{% endblock %}
 
 {% block content %}
+<!-- ========================================== -->
+<!-- 🌟 CUSTOM WEB3 LOADING SPINNER OVERLAY -->
+<!-- ========================================== -->
+<div id="loading-spinner" class="fixed inset-0 z-[9999] bg-slate-950/90 backdrop-blur-md flex flex-col items-center justify-center transition-opacity duration-500">
+    <div class="relative flex items-center justify-center">
+        <!-- Outer Glowing Ring -->
+        <div class="w-20 h-20 rounded-full border-4 border-indigo-500/20 border-t-indigo-500 animate-spin"></div>
+        <!-- Inner Pulsing Node -->
+        <div class="absolute w-8 h-8 rounded-full bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center animate-pulse">
+            <div class="w-2.5 h-2.5 rounded-full bg-emerald-400"></div>
+        </div>
+    </div>
+    <div class="mt-5 text-center space-y-1">
+        <p class="text-xs font-mono tracking-widest text-indigo-300 uppercase animate-pulse">Connecting Web3 Vault</p>
+        <p class="text-[10px] font-mono text-slate-500">Synchronizing live oracles & AI signals...</p>
+    </div>
+</div>
+
+<style>
+    .spinner-hidden {
+        opacity: 0;
+        pointer-events: none;
+        visibility: hidden;
+    }
+</style>
+
 <!-- Chart.js CDN -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
@@ -32,7 +58,9 @@
                 <div>
                     <p class="text-xs uppercase font-mono tracking-widest text-slate-400">Total Portfolio Net Worth (Exchange + Trading)</p>
                     <div class="flex items-baseline gap-3 mt-1">
-                        <h1 id="account-balance" class="text-3xl md:text-5xl font-black text-white font-mono tracking-tight">${{ balance|default:"0.00" }} <span class="text-lg font-normal text-slate-400">USDT</span></h1>
+                        <h1 id="account-balance" class="text-3xl md:text-5xl font-black text-white font-mono tracking-tight">
+                            ${{ grand_total|default:"0.00"|floatformat:2 }} <span class="text-lg font-normal text-slate-400">USDT</span>
+                        </h1>
                     </div>
                 </div>
 
@@ -63,34 +91,115 @@
                 </div>
             </div>
 
-            <!-- Right: Split Account Breakdown Widgets -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-3 min-w-[240px]">
-                <!-- Exchange Account Card -->
-                <div class="bg-slate-950/80 border border-slate-800/80 rounded-xl p-3.5 flex items-center justify-between">
-                    <div class="flex items-center gap-2.5">
-                        <div class="w-8 h-8 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 text-xs font-bold font-mono">
-                            E
-                        </div>
-                        <div>
-                            <p class="text-[10px] uppercase font-bold text-slate-400">Exchange Account</p>
-                            <p id="exchange-balance-display" class="text-xs font-mono font-bold text-emerald-400">${{ exchange_balance|default:"0.00" }}</p>
-                        </div>
-                    </div>
-                </div>
+         <!-- Right: Unified Net Worth Breakdown -->
 
-                <!-- Trading Account Card -->
-                <div class="bg-slate-950/80 border border-slate-800/80 rounded-xl p-3.5 flex items-center justify-between">
-                    <div class="flex items-center gap-2.5">
-                        <div class="w-8 h-8 rounded-full bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400 text-xs font-bold font-mono">
-                            T
+<!-- Right: Unified Net Worth Breakdown -->
+<div class="min-w-[320px] max-w-[420px] w-full">
+    <div class="bg-slate-950/80 border border-slate-800/80 rounded-2xl p-4 shadow-inner space-y-3">
+
+        <!-- Total Header -->
+        <div class="flex items-center justify-between pb-3 border-b border-slate-800">
+            <div>
+                <p class="text-[10px] uppercase tracking-widest font-bold text-slate-400">Total Net Worth</p>
+                <p id="grand-total-display" class="text-2xl font-black text-white font-mono mt-0.5">
+                    ${{ grand_total|default:"0.00"|floatformat:2 }}
+                </p>
+                <p class="text-[9px] text-slate-500 mt-0.5">Site + All Connected Brokers</p>
+            </div>
+            <button onclick="refreshAllBrokers()" id="refresh-all-btn"
+                class="px-3 py-1.5 rounded-lg bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-300 text-[10px] font-bold border border-indigo-500/30 transition flex items-center gap-1.5">
+                <i class="fa-solid fa-rotate text-[10px]" id="refresh-all-icon"></i> Refresh
+            </button>
+        </div>
+
+        <!-- Breakdown Rows -->
+        <div class="space-y-2 text-xs font-mono">
+
+            <!-- Site Exchange -->
+            <div class="flex items-center justify-between py-1.5">
+                <div class="flex items-center gap-2">
+                    <span class="w-6 h-6 rounded-md bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 text-[10px] font-bold">E</span>
+                    <span class="text-slate-300 font-sans text-[11px]">Site Exchange</span>
+                </div>
+                <span class="text-emerald-400 font-bold">${{ exchange_balance|default:"0.00"|floatformat:2 }}</span>
+            </div>
+
+            <!-- Site Trading -->
+            <div class="flex items-center justify-between py-1.5">
+                <div class="flex items-center gap-2">
+                    <span class="w-6 h-6 rounded-md bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400 text-[10px] font-bold">T</span>
+                    <span class="text-slate-300 font-sans text-[11px]">Site Trading</span>
+                </div>
+                <span class="text-indigo-300 font-bold">${{ trading_balance|default:"0.00"|floatformat:2 }}</span>
+            </div>
+
+            <!-- Broker Accounts (Dynamic) -->
+            <div id="broker-rows-container" class="space-y-2 pt-2 border-t border-slate-800/60">
+                {% for b in broker_accounts %}
+                <div class="flex items-center justify-between py-1.5 group" data-broker-row="{{ b.broker }}" data-account-id="{{ b.account_id|default:'' }}">
+                    <div class="flex items-center gap-2">
+                        <span class="w-6 h-6 rounded-md 
+                            {% if b.broker == 'DERIV' %}bg-blue-500/10 border border-blue-500/20 text-blue-400
+                            {% elif b.broker == 'BINANCE' %}bg-amber-500/10 border border-amber-500/20 text-amber-400
+                            {% else %}bg-slate-500/10 border border-slate-500/20 text-slate-400{% endif %} 
+                            flex items-center justify-center text-[10px] font-bold">
+                            {{ b.broker|slice:":1" }}
+                        </span>
+                        <div class="flex flex-col">
+                            <span class="text-slate-300 font-sans text-[11px]">{{ b.label }}</span>
+                            <span class="text-[9px] text-slate-500 font-mono" data-synced-at="{{ b.broker }}">
+                                {% if b.synced_at %}synced {{ b.synced_at|timesince }} ago{% else %}never synced{% endif %}
+                            </span>
                         </div>
-                        <div>
-                            <p class="text-[10px] uppercase font-bold text-slate-400">Trading Account</p>
-                            <p id="trading-balance-display" class="text-xs font-mono font-bold text-indigo-300">${{ trading_balance|default:"0.00" }}</p>
-                        </div>
+                        {% if b.is_stale %}
+                        <span class="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" title="Stale data"></span>
+                        {% endif %}
+                        {% if b.status == 'ERROR' %}
+                        <span class="w-1.5 h-1.5 rounded-full bg-rose-400" title="{{ b.error }}"></span>
+                        {% endif %}
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="text-white font-bold" data-balance="{{ b.broker }}">
+                            ${{ b.balance|floatformat:2 }}
+                            <span class="text-[9px] text-slate-500">{{ b.currency }}</span>
+                        </span>
+                        <button onclick="refreshSingleBroker('{{ b.broker }}')" 
+                            class="opacity-40 group-hover:opacity-100 transition text-slate-500 hover:text-white text-[10px]"
+                            title="Refresh this broker">
+                            <i class="fa-solid fa-rotate"></i>
+                        </button>
                     </div>
                 </div>
+                {% empty %}
+                <div class="text-center py-3 text-slate-500 text-[10px]">
+                    No brokers connected yet.
+                </div>
+                {% endfor %}
             </div>
+
+            <!-- Connect Broker Buttons -->
+            <div class="flex flex-wrap gap-2 pt-3 border-t border-slate-800/60">
+                <a href="{% url 'connect_deriv' %}" 
+                   class="flex-1 px-3 py-2 rounded-lg bg-blue-600/20 hover:bg-blue-600/30 text-blue-300 text-[10px] font-bold border border-blue-500/30 transition text-center">
+                    <i class="fa-solid fa-plug mr-1"></i> Connect Deriv
+                </a>
+                <button onclick="document.getElementById('binanceModal').classList.remove('hidden')"
+                   class="flex-1 px-3 py-2 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 text-[10px] font-bold border border-amber-500/30 transition">
+                    <i class="fa-solid fa-plug mr-1"></i> Connect Binance
+                </button>
+            </div>
+
+        </div>
+
+        <!-- Footer Status -->
+        <div class="pt-3 border-t border-slate-800 flex justify-between items-center text-[10px]">
+            <span class="text-slate-500">Auto-refresh every 60s</span>
+            <span class="text-slate-500" id="last-sync-text">—</span>
+        </div>
+
+    </div>
+</div>
+
         </div>
     </div>
 
@@ -198,7 +307,7 @@
                         <select id="asset-selector" onchange="changeActiveAsset(this.value)" class="bg-slate-900/90 border border-indigo-500/40 text-amber-300 font-mono text-xs rounded-xl px-3.5 py-2.5 font-bold focus:outline-none focus:border-indigo-400 shadow-inner cursor-pointer">
                             <optgroup label="Volatility Indices">
                                 <option value="R_100" selected>Volatility 100 Index (R_100)</option>
-                                <option value="R_75">Volatility 75 Index (R_75)</option>
+                                <option value="R_75"  selected>Volatility 75 Index (R_75)</option>
                                 <option value="R_50">Volatility 50 Index (R_50)</option>
                             </optgroup>
                         </select>
@@ -213,103 +322,7 @@
                     </div>
                 </div>
 
-                <!-- MAIN TRADING INTERFACE GRID -->
-                <div class="grid grid-cols-1 lg:grid-cols-12 gap-5">
-                    <!-- LEFT: LIVE STREAM METRICS -->
-                    <div class="lg:col-span-5 space-y-4">
-                        <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-4">
-                            <div class="flex justify-between items-center mb-3">
-                                <span class="text-[10px] uppercase font-bold text-slate-400">Live Ticker Feed</span>
-                                <span id="stream-asset" class="text-xs font-mono font-bold text-indigo-300">Volatility 100 Index</span>
-                            </div>
-                            <div class="flex items-baseline justify-between">
-                                <div>
-                                    <p class="text-[10px] text-slate-500 uppercase">Oracle Price</p>
-                                    <h3 id="stream-price" class="text-2xl font-black text-emerald-400 font-mono mt-0.5">$----</h3>
-                                </div>
-                                <div class="text-right">
-                                    <p class="text-[10px] text-slate-500 uppercase">Last Digit</p>
-                                    <h3 id="stream-digit" class="text-3xl font-black text-amber-400 font-mono mt-0.5">-</h3>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="grid grid-cols-2 gap-3">
-                            <div class="bg-slate-900/80 border border-slate-800 rounded-xl p-3">
-                                <p class="text-[10px] uppercase font-bold text-slate-400">Total Net Balance</p>
-                                <p id="stream-balance" class="text-base font-black text-emerald-400 mt-1 font-mono">${{ balance|default:"0.00" }}</p>
-                            </div>
-                            <div class="bg-slate-900/80 border border-slate-800 rounded-xl p-3">
-                                <p class="text-[10px] uppercase font-bold text-slate-400">Bot Status</p>
-                                <div id="stream-signal" class="mt-1">
-                                    <span id="bot-live-status-badge" class="text-xs font-bold text-slate-400 font-mono">Standby</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- RIGHT: CONTRACT BUILDER -->
-                    <div class="lg:col-span-7 bg-slate-950/90 border border-indigo-500/30 rounded-2xl p-5 flex flex-col justify-between">
-                        <div>
-                            <div class="flex items-center justify-between border-b border-slate-800 pb-3 mb-4">
-                                <div class="flex items-center gap-1.5 overflow-x-auto">
-                                    <button onclick="setTradeCategory('DIGITMATCH')" id="tab-DIGITMATCH" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-indigo-600 text-white transition cursor-pointer">Matches/Differs</button>
-                                    <button onclick="setTradeCategory('DIGITEVEN')" id="tab-DIGITEVEN" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-slate-900 text-slate-400 hover:text-white transition cursor-pointer">Even/Odd</button>
-                                </div>
-                                <span class="text-[10px] font-bold text-amber-400 uppercase bg-amber-500/10 px-2 py-1 rounded border border-amber-500/20">Deriv API</span>
-                            </div>
-
-                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
-                                <div class="bg-slate-900/80 border border-slate-800 rounded-xl p-3">
-                                    <label class="block text-[10px] text-slate-400 uppercase font-bold mb-1">Stake Amount</label>
-                                    <div class="flex items-center">
-                                        <input type="number" id="trade-stake-amount" value="10" min="1" max="1000" step="1" 
-                                               class="w-full bg-transparent text-lg font-black text-emerald-400 font-mono focus:outline-none">
-                                        <span class="text-xs font-bold text-slate-400">USDT</span>
-                                    </div>
-                                </div>
-
-                                <div class="bg-slate-900/80 border border-slate-800 rounded-xl p-3">
-                                    <label class="block text-[10px] text-slate-400 uppercase font-bold mb-1">Duration</label>
-                                    <select id="trade-duration-ticks" class="w-full bg-transparent text-sm font-bold text-white font-mono focus:outline-none cursor-pointer">
-                                        <option value="1" selected>1 Tick</option>
-                                        <option value="2">2 Ticks</option>
-                                        <option value="3">3 Ticks</option>
-                                    </select>
-                                </div>
-                            </div>
-
-                            <div id="digit-selector-container" class="bg-slate-900/60 border border-slate-800 rounded-xl p-3 mb-4">
-                                <div class="flex items-center justify-between mb-2">
-                                    <span class="text-[10px] uppercase font-bold text-slate-400">Prediction Target Digit</span>
-                                    <span id="selected-digit-display" class="text-xs font-mono font-bold text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded">Digit: 5</span>
-                                </div>
-                                <div class="grid grid-cols-10 gap-1.5">
-                                    <button onclick="selectPredictionDigit(0)" class="digit-btn py-2 bg-slate-900 hover:bg-indigo-600 text-slate-300 rounded font-mono text-xs font-bold transition cursor-pointer">0</button>
-                                    <button onclick="selectPredictionDigit(1)" class="digit-btn py-2 bg-slate-900 hover:bg-indigo-600 text-slate-300 rounded font-mono text-xs font-bold transition cursor-pointer">1</button>
-                                    <button onclick="selectPredictionDigit(2)" class="digit-btn py-2 bg-slate-900 hover:bg-indigo-600 text-slate-300 rounded font-mono text-xs font-bold transition cursor-pointer">2</button>
-                                    <button onclick="selectPredictionDigit(3)" class="digit-btn py-2 bg-slate-900 hover:bg-indigo-600 text-slate-300 rounded font-mono text-xs font-bold transition cursor-pointer">3</button>
-                                    <button onclick="selectPredictionDigit(4)" class="digit-btn py-2 bg-slate-900 hover:bg-indigo-600 text-slate-300 rounded font-mono text-xs font-bold transition cursor-pointer">4</button>
-                                    <button onclick="selectPredictionDigit(5)" id="digit-btn-5" class="digit-btn py-2 bg-indigo-600 text-white rounded font-mono text-xs font-bold transition ring-2 ring-indigo-400 cursor-pointer">5</button>
-                                    <button onclick="selectPredictionDigit(6)" class="digit-btn py-2 bg-slate-900 hover:bg-indigo-600 text-slate-300 rounded font-mono text-xs font-bold transition cursor-pointer">6</button>
-                                    <button onclick="selectPredictionDigit(7)" class="digit-btn py-2 bg-slate-900 hover:bg-indigo-600 text-slate-300 rounded font-mono text-xs font-bold transition cursor-pointer">7</button>
-                                    <button onclick="selectPredictionDigit(8)" class="digit-btn py-2 bg-slate-900 hover:bg-indigo-600 text-slate-300 rounded font-mono text-xs font-bold transition cursor-pointer">8</button>
-                                    <button onclick="selectPredictionDigit(9)" class="digit-btn py-2 bg-slate-900 hover:bg-indigo-600 text-slate-300 rounded font-mono text-xs font-bold transition cursor-pointer">9</button>
-                                </div>
-                                <input type="hidden" id="trade-barrier-input" value="5">
-                            </div>
-                        </div>
-
-                        <div class="grid grid-cols-2 gap-3">
-                            <button onclick="executeDerivTrade('DIGITMATCH')" class="py-3 px-4 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl font-bold text-xs transition shadow-lg flex items-center justify-center gap-2 cursor-pointer">
-                                <i class="fa-solid fa-bullseye"></i> BUY MATCH
-                            </button>
-                            <button onclick="executeDerivTrade('DIGITDIFF')" class="py-3 px-4 bg-purple-600 hover:bg-purple-500 text-white rounded-xl font-bold text-xs transition shadow-lg flex items-center justify-center gap-2 cursor-pointer">
-                                <i class="fa-solid fa-shield-halved"></i> BUY DIFFER
-                            </button>
-                        </div>
-                    </div>
-                </div>
+        
             </div>
 
         </div>
@@ -380,18 +393,8 @@
                 </div>
             </div>
 
-            <!-- ACCOUNT SECURITY SECTION -->
-            <div id="account-section" class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-xl">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <h3 class="text-sm font-bold text-white">Account & API</h3>
-                        <p class="text-[11px] text-slate-400 mt-0.5">Manage credentials</p>
-                    </div>
-                    <button onclick="openModal('connect-modal')" class="px-3 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold transition cursor-pointer">
-                        Connect
-                    </button>
-                </div>
-            </div>
+
+    
 
         </div>
 
@@ -458,6 +461,61 @@
         </form>
     </div>
 </div>
+
+<!-- CTRADER MODAL -->
+<div id="ctrader-modal" class="hidden fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-blue-500/30 rounded-2xl p-6 w-full max-w-md shadow-2xl relative">
+        <button onclick="closeModal('ctrader-modal')" class="absolute top-4 right-4 text-slate-400 hover:text-white cursor-pointer">
+            <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+        <h3 class="text-lg font-bold text-white flex items-center gap-2">
+            <i class="fa-solid fa-chart-line text-blue-400"></i> Connect cTrader Account
+        </h3>
+        <form method="POST" action="{% url 'connect_ctrader' %}" class="space-y-3 text-xs mt-4">
+            {% csrf_token %}
+            <div>
+                <label class="block text-slate-400 font-bold mb-1">Broker Environment</label>
+                <input type="text" value="Pepperstone-Live" disabled class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-slate-400 font-mono">
+                <input type="hidden" name="server_name" value="Pepperstone-Live">
+            </div>
+            <div>
+                <label class="block text-slate-400 font-bold mb-1">cTrader Account ID / Login</label>
+                <input type="text" name="account_number" placeholder="e.g. 12345678" required class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-white focus:outline-none focus:border-blue-500 font-mono">
+            </div>
+            <div>
+                <label class="block text-slate-400 font-bold mb-1">OpenAPI Token / Password</label>
+                <input type="password" name="api_token" placeholder="Enter cTrader token or password" required class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-white focus:outline-none focus:border-blue-500 font-mono">
+            </div>
+            <button type="submit" class="w-full py-3 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl transition cursor-pointer shadow-lg">
+                Authorize & Link cTrader
+            </button>
+        </form>
+    </div>
+</div>
+
+<!-- BINANCE CONNECTION MODAL -->
+<div id="binanceModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-md p-6 shadow-2xl relative">
+        <h3 class="text-lg font-bold text-white mb-2">Connect Binance Account</h3>
+        <p class="text-xs text-slate-400 mb-4">Enter your Binance API Key and Secret Key with Spot reading permissions enabled.</p>
+        
+        <form method="POST" action="{% url 'connect_binance' %}" class="space-y-4">
+            {% csrf_token %}
+            <div>
+                <label class="block text-xs font-medium text-slate-300 mb-1">Binance API Key</label>
+                <input type="text" name="api_key" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-500 font-mono">
+            </div>
+            <div>
+                <label class="block text-xs font-medium text-slate-300 mb-1">Binance Secret Key</label>
+                <input type="password" name="api_secret" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-500 font-mono">
+            </div>
+            <div class="flex items-center justify-end gap-3 pt-2">
+                <button type="button" onclick="document.getElementById('binanceModal').classList.add('hidden')" class="px-4 py-2 rounded-xl bg-slate-800 text-slate-300 text-xs font-bold hover:bg-slate-700 transition">Cancel</button>
+                <button type="submit" class="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-950 text-xs font-bold transition">Connect Binance</button>
+            </div>
+        </form>
+    </div>
+</div>
 {% endblock %}
 
 {% block extra_js %}
@@ -500,6 +558,17 @@
                 "digit-btn py-2 bg-slate-900 hover:bg-indigo-600 text-slate-300 rounded font-mono text-xs font-bold transition cursor-pointer";
         });
     }
+
+    // Hide spinner once full page assets and scripts finish loading
+    window.addEventListener('load', function() {
+        setTimeout(() => {
+            const spinner = document.getElementById('loading-spinner');
+            if (spinner) {
+                spinner.classList.add('spinner-hidden');
+                setTimeout(() => spinner.remove(), 500);
+            }
+        }, 300);
+    });
 
     document.addEventListener("DOMContentLoaded", function () {
         const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
@@ -574,4 +643,176 @@
         connectTradingSocket();
     });
 </script>
+
+
+<script>
+    // ==========================================
+    // BROKER BALANCE AUTO-REFRESH
+    // ==========================================
+    const BROKER_REFRESH_INTERVAL = 60000; // 60 seconds
+
+    async function refreshAllBrokers() {
+        const btn = document.getElementById('refresh-all-btn');
+        const icon = document.getElementById('refresh-all-icon');
+        if (btn) btn.disabled = true;
+        if (icon) icon.classList.add('animate-spin');
+
+        try {
+            const resp = await fetch('/api/broker-balances/?sync=1', {
+                headers: { 'X-CSRFToken': getCookie('csrftoken') }
+            });
+            const data = await resp.json();
+
+            if (data.success) {
+                updateBrokerUI(data);
+                document.getElementById('last-sync-text').textContent =
+                    'Updated ' + new Date().toLocaleTimeString();
+            }
+        } catch (err) {
+            console.error('Broker refresh failed:', err);
+        } finally {
+            if (btn) btn.disabled = false;
+            if (icon) icon.classList.remove('animate-spin');
+        }
+    }
+
+    async function refreshSingleBroker(brokerName) {
+        // Find the account id from the DOM
+        const rows = document.querySelectorAll('[data-broker-row]');
+        let accountId = null;
+        rows.forEach(r => {
+            if (r.getAttribute('data-broker-row') === brokerName) {
+                accountId = r.getAttribute('data-account-id');
+            }
+        });
+
+        // We don't have account_id in the DOM — fall back to full refresh
+        await refreshAllBrokers();
+    }
+
+    function updateBrokerUI(data) {
+        // Update grand total
+        const grandTotal = (parseFloat("{{ site_total|default:0 }}") +
+                            parseFloat(data.broker_total_usd || 0)).toFixed(2);
+        const gt = document.getElementById('grand-total-display');
+        if (gt) gt.textContent = '$' + grandTotal;
+
+        // Update each broker row
+        (data.brokers || []).forEach(b => {
+            const balEl = document.querySelector(`[data-balance="${b.broker}"]`);
+            if (balEl) {
+                balEl.innerHTML = `$${parseFloat(b.balance).toFixed(2)} <span class="text-[9px] text-slate-500">${b.currency}</span>`;
+            }
+            const syncEl = document.querySelector(`[data-synced-at="${b.broker}"]`);
+            if (syncEl && b.synced_at) {
+                const ago = timeAgo(new Date(b.synced_at));
+                syncEl.textContent = `synced ${ago}`;
+            }
+        });
+    }
+
+    function timeAgo(date) {
+        const sec = Math.floor((Date.now() - date.getTime()) / 1000);
+        if (sec < 60) return sec + 's ago';
+        if (sec < 3600) return Math.floor(sec / 60) + 'm ago';
+        if (sec < 86400) return Math.floor(sec / 3600) + 'h ago';
+        return Math.floor(sec / 86400) + 'd ago';
+    }
+
+    function getCookie(name) {
+        let v = null;
+        if (document.cookie) {
+            document.cookie.split(';').forEach(c => {
+                const t = c.trim();
+                if (t.startsWith(name + '=')) v = decodeURIComponent(t.slice(name.length + 1));
+            });
+        }
+        return v;
+    }
+
+    // Auto-refresh every 60 seconds
+    setInterval(refreshAllBrokers, BROKER_REFRESH_INTERVAL);
+</script>
+
+
+<script>
+    // ==========================================
+    // BROKER BALANCE AUTO-REFRESH
+    // ==========================================
+    const BROKER_REFRESH_INTERVAL = 60000; // 60 seconds
+
+    async function refreshAllBrokers() {
+        const btn = document.getElementById('refresh-all-btn');
+        const icon = document.getElementById('refresh-all-icon');
+        if (btn) btn.disabled = true;
+        if (icon) icon.classList.add('animate-spin');
+
+        try {
+            const resp = await fetch('/api/broker-balances/?sync=1', {
+                headers: { 'X-CSRFToken': getCookie('csrftoken') }
+            });
+            const data = await resp.json();
+
+            if (data.success) {
+                updateBrokerUI(data);
+                const lsu = document.getElementById('last-sync-text');
+                if (lsu) lsu.textContent = 'Updated ' + new Date().toLocaleTimeString();
+            }
+        } catch (err) {
+            console.error('Broker refresh failed:', err);
+        } finally {
+            if (btn) btn.disabled = false;
+            if (icon) icon.classList.remove('animate-spin');
+        }
+    }
+
+    function refreshSingleBroker(brokerName) {
+        // Simple approach — refresh all, filtered view will update naturally
+        refreshAllBrokers();
+    }
+
+    function updateBrokerUI(data) {
+        const siteTotal = parseFloat("{{ site_total|default:'0' }}") || 0;
+        const grandTotal = (siteTotal + parseFloat(data.broker_total_usd || 0)).toFixed(2);
+
+        const gt = document.getElementById('grand-total-display');
+        if (gt) gt.textContent = '$' + grandTotal;
+
+        (data.brokers || []).forEach(b => {
+            const balEl = document.querySelector(`[data-balance="${b.broker}"]`);
+            if (balEl) {
+                balEl.innerHTML = `$${parseFloat(b.balance).toFixed(2)} <span class="text-[9px] text-slate-500">${b.currency}</span>`;
+            }
+            const syncEl = document.querySelector(`[data-synced-at="${b.broker}"]`);
+            if (syncEl && b.synced_at) {
+                const ago = timeAgo(new Date(b.synced_at));
+                syncEl.textContent = `synced ${ago}`;
+            }
+        });
+    }
+
+    function timeAgo(date) {
+        const sec = Math.floor((Date.now() - date.getTime()) / 1000);
+        if (sec < 60) return sec + 's ago';
+        if (sec < 3600) return Math.floor(sec / 60) + 'm ago';
+        if (sec < 86400) return Math.floor(sec / 3600) + 'h ago';
+        return Math.floor(sec / 86400) + 'd ago';
+    }
+
+    function getCookie(name) {
+        let v = null;
+        if (document.cookie) {
+            document.cookie.split(';').forEach(c => {
+                const t = c.trim();
+                if (t.startsWith(name + '=')) v = decodeURIComponent(t.slice(name.length + 1));
+            });
+        }
+        return v;
+    }
+
+    // Auto-refresh every 60 seconds
+    setInterval(refreshAllBrokers, BROKER_REFRESH_INTERVAL);
+</script>
+<!-- Add to base_dashboard.html or trade.html -->
+<script src="https://unpkg.com/lightweight-charts@4.1.0/dist/lightweight-charts.standalone.production.js"></script>
 {% endblock %}

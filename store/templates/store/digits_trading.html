@@ -1,6 +1,37 @@
 {% extends 'base_dashboard.html' %}
 
 {% block content %}
+<!-- ========================================== -->
+<!-- CUSTOM WEB3 LOADING SPINNER OVERLAY -->
+<!-- ========================================== -->
+<div id="loading-spinner" class="fixed inset-0 z-[9999] bg-slate-950/90 backdrop-blur-md flex flex-col items-center justify-center transition-opacity duration-500">
+    <div class="relative flex items-center justify-center">
+        <div class="w-20 h-20 rounded-full border-4 border-indigo-500/20 border-t-indigo-500 animate-spin"></div>
+        <div class="absolute w-8 h-8 rounded-full bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center animate-pulse">
+            <div class="w-2.5 h-2.5 rounded-full bg-emerald-400"></div>
+        </div>
+    </div>
+    <div class="mt-5 text-center space-y-1">
+        <p class="text-xs font-mono tracking-widest text-indigo-300 uppercase animate-pulse">Connecting Web3 Vault</p>
+        <p class="text-[10px] font-mono text-slate-500">Synchronizing live oracles & AI signals...</p>
+    </div>
+</div>
+
+<style>
+    .spinner-hidden {
+        opacity: 0;
+        pointer-events: none;
+        visibility: hidden;
+    }
+    .trade-log-entry {
+        animation: slideIn 0.3s ease-out;
+    }
+    @keyframes slideIn {
+        from { opacity: 0; transform: translateX(-10px); }
+        to { opacity: 1; transform: translateX(0); }
+    }
+</style>
+
 <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         
@@ -75,24 +106,71 @@
         <!-- Right Column: Controls, AI Scanner & Digit Prediction Grid -->
         <div class="space-y-6">
             
-            <!-- AI Gold (XAUUSD) Auto-Trader Toggle Card -->
-            <div class="bg-gradient-to-br from-amber-950/90 via-slate-900 to-yellow-950/90 rounded-2xl p-5 text-white border border-amber-800/40 shadow-xl space-y-3">
+            <!-- 🔥 AI Gold (XAUUSD) Auto-Trader Toggle Card - Uses Funded Account -->
+            <div class="bg-gradient-to-br from-amber-950/90 via-slate-900 to-yellow-950/90 rounded-2xl p-5 text-white border border-amber-800/40 shadow-xl space-y-4">
                 <div class="flex items-center justify-between">
                     <div class="flex items-center space-x-2">
                         <span class="text-xl">🪙</span>
                         <div>
                             <h3 class="text-xs font-bold uppercase tracking-wider text-amber-300">AI Gold Auto-Trader</h3>
-                            <p class="text-[11px] text-slate-300">Executes 3 Gold trades with AI BUY/SELL & SL/TP</p>
+                            <p class="text-[11px] text-slate-300">Uses Funded Account | 88% Profit Retention</p>
                         </div>
                     </div>
                     <label class="relative inline-flex items-center cursor-pointer">
-                        <input type="checkbox" id="aiGoldToggle5" class="sr-only peer" onchange="handleAiGoldToggle(this, 'aiGoldStatusContainer5', 'aiGoldLogList5')">
+                        <input type="checkbox" id="aiGoldToggle" class="sr-only peer" onchange="toggleAIGold(this)" {% if ai_gold_active %}checked{% endif %}>
                         <div class="w-11 h-6 bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-amber-500"></div>
                     </label>
                 </div>
-                <div id="aiGoldStatusContainer5" class="hidden text-xs bg-slate-950/90 rounded-xl p-3 border border-amber-800/60 space-y-1">
-                    <p class="font-bold text-amber-400 mb-1">AI Gold Engine Active: 3 Trades in progress...</p>
-                    <div id="aiGoldLogList5" class="space-y-1 font-mono text-[11px]"></div>
+
+                <!-- Funded Account Balance Display -->
+                <div class="bg-slate-950/70 rounded-xl p-3 border border-amber-800/30 flex justify-between items-center">
+                    <div>
+                        <span class="text-[9px] uppercase font-bold text-slate-400">Funded Balance</span>
+                        <h4 id="fundedBalanceDisplay" class="text-lg font-black text-emerald-400">${{ funded_balance|default:"0.00" }}</h4>
+                    </div>
+                    <div class="text-right">
+                        <span class="text-[9px] uppercase font-bold text-slate-400">Status</span>
+                        <h4 id="aiGoldStatusBadge" class="text-xs font-bold {% if ai_gold_active %}text-emerald-400{% else %}text-amber-400{% endif %}">
+                            {% if ai_gold_active %}● Active{% else %}● Inactive{% endif %}
+                        </h4>
+                    </div>
+                </div>
+
+                <!-- Funded Account Info -->
+                <div class="grid grid-cols-2 gap-2 text-[10px]">
+                    <div class="bg-slate-950/50 rounded-lg p-2 text-center border border-slate-800/30">
+                        <span class="text-slate-400 block">Initial Capital</span>
+                        <span class="font-bold text-white">${{ funded_account.initial_balance|default:"0.00" }}</span>
+                    </div>
+                    <div class="bg-slate-950/50 rounded-lg p-2 text-center border border-slate-800/30">
+                        <span class="text-slate-400 block">Subscription</span>
+                        <span class="font-bold text-amber-400 uppercase">{{ subscription_tier|default:"Free" }}</span>
+                    </div>
+                </div>
+
+                <!-- Trading Log -->
+                <div id="aiGoldTradingLog" class="bg-slate-950/60 rounded-xl p-3 border border-slate-800/60 max-h-48 overflow-y-auto space-y-1 font-mono text-[11px]">
+                    <div class="text-slate-500 text-center py-4 text-xs">Toggle the switch above to start AI Gold trading with your funded account</div>
+                </div>
+
+                <!-- Stats Summary -->
+                <div class="grid grid-cols-4 gap-2 text-center">
+                    <div class="bg-slate-950/60 rounded-xl p-2 border border-slate-800/40">
+                        <span class="text-[8px] uppercase text-slate-500 block">Trades</span>
+                        <span id="aiGoldTradeCount" class="text-sm font-bold text-white">0</span>
+                    </div>
+                    <div class="bg-slate-950/60 rounded-xl p-2 border border-slate-800/40">
+                        <span class="text-[8px] uppercase text-slate-500 block">Wins</span>
+                        <span id="aiGoldWins" class="text-sm font-bold text-emerald-400">0</span>
+                    </div>
+                    <div class="bg-slate-950/60 rounded-xl p-2 border border-slate-800/40">
+                        <span class="text-[8px] uppercase text-slate-500 block">Win Rate</span>
+                        <span id="aiGoldWinRate" class="text-sm font-bold text-emerald-400">0%</span>
+                    </div>
+                    <div class="bg-slate-950/60 rounded-xl p-2 border border-slate-800/40">
+                        <span class="text-[8px] uppercase text-slate-500 block">Profit</span>
+                        <span id="aiGoldProfit" class="text-sm font-bold text-amber-400">$0.00</span>
+                    </div>
                 </div>
             </div>
 
@@ -164,7 +242,7 @@
                             class="py-4 rounded-xl font-bold text-xs border bg-blue-600 border-blue-500 text-white shadow-md shadow-blue-500/20 transition cursor-pointer">
                             Even (0,2,4,6,8)
                         </button>
-                        <button onclick="setEvenOdd('ODD')" id="btnOdd" 
+                        <button onclick="setEvenOdd('ODD')" id="btnOdd"  
                             class="py-4 rounded-xl font-bold text-xs border bg-slate-900 border-slate-800 text-slate-300 hover:border-slate-700 transition cursor-pointer">
                             Odd (1,3,5,7,9)
                         </button>
@@ -242,6 +320,14 @@
 </div>
 
 <script>
+    // ==========================================
+    // PASS FUNDED BALANCE FROM DJANGO TO JAVASCRIPT
+    // ==========================================
+    const FUNDED_BALANCE = {{ funded_balance|default:"0" }};
+    const IS_FUNDED = {{ is_funded|yesno:"true,false" }};
+    const SUBSCRIPTION_TIER = "{{ subscription_tier|default:'Free' }}";
+    const IS_ACTIVE_SUBSCRIPTION = {{ is_active_subscription|yesno:"true,false" }};
+
     let ws = null;
     let selectedSymbol = "R_100";
     let activeTab = "matches"; 
@@ -254,6 +340,14 @@
     let isBotActive = true;
     let isAutoTrading = false;
 
+    // AI Gold Auto-Trader variables
+    let aiGoldInterval = null;
+    let isAIGoldActive = document.getElementById('aiGoldToggle')?.checked || false;
+    let aiGoldTradeCount = 0;
+    let aiGoldTotalProfit = 0;
+    let aiGoldWins = 0;
+    let aiGoldLosses = 0;
+
     const tickSequence = [1, 5, 10, 4];
     let sequenceIndex = 0;
 
@@ -263,44 +357,229 @@
     let lastTradeWon = true;
     let skipNextTrade = false;
 
-    // AI Gold Auto-Trader Trigger Function
-    async function handleAiGoldToggle(checkbox, containerId, logListId) {
-        if (!checkbox.checked) return;
+    // Robust spinner removal
+    function hideSpinner() {
+        const spinner = document.getElementById('loading-spinner');
+        if (spinner && !spinner.classList.contains('spinner-hidden')) {
+            spinner.classList.add('spinner-hidden');
+            setTimeout(() => spinner.remove(), 500);
+        }
+    }
 
-        const statusContainer = document.getElementById(containerId);
-        const logList = document.getElementById(logListId);
+    if (document.readyState === 'complete' || document.readyState === 'interactive') {
+        setTimeout(hideSpinner, 300);
+    } else {
+        window.addEventListener('load', hideSpinner);
+    }
+    setTimeout(hideSpinner, 1500);
+
+    // ==========================================
+    // CSRF Token Helper
+    // ==========================================
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+    // ==========================================
+    // 🔥 AI Gold Auto-Trader - Uses Funded Account
+    // ==========================================
+
+    async function toggleAIGold(checkbox) {
+        const badge = document.getElementById('aiGoldStatusBadge');
+        const log = document.getElementById('aiGoldTradingLog');
         
-        statusContainer.classList.remove('hidden');
-        logList.innerHTML = '<p class="text-slate-400">Connecting to AI & executing 3 Gold trades with SL/TP...</p>';
+        if (checkbox.checked) {
+            // Check if funded account has balance
+            if (FUNDED_BALANCE <= 0) {
+                checkbox.checked = false;
+                log.innerHTML = '<div class="text-rose-400 text-center py-2">❌ Funded account balance is $0. Please subscribe to Pro or VIP.</div>';
+                return;
+            }
 
+            // Check if user has active subscription
+            if (!IS_ACTIVE_SUBSCRIPTION) {
+                checkbox.checked = false;
+                log.innerHTML = '<div class="text-rose-400 text-center py-2">❌ Active subscription required. Upgrade to Pro or VIP.</div>';
+                return;
+            }
+
+            badge.textContent = '● Starting...';
+            badge.className = 'text-xs font-bold text-amber-400 animate-pulse';
+            log.innerHTML = '<div class="text-amber-400 text-center py-2">🔄 Initializing AI Gold Engine with Funded Account...</div>';
+            
+            try {
+                const response = await fetch('{% url "execute_funded_ai_gold" %}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCookie('csrftoken')
+                    },
+                    body: JSON.stringify({ action: 'toggle' })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    isAIGoldActive = true;
+                    badge.textContent = '● Active';
+                    badge.className = 'text-xs font-bold text-emerald-400';
+                    
+                    // Display trade results
+                    log.innerHTML = '';
+                    if (data.trades && data.trades.length > 0) {
+                        data.trades.forEach((trade, index) => {
+                            const profitColor = trade.profit >= 0 ? 'text-emerald-400' : 'text-rose-400';
+                            log.innerHTML += `
+                                <div class="trade-log-entry flex justify-between items-center py-1 border-b border-slate-800/30 text-[10px]">
+                                    <span class="text-slate-400">#${index + 1}</span>
+                                    <span class="font-bold ${trade.direction === 'BUY' ? 'text-emerald-400' : 'text-red-400'}">${trade.direction}</span>
+                                    <span class="font-mono text-slate-400">${trade.entry} → ${trade.exit}</span>
+                                    <span class="font-bold ${profitColor}">${trade.profit >= 0 ? '+' : ''}$${trade.profit.toFixed(2)}</span>
+                                    <span class="text-[9px] ${trade.status === 'WON' ? 'text-emerald-400' : 'text-rose-400'}">${trade.status}</span>
+                                </div>
+                            `;
+                            aiGoldTradeCount++;
+                            aiGoldTotalProfit += trade.profit;
+                            if (trade.profit > 0) aiGoldWins++;
+                            else aiGoldLosses++;
+                        });
+                        
+                        updateAIGoldStats();
+                        
+                        // Update balance display
+                        if (data.new_balance !== undefined) {
+                            document.getElementById('fundedBalanceDisplay').textContent = `$${data.new_balance.toFixed(2)}`;
+                        }
+                    }
+                    
+                    startAIGoldLoop();
+                } else {
+                    checkbox.checked = false;
+                    badge.textContent = '● Inactive';
+                    badge.className = 'text-xs font-bold text-amber-400';
+                    log.innerHTML = `<div class="text-rose-400 text-center py-2">❌ Error: ${data.error || 'Failed to start'}</div>`;
+                }
+            } catch (err) {
+                checkbox.checked = false;
+                badge.textContent = '● Inactive';
+                badge.className = 'text-xs font-bold text-amber-400';
+                log.innerHTML = `<div class="text-rose-400 text-center py-2">❌ Network Error: ${err.message}</div>`;
+            }
+        } else {
+            // Stop AI Gold
+            isAIGoldActive = false;
+            if (aiGoldInterval) {
+                clearInterval(aiGoldInterval);
+                aiGoldInterval = null;
+            }
+            badge.textContent = '● Inactive';
+            badge.className = 'text-xs font-bold text-amber-400';
+            
+            // Send stop signal
+            try {
+                await fetch('{% url "execute_funded_ai_gold" %}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCookie('csrftoken')
+                    },
+                    body: JSON.stringify({ action: 'toggle' })
+                });
+            } catch (err) {}
+            
+            document.getElementById('aiGoldTradingLog').innerHTML = `
+                <div class="text-slate-500 text-center py-4 text-xs">⏹ AI Gold Auto-Trader stopped. Toggle to resume.</div>
+            `;
+        }
+    }
+
+    function startAIGoldLoop() {
+        if (aiGoldInterval) {
+            clearInterval(aiGoldInterval);
+        }
+        
+        // Run every 60 seconds
+        aiGoldInterval = setInterval(() => {
+            if (isAIGoldActive) {
+                autoExecuteAIGold();
+            }
+        }, 60000);
+    }
+
+    async function autoExecuteAIGold() {
+        if (!isAIGoldActive) return;
+        
         try {
-            const response = await fetch('/api/execute-ai-gold/', {
+            const response = await fetch('{% url "execute_funded_ai_gold" %}', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]')?.value || ''
+                    'X-CSRFToken': getCookie('csrftoken')
                 },
-                body: JSON.stringify({ stake: parseFloat(document.getElementById('stakeInput').value) || 10.00 })
+                body: JSON.stringify({ action: 'toggle' })
             });
-
+            
             const data = await response.json();
             
-            if (data.success) {
-                logList.innerHTML = '';
-                data.trades.forEach((t, index) => {
-                    const colorClass = t.result === 'WON' ? 'text-emerald-400' : 'text-rose-400';
-                    logList.innerHTML += `<div>Trade #${index+1}: <span class="font-bold text-white">${t.direction}</span> | Entry: ${t.entry.toFixed(2)} | SL: ${t.sl.toFixed(2)} | TP: ${t.tp.toFixed(2)} | Result: <span class="${colorClass} font-bold">${t.result} ($${t.payout})</span></div>`;
+            if (data.success && data.trades) {
+                const log = document.getElementById('aiGoldTradingLog');
+                data.trades.forEach((trade) => {
+                    const profitColor = trade.profit >= 0 ? 'text-emerald-400' : 'text-rose-400';
+                    log.innerHTML += `
+                        <div class="trade-log-entry flex justify-between items-center py-1 border-b border-slate-800/30 text-[10px]">
+                            <span class="text-slate-400">🔄 Auto</span>
+                            <span class="font-bold ${trade.direction === 'BUY' ? 'text-emerald-400' : 'text-red-400'}">${trade.direction}</span>
+                            <span class="font-mono text-slate-400">${trade.entry} → ${trade.exit}</span>
+                            <span class="font-bold ${profitColor}">${trade.profit >= 0 ? '+' : ''}$${trade.profit.toFixed(2)}</span>
+                            <span class="text-[9px] ${trade.status === 'WON' ? 'text-emerald-400' : 'text-rose-400'}">${trade.status}</span>
+                        </div>
+                    `;
+                    aiGoldTradeCount++;
+                    aiGoldTotalProfit += trade.profit;
+                    if (trade.profit > 0) aiGoldWins++;
+                    else aiGoldLosses++;
                 });
-                logList.innerHTML += `<div class="mt-2 pt-2 border-t border-slate-800 text-amber-400 font-bold">Completed! New Trading Bal: $${data.new_balance}</div>`;
-            } else {
-                logList.innerHTML = `<p class="text-rose-400">Error: ${data.error}</p>`;
+                
+                updateAIGoldStats();
+                
+                // Update balance
+                if (data.new_balance !== undefined) {
+                    document.getElementById('fundedBalanceDisplay').textContent = `$${data.new_balance.toFixed(2)}`;
+                }
+                
+                // Keep log manageable
+                while (log.children.length > 50) {
+                    log.removeChild(log.firstChild);
+                }
+                log.scrollTop = log.scrollHeight;
             }
         } catch (err) {
-            logList.innerHTML = `<p class="text-rose-400">Network Error executing automated Gold trades.</p>`;
-        } finally {
-            setTimeout(() => { checkbox.checked = false; }, 4000);
+            console.error('Auto-execute error:', err);
         }
     }
+
+    function updateAIGoldStats() {
+        document.getElementById('aiGoldTradeCount').textContent = aiGoldTradeCount;
+        document.getElementById('aiGoldWins').textContent = aiGoldWins;
+        const winRate = aiGoldTradeCount > 0 ? Math.round((aiGoldWins / aiGoldTradeCount) * 100) : 0;
+        document.getElementById('aiGoldWinRate').textContent = `${winRate}%`;
+        document.getElementById('aiGoldProfit').textContent = `$${aiGoldTotalProfit.toFixed(2)}`;
+    }
+
+    // ==========================================
+    // Existing Trading Functions
+    // ==========================================
 
     function formatDerivSymbol(symbol) {
         const symbolMap = {
@@ -548,6 +827,34 @@
         stopAutoBot();
     }
 
-    document.addEventListener('DOMContentLoaded', () => { initGrids(); connectDerivWS(); });
+    // Check AI Gold status on load
+    async function checkAIGoldStatus() {
+        try {
+            const response = await fetch('{% url "execute_funded_ai_gold" %}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: JSON.stringify({ action: 'status' })
+            });
+            const data = await response.json();
+            if (data.success && data.active) {
+                document.getElementById('aiGoldToggle').checked = true;
+                document.getElementById('aiGoldStatusBadge').textContent = '● Active';
+                document.getElementById('aiGoldStatusBadge').className = 'text-xs font-bold text-emerald-400';
+                isAIGoldActive = true;
+                startAIGoldLoop();
+            }
+        } catch (err) {
+            console.error('Error checking AI Gold status:', err);
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => { 
+        initGrids(); 
+        connectDerivWS();
+        checkAIGoldStatus();
+    });
 </script>
 {% endblock %}

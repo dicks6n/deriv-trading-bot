@@ -1,264 +1,377 @@
+"""
+Deriv Service — Uses OTP-based WebSocket authentication.
+The new Deriv API requires fetching an OTP via REST before opening
+the WebSocket connection. Direct token-based WebSocket connections
+are rejected with HTTP 401.
+"""
 import json
 import logging
 import ssl
 import asyncio
 import random
+import time
 import websockets
+import requests
+import pandas as pd
 from django.conf import settings
-from .ai_model import EvenOddAIPredictor
-import os
-
-APP_ID = getattr(settings, 'DERIV_APP_ID', '33XN84FbZfx1ZO1xDyUzH')
-DERIV_WS_URL = f"wss://ws.derivws.com/websockets/v3?app_id={APP_ID}"
 
 logger = logging.getLogger(__name__)
 
+# SSL context for secure WebSocket connections
 ssl_context = ssl.create_default_context()
 ssl_context.check_hostname = False
 ssl_context.verify_mode = ssl.CERT_NONE
+
+# Public WebSocket (no auth needed) — used for market data (ticks)
+PUBLIC_WS_URL = "wss://api.derivws.com/trading/v1/options/ws/public"
+
+# REST base for OTP + authenticated endpoints
+REST_BASE_URL = "https://api.derivws.com"
 
 SYMBOL_MAP = {
     "Gold / USD (XAU)": "frxXAUUSD",
     "Volatility 100 Index": "R_100",
     "Volatility 75 Index": "R_75",
     "Volatility 50 Index": "R_50",
+    "Volatility 25 Index": "R_25",
+    "Volatility 10 Index": "R_10",
     "EUR/USD": "frxEURUSD",
     "GBP/USD": "frxGBPUSD",
+    "USD/JPY": "frxUSDJPY",
+    "BTC/USD": "cryBTCUSD",
+}
+
+# Base prices for fallback tick generation
+BASE_PRICES = {
+    'R_10': 1000.00,
+    'R_25': 2500.00,
+    'R_50': 5000.00,
+    'R_75': 7500.00,
+    'R_100': 10000.00,
+    '1HZ10V': 1000.00,
+    '1HZ25V': 2500.00,
+    '1HZ50V': 5000.00,
+    '1HZ75V': 7500.00,
+    '1HZ100V': 10000.00,
+    'frxXAUUSD': 4454.08,
+    'frxXTIUSD': 83.44,
+    'frxEURUSD': 1.1583,
+    'frxGBPUSD': 1.2940,
+    'frxUSDJPY': 146.15,
+    'frxEURGBP': 0.8415,
+    'frxEURJPY': 159.20,
+    'frxGBPJPY': 189.10,
+    'cryBTCUSD': 78912.33,
+    'cryETHUSD': 3456.78,
 }
 
 
 class DerivService:
     def __init__(self):
-        self.app_id = getattr(settings, 'DERIV_APP_ID', '33XN84FbZfx1ZO1xDyUzH')
+        self.app_id = getattr(settings, 'DERIV_APP_ID', '')
         self.api_token = getattr(settings, 'DERIV_API_TOKEN', '')
-        self.ws_url = f"wss://ws.derivws.com/websockets/v3?app_id={self.app_id}"
-        self.ai_engine = EvenOddAIPredictor()
+        self._use_fallback = False
+        self._last_prices = {}
 
     def resolve_symbol(self, raw_symbol):
         return SYMBOL_MAP.get(raw_symbol, raw_symbol)
 
-    async def get_account_info(self, token=None, account_number="32337661"):
-        active_token = token or self.api_token
+    # ==========================================
+    # OTP FLOW — Get authenticated WebSocket URL
+    # ==========================================
 
-        if not active_token:
-            return {
-                "balance": "10,000.00",
-                "currency": "USD",
-                "is_demo": True,
-                "loginid": f"MT5:{account_number}",
-                "server": "Deriv-Demo"
-            }
+    def _get_authenticated_ws_url(self, token, account_number):
+        """
+        Calls Deriv's REST endpoint to obtain a one-time-password
+        and returns the ready-to-use authenticated WebSocket URL.
+
+        Returns:
+            str — the authenticated wss:// URL, or None on failure.
+        """
+        endpoint = f"{REST_BASE_URL}/trading/v1/options/accounts/{account_number}/otp"
+        headers = {
+            "Deriv-App-ID": self.app_id,
+            "Authorization": f"Bearer {token}",
+            "Content-Type": "application/json",
+        }
 
         try:
-            # Fixed timeout -> open_timeout
-            async with websockets.connect(self.ws_url, ssl=ssl_context, open_timeout=4) as ws:
-                # 1. Authorize API Token
-                await ws.send(json.dumps({"authorize": active_token}))
-                auth_res = json.loads(await asyncio.wait_for(ws.recv(), timeout=3))
+            response = requests.post(endpoint, headers=headers, timeout=10)
+            response.raise_for_status()
+            data = response.json()
+            ws_url = data.get('data', {}).get('url')
+            if not ws_url:
+                logger.warning(f"OTP response missing 'url' field: {data}")
+                return None
+            return ws_url
+        except requests.HTTPError as e:
+            logger.warning(f"OTP request HTTP error: {e} — {getattr(e.response, 'text', '')[:200]}")
+            return None
+        except Exception as e:
+            logger.warning(f"OTP request failed: {e}")
+            return None
 
-                if "error" in auth_res:
-                    return {
-                        "balance": "10,000.00",
-                        "currency": "USD",
-                        "is_demo": True,
-                        "loginid": f"MT5:{account_number}",
-                        "server": "Deriv-Demo"
-                    }
+    # ==========================================
+    # ACCOUNT INFO (via OTP-authenticated WebSocket)
+    # ==========================================
 
-                # 2. Fetch MT5 login list for MT5 Demo Account balance
-                await ws.send(json.dumps({"mt5_login_list": 1}))
-                mt5_res = json.loads(await asyncio.wait_for(ws.recv(), timeout=3))
-                mt5_accounts = mt5_res.get("mt5_login_list", [])
+    async def get_account_info(self, token=None, account_number=""):
+        """
+        Fetches balance and account details via OTP-authenticated WebSocket.
+        Falls back to demo info if anything fails.
+        """
+        active_token = token or self.api_token
 
-                if mt5_accounts:
-                    target_mt5 = next(
-                        (acc for acc in mt5_accounts if str(acc.get("login")) == str(account_number)),
-                        mt5_accounts[0]
-                    )
-                    mt5_balance = target_mt5.get("balance", 10000.00)
-                    mt5_login = target_mt5.get("login", account_number)
-                    mt5_currency = target_mt5.get("currency", "USD")
+        if not active_token or not account_number:
+            return self._demo_account_info(account_number)
 
-                    return {
-                        "balance": f"{float(mt5_balance):,.2f}",
-                        "raw_balance": float(mt5_balance),
-                        "currency": mt5_currency,
-                        "is_demo": True,
-                        "loginid": f"MT5:{mt5_login}",
-                        "server": "Deriv-Demo"
-                    }
+        # 1. Get authenticated WebSocket URL via OTP
+        ws_url = await asyncio.to_thread(
+            self._get_authenticated_ws_url, active_token, account_number
+        )
+        if not ws_url:
+            logger.warning("Could not obtain authenticated WebSocket URL, using demo fallback")
+            return self._demo_account_info(account_number)
 
-                # Standard authorization fallback
-                auth_data = auth_res.get("authorize", {})
-                balance = auth_data.get("balance", 10000.00)
-                loginid = auth_data.get("loginid", account_number)
-                is_demo = auth_data.get("is_virtual") == 1 or str(loginid).startswith("VRTC")
+        # 2. Connect and fetch balance
+        try:
+            async with websockets.connect(
+                ws_url,
+                ssl=ssl_context,
+                open_timeout=8,
+                ping_interval=20,
+                ping_timeout=10,
+            ) as ws:
+                # Request balance subscription
+                await ws.send(json.dumps({"balance": 1, "subscribe": 1}))
+
+                balance = None
+                currency = "USD"
+                loginid = account_number
+                is_virtual = False
+
+                start_time = asyncio.get_event_loop().time()
+                while (asyncio.get_event_loop().time() - start_time) < 8:
+                    try:
+                        raw = await asyncio.wait_for(ws.recv(), timeout=5)
+                        msg = json.loads(raw)
+
+                        if msg.get('msg_type') == 'balance' and 'balance' in msg:
+                            balance = float(msg['balance'].get('balance', 0))
+                            currency = msg['balance'].get('currency', 'USD')
+                            loginid = msg['balance'].get('loginid', account_number)
+                            break
+
+                        if msg.get('msg_type') == 'error':
+                            logger.warning(f"Deriv error: {msg.get('error', {}).get('message')}")
+                            break
+                    except asyncio.TimeoutError:
+                        break
+
+                if balance is None:
+                    logger.warning("No balance returned from Deriv WebSocket")
+                    return self._demo_account_info(account_number)
 
                 return {
-                    "balance": f"{float(balance):,.2f}",
-                    "raw_balance": float(balance),
-                    "currency": auth_data.get("currency", "USD"),
-                    "is_demo": is_demo,
+                    "balance": f"{balance:,.2f}",
+                    "raw_balance": balance,
+                    "currency": currency,
+                    "is_demo": is_virtual,
                     "loginid": str(loginid),
-                    "server": "Deriv-Server"
+                    "server": "Deriv-Server",
+                    "connected": True,
                 }
 
         except Exception as e:
-            logger.warning(f"Deriv MT5 WebSocket Error: {e}")
-            return {
-                "balance": "10,000.00",
-                "currency": "USD",
-                "is_demo": True,
-                "loginid": f"MT5:{account_number}",
-                "server": "Deriv-Demo"
-            }
+            logger.warning(f"Deriv Account Info Error: {e}")
+            return self._demo_account_info(account_number)
+
+    def _demo_account_info(self, account_number=""):
+        """Return demo account info when Deriv is unavailable"""
+        return {
+            "balance": "10,000.00",
+            "raw_balance": 10000.00,
+            "currency": "USD",
+            "is_demo": True,
+            "loginid": f"MT5:{account_number or 'DEMO'}",
+            "server": "Deriv-Demo",
+            "connected": False,
+        }
+
+    # ==========================================
+    # TICKS — Public WebSocket, no auth needed
+    # ==========================================
 
     async def get_recent_ticks(self, symbol="frxXAUUSD", count=50):
+        """Get recent historical ticks — uses PUBLIC WebSocket, no auth."""
         deriv_symbol = self.resolve_symbol(symbol)
+
+        if self._use_fallback:
+            return self._fallback_ticks(deriv_symbol, count)
+
         try:
-            # Fixed timeout -> open_timeout
-            async with websockets.connect(self.ws_url, ssl=ssl_context, open_timeout=3) as ws:
+            async with websockets.connect(
+                PUBLIC_WS_URL,
+                ssl=ssl_context,
+                open_timeout=5,
+                ping_interval=20,
+                ping_timeout=10,
+            ) as ws:
                 req = {
                     "ticks_history": deriv_symbol,
                     "adjust_start_time": 1,
                     "count": count,
                     "end": "latest",
-                    "style": "ticks"
+                    "style": "ticks",
                 }
                 await ws.send(json.dumps(req))
-                res = json.loads(await asyncio.wait_for(ws.recv(), timeout=3))
+                res = json.loads(await asyncio.wait_for(ws.recv(), timeout=8))
+
+                if "error" in res:
+                    logger.warning(f"Deriv ticks error for {deriv_symbol}: {res['error']}")
+                    self._use_fallback = True
+                    return self._fallback_ticks(deriv_symbol, count)
 
                 if "history" in res and "prices" in res["history"]:
-                    return res["history"]["prices"]
+                    prices = [float(p) for p in res["history"]["prices"]]
+                    if prices:
+                        self._last_prices[deriv_symbol] = prices[-1]
+                    return prices
+
         except Exception as e:
             logger.warning(f"Fallback tick generator for {deriv_symbol}: {e}")
+            self._use_fallback = True
 
-        base_price = 2742.50 if "XAU" in deriv_symbol else 1245.80
-        return [round(base_price + random.uniform(-1.5, 1.5), 2) for _ in range(30)]
+        return self._fallback_ticks(deriv_symbol, count)
 
-    async def run_ai_trade_decision(self, symbol="Gold / USD (XAU)"):
-        deriv_symbol = self.resolve_symbol(symbol)
-        ticks = await self.get_recent_ticks(symbol=deriv_symbol, count=50)
-
-        self.ai_engine.train(ticks)
-        predicted_contract, confidence = self.ai_engine.predict_next(ticks)
-
-        last_price = ticks[-1]
-        last_digit = self.ai_engine.extract_last_digit(last_price)
-
-        return {
-            "display_symbol": symbol,
-            "symbol": deriv_symbol,
-            "predicted_contract": predicted_contract,
-            "signal": "BUY (EVEN)" if predicted_contract == "DIGITEVEN" else "SELL (ODD)",
-            "confidence": f"{confidence}%",
-            "raw_confidence": confidence,
-            "last_price": f"{last_price:,.2f}",
-            "last_digit": last_digit,
-            "status": "Active"
-        }
-
-    async def execute_trade(self, token, symbol="R_100", contract_type="DIGITEVEN", stake=10.0, duration=1, duration_unit="t"):
-        """Sends a 2-step Proposal and Buy command to Deriv via WebSocket."""
-        active_token = token or self.api_token
+    async def get_settlement_ticks(self, symbol, count=1, timeout=10):
+        """Get settlement ticks — uses PUBLIC WebSocket, no auth."""
         deriv_symbol = self.resolve_symbol(symbol)
 
-        if not active_token or active_token == 'demo_token_xyz':
-            return {
-                "success": False,
-                "error": "Please connect your real Deriv API Token using the 'Connect Deriv' button to execute live trades."
-            }
+        if self._use_fallback:
+            return self._fallback_ticks(deriv_symbol, count)
 
         try:
-            # Fixed timeout -> open_timeout
-            async with websockets.connect(self.ws_url, ssl=ssl_context, open_timeout=5) as ws:
-                # 1. Authorize connection
-                await ws.send(json.dumps({"authorize": active_token}))
-                auth_res = json.loads(await asyncio.wait_for(ws.recv(), timeout=3))
+            async with websockets.connect(
+                PUBLIC_WS_URL,
+                ssl=ssl_context,
+                open_timeout=5,
+                ping_interval=20,
+                ping_timeout=10,
+            ) as ws:
+                await ws.send(json.dumps({"ticks": deriv_symbol, "subscribe": 1}))
 
-                if "error" in auth_res:
-                    return {"success": False, "error": auth_res["error"].get("message", "Authorization failed")}
+                ticks = []
+                start_time = asyncio.get_event_loop().time()
 
-                # 2. Request Price Proposal for Contract
-                proposal_req = {
-                    "proposal": 1,
-                    "amount": float(stake),
-                    "basis": "stake",
-                    "contract_type": contract_type,  # 'DIGITEVEN' or 'DIGITODD'
-                    "currency": "USD",
-                    "duration": int(duration),
-                    "duration_unit": duration_unit,  # 't' for ticks
-                    "symbol": deriv_symbol
-                }
+                while len(ticks) < count:
+                    elapsed = asyncio.get_event_loop().time() - start_time
+                    if elapsed > timeout:
+                        break
+                    try:
+                        remaining = max(0.5, timeout - elapsed)
+                        response = await asyncio.wait_for(ws.recv(), timeout=remaining)
+                        data = json.loads(response)
 
-                await ws.send(json.dumps(proposal_req))
-                proposal_res = json.loads(await asyncio.wait_for(ws.recv(), timeout=3))
+                        if "error" in data:
+                            logger.warning(f"Deriv settlement error: {data['error']}")
+                            self._use_fallback = True
+                            return self._fallback_ticks(deriv_symbol, count)
 
-                if "error" in proposal_res:
-                    return {"success": False, "error": proposal_res["error"].get("message", "Proposal error")}
+                        if "tick" in data and "quote" in data["tick"]:
+                            quote = float(data["tick"]["quote"])
+                            ticks.append(quote)
+                            self._last_prices[deriv_symbol] = quote
+                    except asyncio.TimeoutError:
+                        break
 
-                proposal_id = proposal_res["proposal"]["id"]
-                ask_price = proposal_res["proposal"]["ask_price"]
+                try:
+                    await ws.send(json.dumps({"forget_all": "ticks"}))
+                except Exception:
+                    pass
 
-                # 3. Execute Buy Command
-                buy_req = {
-                    "buy": proposal_id,
-                    "price": ask_price
-                }
-
-                await ws.send(json.dumps(buy_req))
-                buy_res = json.loads(await asyncio.wait_for(ws.recv(), timeout=4))
-
-                if "error" in buy_res:
-                    return {"success": False, "error": buy_res["error"].get("message", "Purchase error")}
-
-                contract_info = buy_res.get("buy", {})
-                return {
-                    "success": True,
-                    "contract_id": contract_info.get("contract_id"),
-                    "transaction_id": contract_info.get("transaction_id"),
-                    "buy_price": contract_info.get("buy_price"),
-                    "balance_after": contract_info.get("balance_after"),
-                    "message": f"Successfully purchased {contract_type} on {symbol}!"
-                }
+                if ticks:
+                    return ticks
 
         except Exception as e:
-            logger.error(f"Deriv Trade Execution Error: {e}")
-            return {"success": False, "error": str(e)}
+            logger.warning(f"Error getting settlement ticks for {deriv_symbol}: {e}")
+            self._use_fallback = True
 
+        return self._fallback_ticks(deriv_symbol, count)
 
-        # ... existing imports ...
+    # ==========================================
+    # FALLBACK
+    # ==========================================
 
-    # NEW HELPER METHOD
+    def _fallback_ticks(self, symbol, count):
+        """Generate realistic fallback ticks when WebSocket is unavailable."""
+        base = self._last_prices.get(symbol) or BASE_PRICES.get(symbol, 1000.00)
+
+        if "XAU" in symbol:
+            volatility = 0.5
+        elif "BTC" in symbol or "ETH" in symbol:
+            volatility = 50.0
+        elif "R_100" in symbol:
+            volatility = 15.0
+        elif "R_75" in symbol:
+            volatility = 10.0
+        elif "JPY" in symbol:
+            volatility = 0.05
+        else:
+            volatility = base * 0.0005
+
+        ticks = []
+        current = base
+        for _ in range(count):
+            change = (random.random() - 0.5) * 2 * volatility
+            current += change
+            if base > 100:
+                ticks.append(round(current, 2))
+            elif base > 1:
+                ticks.append(round(current, 3))
+            else:
+                ticks.append(round(current, 5))
+
+        if ticks:
+            self._last_prices[symbol] = ticks[-1]
+        return ticks
+
+    # ==========================================
+    # OHLC AGGREGATION
+    # ==========================================
+
     def aggregate_ticks_to_ohlc(self, ticks_response, interval_minutes=1):
-        """
-        Aggregates raw API tick data into OHLCV dictionaries for analysis.
-        Input: ticks_response from get_recent_ticks
-        Output: List of dictionaries: [{'open': x, 'high': x, 'low': x, 'close': x}, ...]
-        """
-        if not ticks_response or 'ticks' not in ticks_response:
+        """Aggregates raw API tick data into OHLCV dictionaries."""
+        if not ticks_response:
             return None
 
-        # Extract list of tick dictionaries
-        ticks = ticks_response['ticks']
-        
-        # Convert to Pandas Series for easy resampling
-        data = {'price': [float(t['quote']) for t in ticks]}
-        index = pd.to_datetime([t['epoch'] for t in ticks], unit='s')
-        series = pd.Series(data=data['price'], index=index)
+        if isinstance(ticks_response, list):
+            prices = ticks_response
+            now = int(time.time())
+            epochs = [now - (len(prices) - i) for i in range(len(prices))]
+        elif 'ticks' in ticks_response:
+            ticks = ticks_response['ticks']
+            prices = [float(t['quote']) for t in ticks]
+            epochs = [t['epoch'] for t in ticks]
+        else:
+            return None
 
-        # Resample into OHLC bars
+        if not prices:
+            return None
+
+        index = pd.to_datetime(epochs, unit='s')
+        series = pd.Series(data=prices, index=index)
         ohlc_resampled = series.resample(f'{interval_minutes}min').ohlc()
-
-        # Clean up the DataFrame for analysis service
-        # Rename columns to lowercase expected by analysis_service
         ohlc_resampled.columns = [col.lower() for col in ohlc_resampled.columns]
-        ohlc_resampled.reset_index(inplace=True) # Convert index to column
-
-        # Drop any rows with NaN (incomplete periods at start/end)
+        ohlc_resampled.reset_index(inplace=True)
         ohlc_resampled.dropna(inplace=True)
-
-        # Convert to list of dictionaries
         return ohlc_resampled.to_dict(orient='records')
 
-# ... existing ai_engine = AIEngine ...
+    # ==========================================
+    # UTILITY
+    # ==========================================
+
+    def reset_fallback(self):
+        """Reset the fallback flag to try live connection again."""
+        self._use_fallback = False
+        logger.info("Fallback flag reset - will try live connection")

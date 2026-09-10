@@ -1,6 +1,6 @@
 from django.urls import path
 from . import views
-from store.views import cryptomus_verify , landing_page_view
+from store.views import cryptomus_verify , landing_page_view , connect_ctrader
 from rest_framework_simplejwt.views import TokenObtainPairView
 from .serializers import CustomTokenObtainPairSerializer
 
@@ -51,7 +51,11 @@ urlpatterns = [
     path('api/nowpayments/ipn/', views.nowpayments_ipn_webhook, name='nowpayments_ipn_webhook'),
     path('api/webhook/binance/', views.binance_webhook, name='binance_webhook'),
     path('cryptomus_6fcb4880.html', cryptomus_verify),
-
+    # ==========================================
+    # Broker Balance API
+    # ==========================================
+    path('api/broker-balances/', views.api_broker_balances, name='api_broker_balances'),
+    path('api/broker/<int:account_id>/sync/', views.sync_single_broker, name='sync_single_broker'),
     # Developer & API Portal (New)
     #path('developer/api/', views.api_dashboard_view, name='api_dashboard'),
    # path('developer/webhooks/', views.webhook_manager_view, name='webhook_manager'),
@@ -61,6 +65,8 @@ urlpatterns = [
     # AI, Signals & Trading Tools
     path('trade/', views.trade_view, name='trade'),
     path('funded/', views.funded_view, name='funded'),
+    path('funded/ai-gold/toggle/', views.execute_funded_ai_gold, name='execute_funded_ai_gold'),
+
     path('digits_trading/', views.digits_trading, name='digits_trading'),
     path('open-trade/', views.open_trade, name='open_trade'),
     path('trade/execute/', views.execute_trade, name='execute_trade'),
@@ -78,7 +84,7 @@ urlpatterns = [
     path('forex-heatmap/', views.forex_heatmap, name='forex_heatmap'),
     path('crypto-heatmap/', views.crypto_heatmap, name='crypto_heatmap'),
     path('trend-scanner/', views.trend_scanner, name='trend_scanner'),
-    path('pattern-detection/', views.pattern_detection, name='pattern_detection'),
+    path('pattern-detection/', views.pattern_detection_view, name='pattern_detection'),
     path('volatility-index/', views.volatility_index, name='volatility_index'),
     path('economic-calendar/', views.economic_calendar, name='economic_calendar'),
     path('news-sentiment/', views.news_sentiment, name='news_sentiment'),
@@ -101,7 +107,22 @@ urlpatterns = [
     path('pl-overview/', views.pl_overview, name='pl_overview'),
     path('forex-pairs/', views.forex_pairs, name='forex_pairs'),
     path('crypto-pairs/', views.crypto_pairs, name='crypto_pairs'),
+    
+    path('connect-binance/', views.connect_binance, name='connect_binance'),
+    path('profile/connect-ctrader/', views.connect_ctrader, name='connect_ctrader'),
+    
 
+
+    # Add to urls.py
+
+    # ... existing URLs ...
+    
+    # Market Scanner
+    path('market-scanner/', views.market_scanner, name='market_scanner'),
+    path('api/market-scan/', views.get_market_scan_data, name='get_market_scan_data'),
+    path('signal/<str:symbol>/', views.signal_detail_view, name='signal_detail'),
+
+    
     # Automation, Bots & Webhooks
     path('api/token/', TokenObtainPairView.as_view(serializer_class=CustomTokenObtainPairSerializer), name='token_obtain_pair'),
 
@@ -155,7 +176,7 @@ urlpatterns = [
     path('signup/', views.signup_view, name='signup'),
     path('logout/', views.logout_view, name='logout'),
 
-
+    path('api/ai-chat/', views.ai_chat_api, name='ai_chat_api'),
     path('support/', views.ai_support_view, name='ai_support'),
     path('support/ticket/submit/', views.submit_support_ticket, name='submit_support_ticket'),
 

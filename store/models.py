@@ -115,7 +115,8 @@ class Trade(models.Model):
     pnl = models.DecimalField(max_digits=12, decimal_places=2, default=0.00)
     date_opened = models.DateTimeField(auto_now_add=True)
     date_closed = models.DateTimeField(null=True, blank=True)
-
+    sl = models.DecimalField(max_digits=18, decimal_places=8, null=True, blank=True, help_text="Stop Loss price")
+    tp = models.DecimalField(max_digits=18, decimal_places=8, null=True, blank=True, help_text="Take Profit price")
     class Meta:
         ordering = ['-date_opened']
 
@@ -168,12 +169,12 @@ class NewsArticle(models.Model):
     def __str__(self):
         return self.title
 
-
 class UserBrokerAccount(models.Model):
     BROKER_CHOICES = [
         ('DERIV', 'Deriv Account'),
         ('PEPPERSTONE_MT5', 'Pepperstone MetaTrader 5'),
         ('PEPPERSTONE_CTRADER', 'Pepperstone cTrader'),
+        ('BINANCE', 'Binance Spot'),
     ]
 
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='broker_accounts')
@@ -184,10 +185,51 @@ class UserBrokerAccount(models.Model):
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
+    # ==========================================
+    # NEW — Balance Cache Fields
+    # ==========================================
+    last_known_balance = models.DecimalField(
+        max_digits=18, decimal_places=2, null=True, blank=True,
+        help_text="Cached balance from last successful sync"
+    )
+    last_balance_currency = models.CharField(max_length=10, default='USD')
+    last_synced_at = models.DateTimeField(null=True, blank=True)
+    sync_status = models.CharField(
+        max_length=20, default='PENDING',
+        choices=[('OK', 'OK'), ('ERROR', 'Error'), ('PENDING', 'Pending')]
+    )
+    sync_error_message = models.TextField(blank=True, null=True)
+
     def __str__(self):
         return f"{self.user.username} - {self.get_broker_display()} ({self.account_number})"
 
+    @property
+    def is_stale(self):
+        """Returns True if last sync is more than 60 seconds old"""
+        if not self.last_synced_at:
+            return True
+        from django.utils import timezone
+        from datetime import timedelta
+        return (timezone.now() - self.last_synced_at) > timedelta(seconds=60)
 
+
+# ==========================================
+# NEW MODEL — Balance History Snapshots
+# ==========================================
+class BrokerBalanceSnapshot(models.Model):
+    """Stores historical balance snapshots for charts and audit"""
+    broker_account = models.ForeignKey(
+        UserBrokerAccount, on_delete=models.CASCADE, related_name='balance_snapshots'
+    )
+    balance = models.DecimalField(max_digits=18, decimal_places=2)
+    currency = models.CharField(max_length=10, default='USD')
+    recorded_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-recorded_at']
+
+    def __str__(self):
+        return f"{self.broker_account} @ {self.balance} {self.currency} ({self.recorded_at})"
 
 # ==========================================
 # ADMIN HUB APPROVAL MODELS (ADDED)
@@ -796,3 +838,26 @@ class SupportTicket(models.Model):
 
     def __str__(self):
         return f"[{self.category}] {self.subject} ({self.status})"
+    
+
+
+
+# Add to models.py
+
+class FundedTrade(models.Model):
+    """Tracks trades executed from funded accounts via AI Gold Auto-Trader"""
+    funded_account = models.ForeignKey('FundedAccount', on_delete=models.CASCADE, related_name='trades')
+    user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
+    asset = models.CharField(max_length=20, default='XAUUSD')
+    direction = models.CharField(max_length=10)  # BUY or SELL
+    entry_price = models.DecimalField(max_digits=18, decimal_places=2)
+    exit_price = models.DecimalField(max_digits=18, decimal_places=2, null=True, blank=True)
+    lot_size = models.DecimalField(max_digits=10, decimal_places=2, default=1.00)
+    profit_percent = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)  # 88% of actual profit
+    profit_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0.00)
+    status = models.CharField(max_length=20, default='PENDING')  # PENDING, WON, LOST
+    created_at = models.DateTimeField(auto_now_add=True)
+    closed_at = models.DateTimeField(null=True, blank=True)
+    
+    def __str__(self):
+        return f"{self.user.username} - {self.asset} ({self.direction}) - {self.status}"

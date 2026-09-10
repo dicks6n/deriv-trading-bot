@@ -13,13 +13,9 @@ from .ai_engine import ai_engine
 DIGIT_CONTRACTS = {'DIGITEVEN', 'DIGITODD', 'DIGITOVER', 'DIGITUNDER', 'DIGITMATCH', 'DIGITDIFF'}
 
 
-
-
 class TradingConsumer(AsyncWebsocketConsumer):
 
-    # Symbols the live signal feed polls in a loop: synthetic indices plus
-    # real markets (Gold, EUR/USD, USD/JPY). Edit this list to change what
-    # shows up in the log panel - no other code needs to change.
+    # Symbols the live signal feed polls in a loop
     SIGNAL_WATCHLIST = [
         'R_100', 'R_75',
         'frxXAUUSD',   # Gold/USD
@@ -31,9 +27,7 @@ class TradingConsumer(AsyncWebsocketConsumer):
     async def connect(self):
         self.deriv_service = DerivService()
         await self.accept()
-        # Background task: keeps polling the watchlist and pushing AI
-        # decisions to the client as log entries, independent of whatever
-        # request/response messages come through receive().
+        # Background task: keeps polling the watchlist and pushing AI decisions
         self.signal_task = asyncio.create_task(self.signal_feed_loop())
 
     async def disconnect(self, close_code):
@@ -47,7 +41,6 @@ class TradingConsumer(AsyncWebsocketConsumer):
             action = data.get('action')
 
             if action == 'get_account_balance':
-                # Site wallet balance (what trades are actually settled against).
                 db_data = await self.get_db_account_data()
                 if db_data:
                     await self.send(text_data=json.dumps({'type': 'account_info', 'data': db_data}))
@@ -55,10 +48,8 @@ class TradingConsumer(AsyncWebsocketConsumer):
                     await self.send_error("No site account found for this user.")
 
             elif action == 'get_deriv_demo_balance' or action == 'get_balance':
-                # READ-ONLY: shows the connected Deriv account balance for reference.
                 deriv_data = await self.fetch_deriv_demo_balance()
                 
-                # Safely extract balance value whether it's dict or nested
                 if isinstance(deriv_data, dict):
                     balance_val = deriv_data.get('balance', deriv_data.get('amount', '0.00'))
                     if isinstance(balance_val, dict):
@@ -85,14 +76,29 @@ class TradingConsumer(AsyncWebsocketConsumer):
             await self.send_error("Something went wrong processing that request.")
 
     # ------------------------------------------------------------------
-    # DB helpers (all DB access must go through database_sync_to_async)
+    # DB helpers - ALL USE filter().first() TO AVOID DUPLICATE ERRORS
     # ------------------------------------------------------------------
+    
     @database_sync_to_async
     def get_db_account_data(self):
+        """Safely get account data - handles duplicates"""
         try:
-            account = Account.objects.get(user=self.scope["user"])
+            # Use filter().first() to avoid MultipleObjectsReturned
+            account = Account.objects.filter(
+                user=self.scope["user"],
+                account_type='EXCHANGE'
+            ).first()
+            
+            if not account:
+                # Try any account for this user
+                account = Account.objects.filter(user=self.scope["user"]).first()
+            
+            if not account:
+                return None
+                
             return {'balance': str(account.balance), 'currency': 'USD'}
-        except Account.DoesNotExist:
+        except Exception as e:
+            print(f"❌ Error getting account: {e}")
             return None
 
     @database_sync_to_async
@@ -101,12 +107,49 @@ class TradingConsumer(AsyncWebsocketConsumer):
 
     @database_sync_to_async
     def get_account(self):
-        account, _ = Account.objects.get_or_create(user=self.scope["user"])
+        """Safely get account - handles duplicates"""
+        # Try to get existing account with filter().first()
+        account = Account.objects.filter(
+            user=self.scope["user"],
+            account_type='TRADING'
+        ).first()
+        
+        if account:
+            return account
+        
+        # Try any account type
+        account = Account.objects.filter(user=self.scope["user"]).first()
+        
+        if account:
+            return account
+        
+        # Create new account only if truly none exist
+        account = Account.objects.create(
+            user=self.scope["user"],
+            account_type='TRADING',
+            balance=Decimal('0.00')
+        )
         return account
 
     @database_sync_to_async
     def debit_balance(self, stake):
-        account, _ = Account.objects.get_or_create(user=self.scope["user"])
+        """Safely debit balance - handles duplicates"""
+        # Use filter().first() instead of get_or_create
+        account = Account.objects.filter(
+            user=self.scope["user"],
+            account_type='TRADING'
+        ).first()
+        
+        if not account:
+            account = Account.objects.filter(user=self.scope["user"]).first()
+        
+        if not account:
+            account = Account.objects.create(
+                user=self.scope["user"],
+                account_type='TRADING',
+                balance=Decimal('0.00')
+            )
+        
         account.balance = Decimal(str(account.balance)) - Decimal(str(stake))
         account.save()
         return account.balance
@@ -134,7 +177,16 @@ class TradingConsumer(AsyncWebsocketConsumer):
 
     @database_sync_to_async
     def refund_trade(self, trade, stake):
-        account, _ = Account.objects.get_or_create(user=trade.user)
+        """Safely refund a trade"""
+        account = Account.objects.filter(user=trade.user).first()
+        
+        if not account:
+            account = Account.objects.create(
+                user=trade.user,
+                account_type='TRADING',
+                balance=Decimal('0.00')
+            )
+        
         account.balance = Decimal(str(account.balance)) + Decimal(str(stake))
         account.save()
         trade.status = 'CANCELLED'
@@ -143,12 +195,21 @@ class TradingConsumer(AsyncWebsocketConsumer):
 
     @database_sync_to_async
     def settle_trade(self, trade, status, payout, settlement_price):
+        """Safely settle a trade"""
         trade.status = status
         trade.exit_price = Decimal(str(settlement_price))
         trade.payout = payout
         trade.save()
 
-        account, _ = Account.objects.get_or_create(user=trade.user)
+        account = Account.objects.filter(user=trade.user).first()
+        
+        if not account:
+            account = Account.objects.create(
+                user=trade.user,
+                account_type='TRADING',
+                balance=Decimal('0.00')
+            )
+        
         if status == 'WON' and payout > 0:
             account.balance = Decimal(str(account.balance)) + Decimal(str(payout))
             account.save()
@@ -165,12 +226,14 @@ class TradingConsumer(AsyncWebsocketConsumer):
     def get_deriv_token(self):
         user = self.scope.get("user")
         if user and not isinstance(user, AnonymousUser) and user.is_authenticated:
-            account = UserBrokerAccount.objects.filter(user=user, broker='DERIV', is_active=True).first()
+            account = UserBrokerAccount.objects.filter(
+                user=user, broker='DERIV', is_active=True
+            ).first()
             if account and account.api_token:
                 return account.api_token, account.account_number
         
-        # Fallback to global settings if no database broker account is linked
         return getattr(settings, 'DERIV_API_TOKEN', None), None
+
     # ------------------------------------------------------------------
     # Deriv (read-only) helpers
     # ------------------------------------------------------------------
@@ -193,11 +256,7 @@ class TradingConsumer(AsyncWebsocketConsumer):
         return {'connected': True, 'balance': str(info or '0.00'), 'amount': str(info or '0.00')}
 
     async def signal_feed_loop(self):
-        """
-        Runs for the lifetime of the connection: every SIGNAL_INTERVAL_SECONDS,
-        pulls fresh ticks for each symbol in SIGNAL_WATCHLIST and pushes the
-        AI's decision to the client as a log-style message ('signal_log').
-        """
+        """Background task for AI signals"""
         try:
             while True:
                 for symbol in self.SIGNAL_WATCHLIST:
@@ -207,11 +266,10 @@ class TradingConsumer(AsyncWebsocketConsumer):
                         print(f"⚠️ signal_feed_loop error for {symbol}: {e}")
                 await asyncio.sleep(self.SIGNAL_INTERVAL_SECONDS)
         except asyncio.CancelledError:
-            # Expected on disconnect - just let the task end quietly.
             pass
 
     async def push_signal_log(self, symbol):
-        """Fetches ticks for one symbol, runs the AI engine, sends the result."""
+        """Fetches ticks and sends AI signal"""
         ticks = await self.deriv_service.get_recent_ticks(symbol=symbol, count=50)
         if not ticks:
             return
@@ -222,8 +280,6 @@ class TradingConsumer(AsyncWebsocketConsumer):
 
         top = result['top_signal']
         contract = top['contract_type']
-        # Reuses the same BUY/SELL/WARN/ERROR/INFO keyword coloring the log
-        # panel already applies - see bot.html's color-coding logic.
         direction_word = 'BUY' if contract in ('CALL', 'DIGITOVER', 'DIGITEVEN') else 'SELL'
         message = f"{direction_word}: {symbol} -> {contract} ({top['confidence']}) @ {result['last_price']}"
 
@@ -256,8 +312,7 @@ class TradingConsumer(AsyncWebsocketConsumer):
         }
 
     # ------------------------------------------------------------------
-    # Site trading (settled against the internal Account balance, judged
-    # fairly using real, read-only Deriv tick data)
+    # Site trading helpers
     # ------------------------------------------------------------------
     async def send_error(self, message):
         await self.send(text_data=json.dumps({'type': 'error', 'message': message}))
@@ -287,7 +342,6 @@ class TradingConsumer(AsyncWebsocketConsumer):
             t = int(target_digit) if target_digit is not None else -1
             return settlement_digit != t
 
-        # Unknown contract type: default to the rise/fall rule.
         return settlement_price > entry_price
 
     async def execute_site_trade(self, data):
@@ -328,7 +382,7 @@ class TradingConsumer(AsyncWebsocketConsumer):
             await self.send_error("Insufficient site balance for this trade.")
             return
 
-        # 1. Get a real entry price from the live (read-only) Deriv feed.
+        # 1. Get entry price
         entry_ticks = await self.deriv_service.get_settlement_ticks(symbol=symbol, count=1, timeout=10)
         if not entry_ticks:
             await self.send_error("Could not reach the live price feed. Please try again.")
@@ -336,7 +390,7 @@ class TradingConsumer(AsyncWebsocketConsumer):
         entry_price = entry_ticks[0]
         entry_digit = ai_engine.extract_last_digit(entry_price)
 
-        # 2. Open the trade and debit the stake from the site balance.
+        # 2. Open trade and debit stake
         trade = await self.open_trade(user, symbol, contract_type, stake, entry_price, target_digit)
         new_balance = await self.debit_balance(stake)
 
@@ -350,7 +404,7 @@ class TradingConsumer(AsyncWebsocketConsumer):
             'balance': str(new_balance),
         }))
 
-        # 3. Settle fairly using the next real tick(s) from Deriv's feed.
+        # 3. Settle trade
         settlement_ticks = await self.deriv_service.get_settlement_ticks(symbol=symbol, count=duration, timeout=20)
 
         if not settlement_ticks:

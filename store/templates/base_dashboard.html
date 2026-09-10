@@ -162,26 +162,6 @@
                     <p class="px-3 text-[10px] font-bold text-indigo-300/70 uppercase tracking-wider mb-2 font-mono">Trading Tools</p>
                     <div class="space-y-1">
                         <a href="#" class="flex items-center gap-3 px-3.5 py-2 rounded-xl text-xs text-slate-400 font-medium hover:text-white hover:bg-indigo-950/40 transition">
-                            <i class="fa-solid fa-fire w-4 text-center"></i>
-                            <span>Forex Heatmap</span>
-                        </a>
-                        <a href="#" class="flex items-center gap-3 px-3.5 py-2 rounded-xl text-xs text-slate-400 font-medium hover:text-white hover:bg-indigo-950/40 transition">
-                            <i class="fa-solid fa-coins w-4 text-center"></i>
-                            <span>Crypto Heatmap</span>
-                        </a>
-                        <a href="#" class="flex items-center gap-3 px-3.5 py-2 rounded-xl text-xs text-slate-400 font-medium hover:text-white hover:bg-indigo-950/40 transition">
-                            <i class="fa-solid fa-arrow-trend-up w-4 text-center"></i>
-                            <span>Trend Scanner</span>
-                        </a>
-                        <a href="#" class="flex items-center gap-3 px-3.5 py-2 rounded-xl text-xs text-slate-400 font-medium hover:text-white hover:bg-indigo-950/40 transition">
-                            <i class="fa-solid fa-shapes w-4 text-center"></i>
-                            <span>Pattern Detection</span>
-                        </a>
-                        <a href="#" class="flex items-center gap-3 px-3.5 py-2 rounded-xl text-xs text-slate-400 font-medium hover:text-white hover:bg-indigo-950/40 transition">
-                            <i class="fa-solid fa-wave-square w-4 text-center"></i>
-                            <span>Volatility Index</span>
-                        </a>
-                        <a href="#" class="flex items-center gap-3 px-3.5 py-2 rounded-xl text-xs text-slate-400 font-medium hover:text-white hover:bg-indigo-950/40 transition">
                             <i class="fa-solid fa-calendar-days w-4 text-center"></i>
                             <span>Economic Calendar</span>
                         </a>
@@ -189,10 +169,7 @@
                             <i class="fa-solid fa-newspaper w-4 text-center"></i>
                             <span>News & Sentiment</span>
                         </a>
-                        <a href="#" class="flex items-center gap-3 px-3.5 py-2 rounded-xl text-xs text-slate-400 font-medium hover:text-white hover:bg-indigo-950/40 transition">
-                            <i class="fa-solid fa-table-cells w-4 text-center"></i>
-                            <span>Correlation Matrix</span>
-                        </a>
+                        
                     </div>
                 </div>
 
@@ -201,29 +178,10 @@
                     <p class="px-3 text-[10px] font-bold text-indigo-300/70 uppercase tracking-wider mb-2 font-mono">Market Analytics</p>
                     <div class="space-y-1">
                         <a href="#" class="flex items-center gap-3 px-3.5 py-2 rounded-xl text-xs text-slate-400 font-medium hover:text-white hover:bg-indigo-950/40 transition">
-                            <i class="fa-solid fa-chart-line w-4 text-center"></i>
-                            <span>Forex Analytics</span>
-                        </a>
-                        <a href="#" class="flex items-center gap-3 px-3.5 py-2 rounded-xl text-xs text-slate-400 font-medium hover:text-white hover:bg-indigo-950/40 transition">
-                            <i class="fa-solid fa-chart-column w-4 text-center"></i>
-                            <span>Crypto Analytics</span>
-                        </a>
-                        <a href="#" class="flex items-center gap-3 px-3.5 py-2 rounded-xl text-xs text-slate-400 font-medium hover:text-white hover:bg-indigo-950/40 transition">
                             <i class="fa-solid fa-ranking-star w-4 text-center"></i>
                             <span>Top Gainers & Losers</span>
                         </a>
-                        <a href="#" class="flex items-center gap-3 px-3.5 py-2 rounded-xl text-xs text-slate-400 font-medium hover:text-white hover:bg-indigo-950/40 transition">
-                            <i class="fa-solid fa-face-smile w-4 text-center"></i>
-                            <span>Market Sentiment</span>
-                        </a>
-                        <a href="#" class="flex items-center gap-3 px-3.5 py-2 rounded-xl text-xs text-slate-400 font-medium hover:text-white hover:bg-indigo-950/40 transition">
-                            <i class="fa-solid fa-layer-group w-4 text-center"></i>
-                            <span>Liquidity Zones</span>
-                        </a>
-                        <a href="#" class="flex items-center gap-3 px-3.5 py-2 rounded-xl text-xs text-slate-400 font-medium hover:text-white hover:bg-indigo-950/40 transition">
-                            <i class="fa-solid fa-binoculars w-4 text-center"></i>
-                            <span>Price Action Monitor</span>
-                        </a>
+                      
                     </div>
                 </div>
 
@@ -235,49 +193,17 @@
                             <i class="fa-solid fa-briefcase w-4 text-center"></i>
                             <span>My Portfolio</span>
                         </a>
-                        <a href="#" class="flex items-center gap-3 px-3.5 py-2 rounded-xl text-xs text-slate-400 font-medium hover:text-white hover:bg-indigo-950/40 transition">
-                            <i class="fa-solid fa-folder-open w-4 text-center"></i>
-                            <span>Open Positions</span>
-                        </a>
+                        
                         <a href="{% url 'trade_history' %}" class="flex items-center gap-3 px-3.5 py-2 rounded-xl text-xs transition group {% if request.resolver_match.url_name == 'trade_history' %}bg-gradient-to-r from-indigo-950 to-slate-900 text-white font-bold border border-indigo-500/40 shadow-lg shadow-indigo-500/10{% else %}text-slate-400 font-medium hover:text-white hover:bg-indigo-950/40{% endif %}">
                             <i class="fa-solid fa-clock-rotate-left w-4 text-center"></i>
                             <span>Trade History</span>
                         </a>
-                        <a href="#" class="flex items-center gap-3 px-3.5 py-2 rounded-xl text-xs text-slate-400 font-medium hover:text-white hover:bg-indigo-950/40 transition">
-                            <i class="fa-solid fa-chart-area w-4 text-center"></i>
-                            <span>Performance Analytics</span>
-                        </a>
+                       
                         <a href="#" class="flex items-center gap-3 px-3.5 py-2 rounded-xl text-xs text-slate-400 font-medium hover:text-white hover:bg-indigo-950/40 transition">
                             <i class="fa-solid fa-scale-balanced w-4 text-center"></i>
                             <span>Risk Metrics</span>
                         </a>
-                        <a href="#" class="flex items-center gap-3 px-3.5 py-2 rounded-xl text-xs text-slate-400 font-medium hover:text-white hover:bg-indigo-950/40 transition">
-                            <i class="fa-solid fa-file-invoice-dollar w-4 text-center"></i>
-                            <span>P/L Overview</span>
-                        </a>
-                    </div>
-                </div>
-
-                <!-- WATCHLISTS -->
-                <div>
-                    <p class="px-3 text-[10px] font-bold text-indigo-300/70 uppercase tracking-wider mb-2 font-mono">Watchlists</p>
-                    <div class="space-y-1">
-                        <a href="#" class="flex items-center gap-3 px-3.5 py-2 rounded-xl text-xs text-slate-400 font-medium hover:text-white hover:bg-indigo-950/40 transition">
-                            <i class="fa-solid fa-dollar-sign w-4 text-center"></i>
-                            <span>Forex Pairs</span>
-                        </a>
-                        <a href="#" class="flex items-center gap-3 px-3.5 py-2 rounded-xl text-xs text-slate-400 font-medium hover:text-white hover:bg-indigo-950/40 transition">
-                            <i class="fa-solid fa-bitcoin-sign w-4 text-center"></i>
-                            <span>Crypto Pairs</span>
-                        </a>
-                        <a href="#" class="flex items-center gap-3 px-3.5 py-2 rounded-xl text-xs text-slate-400 font-medium hover:text-white hover:bg-indigo-950/40 transition">
-                            <i class="fa-solid fa-bell w-4 text-center"></i>
-                            <span>Custom Alerts</span>
-                        </a>
-                        <a href="#" class="flex items-center gap-3 px-3.5 py-2 rounded-xl text-xs text-slate-400 font-medium hover:text-white hover:bg-indigo-950/40 transition">
-                            <i class="fa-solid fa-bookmark w-4 text-center"></i>
-                            <span>Saved Signals</span>
-                        </a>
+                    
                     </div>
                 </div>
 
@@ -289,18 +215,12 @@
                             <i class="fa-solid fa-robot w-4 text-center"></i>
                             <span>Bot Center</span>
                         </a>
-                        <a href="#" class="flex items-center gap-3 px-3.5 py-2 rounded-xl text-xs text-slate-400 font-medium hover:text-white hover:bg-indigo-950/40 transition">
-                            <i class="fa-solid fa-share-nodes w-4 text-center"></i>
-                            <span>Auto-Signal Forwarder</span>
-                        </a>
+                        
                         <a href="{% url 'webhooks' %}" class="flex items-center gap-3 px-3.5 py-2 rounded-xl text-xs transition group {% if request.resolver_match.url_name == 'webhooks' %}bg-gradient-to-r from-indigo-950 to-slate-900 text-white font-bold border border-indigo-500/40 shadow-lg shadow-indigo-500/10{% else %}text-slate-400 font-medium hover:text-white hover:bg-indigo-950/40{% endif %}">
                             <i class="fa-solid fa-code w-4 text-center"></i>
                             <span>Webhook Automations</span>
                         </a>
-                        <a href="#" class="flex items-center gap-3 px-3.5 py-2 rounded-xl text-xs text-slate-400 font-medium hover:text-white hover:bg-indigo-950/40 transition">
-                            <i class="fa-solid fa-plug w-4 text-center"></i>
-                            <span>API Integrations</span>
-                        </a>
+                        
                     </div>
                 </div>
 
@@ -501,6 +421,7 @@
             } catch (error) { console.error('Error fetching notifications:', error); }
         }, 10000);
     </script>
+    <script src="https://unpkg.com/lightweight-charts@4.1.0/dist/lightweight-charts.standalone.production.js"></script>
     {% block extra_js %}{% endblock %}
 </body>
 </html>

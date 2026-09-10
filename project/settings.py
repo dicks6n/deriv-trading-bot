@@ -10,12 +10,17 @@ load_dotenv(os.path.join(BASE_DIR, '.env'))  #
 
 # =============================================
 # DERIV API CONFIGURATION
-# =============================================
-DERIV_APP_ID = os.getenv('DERIV_APP_ID', '33XN84FbZfx1ZO1xDyUzH')  #
-DERIV_API_TOKEN = os.getenv('DERIV_API_TOKEN', 'pat_88425959654f17ccd0a5f09ea440c64761dd130618179d2db744b85e3ce7d385')  #
+# ==========================================
+# Deriv OAuth Configuration
+# ==========================================
+import os
 
-
-
+DERIV_APP_ID = os.environ.get('DERIV_APP_ID', '34mjct1dBCmYao65TsMoD')
+DERIV_OAUTH_REDIRECT = os.environ.get(
+    'DERIV_OAUTH_REDIRECT',
+    'http://127.0.0.1:8000/deriv-callback/'  # change in production
+)
+DERIV_OAUTH_SCOPES = 'read trade'
 # =============================================
 # NOWCRYPTO API CONFIGURATION
 # =============================================
@@ -30,7 +35,14 @@ NOWPAYMENTS_SANDBOX = True  # Set to False when going live
 # =============================================
 SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-ahw@(v2zyav9rjx$yqhgjer+qfa$xiv7k1d37!q$0w8ylwba3k')  #
 DEBUG = True  #
-ALLOWED_HOSTS = ['*']  #
+ALLOWED_HOSTS = ['*' , '192.168.100.74' , '.loca.lt', '.trycloudflare.com']  #
+
+
+CSRF_TRUSTED_ORIGINS = [
+    'https://*.loca.lt', 'https://*.trycloudflare.com',
+]
+
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 # =============================================
 # APPLICATION DEFINITION
