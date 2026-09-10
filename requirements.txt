@@ -59,6 +59,7 @@ torch==2.2.2
 tqdm==4.70.0
 transformers==4.57.6
 Twisted==25.5.0
+django-hide-admin
 txaio==23.6.1
 typing_extensions==4.15.0
 tzdata==2026.3
