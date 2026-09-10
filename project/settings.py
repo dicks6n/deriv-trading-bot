@@ -37,7 +37,7 @@ ALLOWED_HOSTS = ['*']  #
 # =============================================
 INSTALLED_APPS = [
     'daphne',  #
-    'hide_admin.apps.HideAdminConfig',
+    #'hide_admin.apps.HideAdminConfig',
    # 'django.contrib.admin',  #
     'django.contrib.auth',  #
     'django.contrib.contenttypes',  #
