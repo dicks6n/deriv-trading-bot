@@ -861,3 +861,26 @@ class FundedTrade(models.Model):
     
     def __str__(self):
         return f"{self.user.username} - {self.asset} ({self.direction}) - {self.status}"
+    
+
+# models.py - add this to your existing models
+
+class UserSession(models.Model):
+    """Tracks user login sessions for security management"""
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='user_sessions')
+    session_key = models.CharField(max_length=40, unique=True)
+    ip_address = models.GenericIPAddressField(null=True, blank=True)
+    user_agent = models.TextField(blank=True, null=True)
+    device_type = models.CharField(max_length=20, default='desktop')  # desktop, mobile, tablet
+    browser = models.CharField(max_length=50, default='Unknown')
+    os_name = models.CharField(max_length=50, default='Unknown')
+    location = models.CharField(max_length=100, blank=True, null=True)
+    is_current = models.BooleanField(default=False)
+    last_activity = models.DateTimeField(auto_now=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-last_activity']
+
+    def __str__(self):
+        return f"{self.user.username} - {self.browser} on {self.os_name}"

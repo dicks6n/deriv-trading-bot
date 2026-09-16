@@ -1054,10 +1054,12 @@ def open_trade(request):
         return redirect('my_trades')
     return redirect('home')
 
+
+
 @login_required
 @csrf_exempt
 def execute_trade(request):
-    """Execute real trades with proper PnL calculation"""
+    """Execute trades - handles both margin trades (BUY/SELL) and volatility digit contracts"""
     if not user_has_approved_kyc(request.user):
         return JsonResponse({"success": False, "error": "KYC verification required to execute trades."}, status=403)
         
@@ -1066,121 +1068,219 @@ def execute_trade(request):
     
     try:
         data = json.loads(request.body)
-        symbol = data.get('symbol', 'XAUUSD')
-        order_type = data.get('order_type', 'BUY').upper()
+        symbol = data.get('symbol', 'R_10')
+        contract_type = data.get('contract_type', data.get('order_type', 'DIGITMATCH')).upper()
         
-        # Get volume (lot size)
-        volume = Decimal(str(data.get('volume', data.get('amount', '1.00'))))
+        print(f"🔍 Trade request: symbol={symbol}, contract_type={contract_type}, data={data}")
         
-        # Get SL and TP
-        sl = data.get('sl')
-        tp = data.get('tp')
-        sl_price = Decimal(str(sl)) if sl is not None and str(sl).strip() != '' else None
-        tp_price = Decimal(str(tp)) if tp is not None and str(tp).strip() != '' else None
-        
-        # Get entry price from frontend or use default
-        frontend_price = data.get('entry_price')
-        if frontend_price:
-            entry_price = Decimal(str(frontend_price))
-        else:
-            # Default prices based on symbol
-            base_prices = {
-                'XAUUSD': Decimal('4454.08'),
-                'USOIL': Decimal('83.44'),
-                'EURUSD': Decimal('1.1583'),
-                'EURGBP': Decimal('0.8415'),
-                'EURJPY': Decimal('159.20'),
-                'GBPUSD': Decimal('1.2940'),
-                'GBPJPY': Decimal('189.10'),
-                'USDJPY': Decimal('146.15'),
-                'BTCUSD': Decimal('78912.33'),
-            }
-            entry_price = base_prices.get(symbol, Decimal('1000.00'))
-        
-        # Validate order type
-        if order_type not in ['BUY', 'SELL']:
-            return JsonResponse({"success": False, "error": "Invalid order type. Use BUY or SELL."}, status=400)
-        
-        # Get or create asset
-        asset_obj, _ = Asset.objects.get_or_create(
-            symbol=symbol,
-            defaults={
-                'name': symbol,
-                'asset_type': 'forex' if symbol not in ['BTCUSD', 'ETHUSD'] else 'crypto',
-                'price': entry_price
-            }
-        )
-        
-        with transaction.atomic():
-            # Get trading account
-            account = Account.objects.select_for_update().get(
-                user=request.user, 
-                account_type='TRADING'
-            )
+        # ==========================================
+        # HANDLE BUY AND SELL ORDERS (Margin / Spot trading)
+        # ==========================================
+        if contract_type in ['BUY', 'SELL']:
+            volume = Decimal(str(data.get('volume', data.get('amount', '1.00'))))
+            sl = data.get('sl')
+            tp = data.get('tp')
             
-            # Calculate margin required (1% for forex, 2% for crypto)
-            if symbol in ['BTCUSD', 'ETHUSD']:
-                margin_pct = Decimal('0.02')
-            elif symbol == 'XAUUSD':
-                margin_pct = Decimal('0.005')  # 0.5% for gold
+            sl_price = Decimal(str(sl)) if sl is not None and str(sl).strip() != '' else None
+            tp_price = Decimal(str(tp)) if tp is not None and str(tp).strip() != '' else None
+            
+            frontend_price = data.get('entry_price')
+            if frontend_price:
+                entry_price = Decimal(str(frontend_price))
             else:
-                margin_pct = Decimal('0.01')   # 1% for forex
+                base_prices = {
+                    'XAUUSD': Decimal('4454.08'),
+                    'USOIL': Decimal('83.44'),
+                    'EURUSD': Decimal('1.1583'),
+                    'EURGBP': Decimal('0.8415'),
+                    'EURJPY': Decimal('159.20'),
+                    'GBPUSD': Decimal('1.2940'),
+                    'GBPJPY': Decimal('189.10'),
+                    'USDJPY': Decimal('146.15'),
+                    'BTCUSD': Decimal('78912.33'),
+                    'R_10': Decimal('1000.00'),
+                }
+                entry_price = base_prices.get(symbol, Decimal('1000.00'))
             
-            margin_required = volume * entry_price * margin_pct
-            
-            # Check sufficient balance
-            if account.balance < margin_required:
+            with transaction.atomic():
+                account = Account.objects.select_for_update().get(user=request.user, account_type='TRADING')
+                margin_required = volume * entry_price * Decimal('0.01')
+                
+                if account.balance < margin_required:
+                    return JsonResponse({"success": False, "error": f"Insufficient balance. Required: ${margin_required:.2f}, Available: ${account.balance:.2f}"}, status=400)
+                
+                asset_obj, _ = Asset.objects.get_or_create(
+                    symbol=symbol,
+                    defaults={'name': symbol, 'asset_type': 'forex_metal', 'price': entry_price}
+                )
+                
+                trade_obj = Trade.objects.create(
+                    user=request.user,
+                    asset=asset_obj,
+                    direction=contract_type,
+                    stake=volume,
+                    entry_price=entry_price,
+                    target_digit=None,
+                    status='OPEN',
+                    payout=Decimal('0.00')
+                )
+                
+                ticket_id = f"#ORD-{8400 + trade_obj.id}"
+                
+                Transaction.objects.create(
+                    user=request.user,
+                    amount=margin_required,
+                    transaction_type='MARGIN_HOLD',
+                    details=f"Opened {contract_type} {volume} lots of {symbol} at {entry_price}"
+                )
+                
                 return JsonResponse({
-                    "success": False, 
-                    "error": f"Insufficient balance. Required: ${margin_required:.2f}"
-                }, status=400)
+                    "success": True,
+                    "ticket_id": ticket_id,
+                    "entry": float(entry_price),
+                    "new_balance": float(round(account.balance, 2)),
+                    "trade_id": trade_obj.id,
+                    "symbol": symbol,
+                    "order_type": contract_type,
+                    "volume": float(volume),
+                })
+        
+        # ==========================================
+        # HANDLE DIGIT CONTRACTS (Volatility Indices)
+        # ==========================================
+        else:
+            # Extract amount/stake
+            amount = Decimal(str(data.get('amount', data.get('stake', '10'))))
+            barrier = data.get('barrier')
+            duration = int(data.get('duration', 1))
             
-            # Reserve margin
-            account.balance -= margin_required
-            account.save()
+            # Validate minimum stake
+            if amount < Decimal('0.35'):
+                return JsonResponse({"success": False, "error": "Minimum stake is $0.35"}, status=400)
             
-            # Create trade with SL and TP
-            trade = Trade.objects.create(
-                user=request.user,
-                asset=asset_obj,
-                direction=order_type,
-                stake=volume,  # Volume in lots
-                entry_price=entry_price,
-                sl=sl_price,
-                tp=tp_price,
-                status='OPEN',
-                payout=Decimal('0.00')
-            )
-            
-            # Log transaction
-            Transaction.objects.create(
-                user=request.user,
-                amount=margin_required,
-                transaction_type='MARGIN_HOLD',
-                details=f"Opened {order_type} {volume} lots of {symbol} at {entry_price}"
-            )
-            
-            # Generate ticket ID
-            ticket_id = f"#ORD-{8400 + trade.id}"
-            
-            return JsonResponse({
-                "success": True,
-                "ticket_id": ticket_id,
-                "entry": float(entry_price),
-                "new_balance": float(account.balance),
-                "trade_id": trade.id,
-                "volume": float(volume),
-                "symbol": symbol,
-                "order_type": order_type,
-                "sl": float(sl_price) if sl_price else None,
-                "tp": float(tp_price) if tp_price else None,
-            })
-            
-    except json.JSONDecodeError:
-        return JsonResponse({"success": False, "error": "Invalid JSON payload"}, status=400)
-    except Account.DoesNotExist:
-        return JsonResponse({"success": False, "error": "Trading account not found"}, status=400)
+            with transaction.atomic():
+                # Get TRADING account (or fall back to EXCHANGE)
+                account, _ = Account.objects.get_or_create(
+                    user=request.user, 
+                    account_type='TRADING'
+                )
+                # Lock the row for update
+                account = Account.objects.select_for_update().get(id=account.id)
+                
+                if account.balance < amount:
+                    return JsonResponse({
+                        "success": False, 
+                        "error": f"Insufficient balance. Required: ${amount:.2f}, Available: ${account.balance:.2f}"
+                    }, status=400)
+                
+                # Deduct stake
+                account.balance -= amount
+                account.save()
+                
+                # Get or create the asset
+                asset_obj, _ = Asset.objects.get_or_create(
+                    symbol=symbol,
+                    defaults={
+                        'name': symbol,
+                        'asset_type': 'synthetic',
+                        'price': Decimal('1000.00'),
+                        'digit_precision': 4
+                    }
+                )
+                
+                # ==========================================
+                # DETERMINE WIN/LOSS BASED ON CONTRACT TYPE
+                # ==========================================
+                final_digit = random.randint(0, 9)
+                won = False
+                payout = Decimal('0.0')
+                
+                # Parse barrier as int where needed
+                try:
+                    barrier_int = int(barrier) if barrier is not None and str(barrier).strip() != '' else None
+                except (ValueError, TypeError):
+                    barrier_int = None
+                
+                if contract_type == 'DIGITMATCH':
+                    won = (final_digit == barrier_int) if barrier_int is not None else False
+                    payout = amount * Decimal('9.5') if won else Decimal('0.0')
+                    
+                elif contract_type == 'DIGITDIFF':
+                    won = (final_digit != barrier_int) if barrier_int is not None else False
+                    payout = amount * Decimal('1.12') if won else Decimal('0.0')
+                    
+                elif contract_type == 'DIGITEVEN':
+                    won = (final_digit % 2 == 0)
+                    payout = amount * Decimal('1.98') if won else Decimal('0.0')
+                    
+                elif contract_type == 'DIGITODD':
+                    won = (final_digit % 2 != 0)
+                    payout = amount * Decimal('1.98') if won else Decimal('0.0')
+                    
+                elif contract_type == 'DIGITOVER':
+                    won = (final_digit > barrier_int) if barrier_int is not None else False
+                    multipliers = {
+                        0: Decimal('1.05'), 1: Decimal('1.15'), 2: Decimal('1.35'),
+                        3: Decimal('1.65'), 4: Decimal('2.15'), 5: Decimal('3.15'),
+                        6: Decimal('5.35'), 7: Decimal('10.5'), 8: Decimal('32.5')
+                    }
+                    payout = amount * multipliers.get(barrier_int, Decimal('2.0')) if won else Decimal('0.0')
+                    
+                elif contract_type == 'DIGITUNDER':
+                    won = (final_digit < barrier_int) if barrier_int is not None else False
+                    multipliers = {
+                        1: Decimal('32.5'), 2: Decimal('10.5'), 3: Decimal('5.35'),
+                        4: Decimal('3.15'), 5: Decimal('2.15'), 6: Decimal('1.65'),
+                        7: Decimal('1.35'), 8: Decimal('1.15')
+                    }
+                    payout = amount * multipliers.get(barrier_int, Decimal('2.0')) if won else Decimal('0.0')
+                
+                else:
+                    # Unknown contract - refund
+                    account.balance += amount
+                    account.save()
+                    return JsonResponse({"success": False, "error": f"Unknown contract type: {contract_type}"}, status=400)
+
+                # If won, add payout
+                if won:
+                    account.balance += payout
+                    account.save()
+                
+                # Create Trade record
+                trade_obj = Trade.objects.create(
+                    user=request.user,
+                    asset=asset_obj,
+                    direction=contract_type,
+                    stake=amount,
+                    entry_price=asset_obj.price,
+                    target_digit=barrier_int,
+                    status='WON' if won else 'LOST',
+                    payout=payout if won else Decimal('0.00')
+                )
+                
+                # Log transaction
+                Transaction.objects.create(
+                    user=request.user,
+                    amount=payout if won else amount,
+                    transaction_type='TRADE_PAYOUT' if won else 'TRADE_STAKE',
+                    details=f"{contract_type} | Digit: {final_digit} | Barrier: {barrier_int} | Result: {'WIN' if won else 'LOSS'} | Payout: ${payout}"
+                )
+                
+                return JsonResponse({
+                    "success": True,
+                    "won": won,
+                    "final_digit": final_digit,
+                    "payout": float(payout),
+                    "profit": float(payout - amount) if won else -float(amount),
+                    "new_balance": float(round(account.balance, 2)),
+                    "trade_id": trade_obj.id,
+                    "contract_type": contract_type,
+                    "symbol": symbol,
+                })
+        
     except Exception as e:
+        import traceback
+        traceback.print_exc()
         return JsonResponse({"success": False, "error": str(e)}, status=500)
 
 
@@ -3582,3 +3682,147 @@ def generate_signal_ai_analysis(symbol_data):
         analysis.append("✅ Low volatility - tighter stops possible")
     
     return analysis
+
+# views.py
+from django.contrib.auth import update_session_auth_hash
+from django.contrib.auth.decorators import login_required
+from django.http import JsonResponse
+from django.views.decorators.http import require_POST
+import json
+
+@login_required
+@require_POST
+def change_password_api(request):
+    try:
+        data = json.loads(request.body)
+        current = data.get('current_password')
+        new_pwd = data.get('new_password')
+        
+        if not request.user.check_password(current):
+            return JsonResponse({'success': False, 'error': 'Current password is incorrect'}, status=400)
+        
+        if len(new_pwd) < 8:
+            return JsonResponse({'success': False, 'error': 'Password must be at least 8 characters'}, status=400)
+        
+        request.user.set_password(new_pwd)
+        request.user.save()
+        update_session_auth_hash(request, request.user)
+        
+        return JsonResponse({'success': True})
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+    
+
+
+
+    # views.py
+import json
+from .models import UserSession
+from django.views.decorators.http import require_POST
+from django.contrib.sessions.models import Session as DjangoSession
+
+
+def serialize_session(user_session, current_key):
+    """Convert session to JSON-safe dict"""
+    return {
+        'id': user_session.id,
+        'session_key': user_session.session_key[:8] + '...',  # truncated for display
+        'ip_address': user_session.ip_address or 'Unknown',
+        'browser': user_session.browser,
+        'os_name': user_session.os_name,
+        'device_type': user_session.device_type,
+        'is_current': user_session.session_key == current_key,
+        'last_activity': user_session.last_activity.isoformat() if user_session.last_activity else None,
+        'created_at': user_session.created_at.isoformat() if user_session.created_at else None,
+        'device_label': f"{user_session.browser} on {user_session.os_name}",
+    }
+
+
+@login_required
+def api_list_sessions(request):
+    """Get all active sessions for the current user"""
+    try:
+        current_key = request.session.session_key
+        sessions = UserSession.objects.filter(user=request.user).order_by('-is_current', '-last_activity')
+        
+        # Filter out expired sessions
+        active_session_keys = DjangoSession.objects.filter(
+            expire_date__gte=timezone.now()
+        ).values_list('session_key', flat=True)
+        
+        # Clean up expired sessions from our table
+        UserSession.objects.filter(user=request.user).exclude(
+            session_key__in=active_session_keys
+        ).delete()
+        
+        # Refresh the query after cleanup
+        sessions = UserSession.objects.filter(user=request.user).order_by('-is_current', '-last_activity')
+        
+        data = [serialize_session(s, current_key) for s in sessions]
+        
+        return JsonResponse({
+            'success': True,
+            'sessions': data,
+            'count': len(data),
+        })
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+
+@login_required
+@require_POST
+def api_revoke_session(request, session_id):
+    """Revoke a specific session"""
+    try:
+        session = UserSession.objects.get(id=session_id, user=request.user)
+        current_key = request.session.session_key
+        
+        # Prevent revoking current session (use logout instead)
+        if session.session_key == current_key:
+            return JsonResponse({
+                'success': False, 
+                'error': 'Cannot revoke your current session. Use "Log out" instead.'
+            }, status=400)
+        
+        # Delete the Django session (forces logout)
+        try:
+            DjangoSession.objects.filter(session_key=session.session_key).delete()
+        except Exception:
+            pass
+        
+        # Delete our record
+        session.delete()
+        
+        return JsonResponse({'success': True})
+    except UserSession.DoesNotExist:
+        return JsonResponse({'success': False, 'error': 'Session not found'}, status=404)
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+
+@login_required
+@require_POST
+def api_revoke_all_other_sessions(request):
+    """Revoke all sessions except the current one"""
+    try:
+        current_key = request.session.session_key
+        
+        # Get all other sessions
+        other_sessions = UserSession.objects.filter(
+            user=request.user
+        ).exclude(session_key=current_key)
+        
+        # Delete the Django sessions (forces logout on those devices)
+        session_keys = [s.session_key for s in other_sessions]
+        DjangoSession.objects.filter(session_key__in=session_keys).delete()
+        
+        # Count and delete our records
+        count = other_sessions.count()
+        other_sessions.delete()
+        
+        return JsonResponse({
+            'success': True,
+            'revoked_count': count,
+        })
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)

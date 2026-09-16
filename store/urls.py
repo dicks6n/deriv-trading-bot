@@ -161,6 +161,14 @@ urlpatterns = [
     path('help-center/', views.help_center, name='help_center'),
 
 
+    path('api/change-password/', views.change_password_api, name='change_password_api'),
+# urls.py
+    # ... existing
+    path('api/sessions/', views.api_list_sessions, name='api_list_sessions'),
+    path('api/sessions/<int:session_id>/revoke/', views.api_revoke_session, name='api_revoke_session'),
+    path('api/sessions/revoke-all/', views.api_revoke_all_other_sessions, name='api_revoke_all_sessions'),
+    path('api/change-password/', views.change_password_api, name='change_password_api'),
+
     
     path('auth/otp/request/', views.request_email_otp_view, name='request_email_otp'),
     path('auth/otp/verify/', views.verify_email_otp_view, name='verify_email_otp'),

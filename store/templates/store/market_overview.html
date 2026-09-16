@@ -4,124 +4,125 @@
 {% block title %}PATREOAIX - Market Scanner{% endblock %}
 
 {% block content %}
-<div class="min-h-screen bg-slate-950 p-4 sm:p-6 space-y-6">
+<div class="min-h-screen bg-slate-950 p-4 sm:p-6 space-y-6 pb-12">
 
     <!-- Header -->
-    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div>
-            <h1 class="text-2xl font-black text-white flex items-center gap-3">
-                <span>🔍</span>
-                Market Scanner
-                <span id="scanStatus" class="text-xs font-mono text-emerald-400 bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-500/20">
-                    ● LIVE
-                </span>
-            </h1>
-            <p class="text-sm text-slate-400 mt-1">Real-time AI-powered market analysis across all trading pairs</p>
-        </div>
-        <div class="flex items-center gap-3">
-            <div class="bg-slate-900 border border-slate-800 rounded-xl px-4 py-2 text-xs text-slate-400">
-                <span class="font-bold text-white" id="totalPairs">0</span> pairs analyzed
+    <div class="bg-gradient-to-r from-slate-900 via-indigo-950/80 to-slate-900 border border-indigo-500/30 rounded-2xl p-6 shadow-2xl relative overflow-hidden">
+        <div class="absolute -top-12 -right-12 w-56 h-56 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none"></div>
+
+        <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-6 relative z-10">
+            <div>
+                <div class="flex items-center gap-3">
+                    <h2 class="text-xl font-black text-white tracking-wide">Market Scanner</h2>
+                    <span id="scanStatus" class="px-3 py-1 rounded-full text-[11px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 flex items-center gap-2">
+                        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span> 
+                        <span>LIVE SCAN</span>
+                    </span>
+                </div>
+                <p class="text-xs text-slate-400 mt-1">Real-time AI-powered market analysis across all trading pairs</p>
             </div>
-            <button onclick="scanMarkets()" id="scanBtn" class="bg-indigo-600 hover:bg-indigo-500 text-white font-bold px-4 py-2.5 rounded-xl transition shadow-lg shadow-indigo-600/20 flex items-center gap-2 text-xs">
-                <span>🔄</span> Rescan All
-            </button>
-            <button onclick="toggleAutoScan()" id="autoScanBtn" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-4 py-2.5 rounded-xl transition shadow-lg shadow-emerald-600/20 flex items-center gap-2 text-xs">
-                <span>▶</span> Auto-Scan
-            </button>
+
+            <div class="flex flex-wrap items-center gap-3">
+                <div class="px-4 py-2.5 rounded-xl bg-slate-900/90 border border-indigo-500/30 text-xs font-bold text-slate-200 flex items-center gap-2">
+                    <span class="text-slate-400">Pairs:</span> 
+                    <span id="totalPairs" class="text-emerald-400 font-mono">0</span>
+                </div>
+                <button onclick="scanMarkets()" id="scanBtn" class="px-4 py-2.5 rounded-xl bg-indigo-500 hover:bg-indigo-400 text-white text-xs font-black transition flex items-center gap-2 shadow-lg shadow-indigo-500/20 cursor-pointer">
+                    <i class="fa-solid fa-rotate text-[10px]"></i> Rescan All
+                </button>
+                <button onclick="toggleAutoScan()" id="autoScanBtn" class="px-4 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-xs font-black transition flex items-center gap-2 shadow-lg shadow-emerald-500/20 cursor-pointer">
+                    <i class="fa-solid fa-play text-[10px]"></i> Auto-Scan
+                </button>
+            </div>
         </div>
     </div>
 
     <!-- Statistics Cards -->
-    <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-4">
-        <div class="bg-slate-900 border border-slate-800 rounded-xl p-4 text-center">
-            <span class="text-[10px] uppercase text-slate-400">Bullish</span>
-            <h3 id="bullishCount" class="text-2xl font-bold text-emerald-400">0</h3>
+    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+        <div class="bg-slate-900/80 border border-slate-800/80 rounded-2xl p-4 text-center shadow-sm">
+            <span class="text-[10px] uppercase text-slate-400 font-bold tracking-wider">Bullish</span>
+            <h3 id="bullishCount" class="text-2xl font-black text-emerald-400 font-mono mt-1">0</h3>
         </div>
-        <div class="bg-slate-900 border border-slate-800 rounded-xl p-4 text-center">
-            <span class="text-[10px] uppercase text-slate-400">Bearish</span>
-            <h3 id="bearishCount" class="text-2xl font-bold text-red-400">0</h3>
+        <div class="bg-slate-900/80 border border-slate-800/80 rounded-2xl p-4 text-center shadow-sm">
+            <span class="text-[10px] uppercase text-slate-400 font-bold tracking-wider">Bearish</span>
+            <h3 id="bearishCount" class="text-2xl font-black text-red-400 font-mono mt-1">0</h3>
         </div>
-        <div class="bg-slate-900 border border-slate-800 rounded-xl p-4 text-center">
-            <span class="text-[10px] uppercase text-slate-400">Neutral</span>
-            <h3 id="neutralCount" class="text-2xl font-bold text-yellow-400">0</h3>
+        <div class="bg-slate-900/80 border border-slate-800/80 rounded-2xl p-4 text-center shadow-sm">
+            <span class="text-[10px] uppercase text-slate-400 font-bold tracking-wider">Neutral</span>
+            <h3 id="neutralCount" class="text-2xl font-black text-yellow-400 font-mono mt-1">0</h3>
         </div>
-        <div class="bg-slate-900 border border-slate-800 rounded-xl p-4 text-center">
-            <span class="text-[10px] uppercase text-slate-400">Buy Signals</span>
-            <h3 id="buyCount" class="text-2xl font-bold text-emerald-400">0</h3>
+        <div class="bg-slate-900/80 border border-slate-800/80 rounded-2xl p-4 text-center shadow-sm">
+            <span class="text-[10px] uppercase text-slate-400 font-bold tracking-wider">Buy Signals</span>
+            <h3 id="buyCount" class="text-2xl font-black text-emerald-400 font-mono mt-1">0</h3>
         </div>
-        <div class="bg-slate-900 border border-slate-800 rounded-xl p-4 text-center">
-            <span class="text-[10px] uppercase text-slate-400">Sell Signals</span>
-            <h3 id="sellCount" class="text-2xl font-bold text-red-400">0</h3>
+        <div class="bg-slate-900/80 border border-slate-800/80 rounded-2xl p-4 text-center shadow-sm">
+            <span class="text-[10px] uppercase text-slate-400 font-bold tracking-wider">Sell Signals</span>
+            <h3 id="sellCount" class="text-2xl font-black text-red-400 font-mono mt-1">0</h3>
         </div>
-        <div class="bg-slate-900 border border-slate-800 rounded-xl p-4 text-center">
-            <span class="text-[10px] uppercase text-slate-400">Confidence</span>
-            <h3 id="avgConfidence" class="text-2xl font-bold text-indigo-400">0%</h3>
+        <div class="bg-slate-900/80 border border-slate-800/80 rounded-2xl p-4 text-center shadow-sm">
+            <span class="text-[10px] uppercase text-slate-400 font-bold tracking-wider">Confidence</span>
+            <h3 id="avgConfidence" class="text-2xl font-black text-indigo-400 font-mono mt-1">0%</h3>
         </div>
     </div>
 
     <!-- Market Sentiment Overview -->
-    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6">
+    <div class="bg-slate-900/80 border border-slate-800/80 rounded-2xl p-6 shadow-sm">
         <div class="flex justify-between items-center mb-4">
-            <h3 class="text-sm font-bold text-white">Overall Market Sentiment</h3>
+            <h3 class="text-sm font-bold text-white flex items-center gap-2">
+                <i class="fa-solid fa-gauge-high text-indigo-400"></i>
+                Overall Market Sentiment
+            </h3>
             <span id="overallSentiment" class="text-xs font-bold px-3 py-1 rounded-full bg-slate-800 text-slate-400">Analyzing...</span>
         </div>
-        <div class="w-full bg-slate-950 h-4 rounded-full overflow-hidden">
+        <div class="w-full bg-slate-950 h-4 rounded-full overflow-hidden border border-slate-800">
             <div id="sentimentBar" class="h-full bg-gradient-to-r from-red-500 via-yellow-500 to-emerald-500 transition-all duration-500" style="width: 50%;"></div>
         </div>
-        <div class="flex justify-between text-[10px] text-slate-500 mt-1">
-            <span>Bearish</span>
-            <span>Neutral</span>
-            <span>Bullish</span>
+        <div class="flex justify-between text-[10px] text-slate-500 mt-2 font-mono">
+            <span>🔻 Bearish</span>
+            <span>⚖️ Neutral</span>
+            <span>🔺 Bullish</span>
         </div>
     </div>
 
-    <!-- Filters -->
-    <div class="flex flex-wrap gap-2">
-        <button onclick="filterMarket('all')" class="filter-btn active px-4 py-2 rounded-xl text-xs font-bold bg-indigo-600 text-white transition">All Markets</button>
-        <button onclick="filterMarket('forex')" class="filter-btn px-4 py-2 rounded-xl text-xs font-bold bg-slate-800 text-slate-400 hover:bg-slate-700 transition">Forex</button>
-        <button onclick="filterMarket('crypto')" class="filter-btn px-4 py-2 rounded-xl text-xs font-bold bg-slate-800 text-slate-400 hover:bg-slate-700 transition">Crypto</button>
-        <button onclick="filterMarket('commodity')" class="filter-btn px-4 py-2 rounded-xl text-xs font-bold bg-slate-800 text-slate-400 hover:bg-slate-700 transition">Commodities</button>
-        <button onclick="filterMarket('index')" class="filter-btn px-4 py-2 rounded-xl text-xs font-bold bg-slate-800 text-slate-400 hover:bg-slate-700 transition">Indices</button>
-        <div class="flex-1"></div>
-        <div class="relative">
-            <input type="text" id="searchInput" onkeyup="searchMarkets()" placeholder="🔍 Search pairs..." class="bg-slate-900 border border-slate-800 rounded-xl px-4 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 w-48">
+    <!-- Filters & Search Bar -->
+    <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 bg-slate-900/60 border border-slate-800/80 rounded-2xl p-4">
+        <div class="flex flex-wrap items-center gap-2">
+            <button onclick="filterMarket('all')" class="filter-btn active px-4 py-2 rounded-xl text-xs font-bold bg-emerald-500 text-slate-950 transition shadow cursor-pointer flex items-center gap-2">
+                <i class="fa-solid fa-grid-2 text-[10px]"></i> All Markets
+            </button>
+            <button onclick="filterMarket('forex')" class="filter-btn px-4 py-2 rounded-xl text-xs font-bold bg-slate-800/80 text-slate-300 hover:bg-slate-800 transition border border-slate-700/60 cursor-pointer flex items-center gap-2">
+                <i class="fa-solid fa-chart-line text-[10px]"></i> Forex
+            </button>
+            <button onclick="filterMarket('crypto')" class="filter-btn px-4 py-2 rounded-xl text-xs font-bold bg-slate-800/80 text-slate-300 hover:bg-slate-800 transition border border-slate-700/60 cursor-pointer flex items-center gap-2">
+                <i class="fa-solid fa-coins text-[10px]"></i> Crypto
+            </button>
+            <button onclick="filterMarket('commodity')" class="filter-btn px-4 py-2 rounded-xl text-xs font-bold bg-slate-800/80 text-slate-300 hover:bg-slate-800 transition border border-slate-700/60 cursor-pointer flex items-center gap-2">
+                <i class="fa-solid fa-gem text-[10px]"></i> Commodities
+            </button>
+            <button onclick="filterMarket('index')" class="filter-btn px-4 py-2 rounded-xl text-xs font-bold bg-slate-800/80 text-slate-300 hover:bg-slate-800 transition border border-slate-700/60 cursor-pointer flex items-center gap-2">
+                <i class="fa-solid fa-chart-pie text-[10px]"></i> Indices
+            </button>
+        </div>
+
+        <div class="relative w-full lg:w-auto">
+            <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 text-[10px]"></i>
+            <input type="text" id="searchInput" onkeyup="searchMarkets()" placeholder="Search pairs..." class="w-full lg:w-64 bg-slate-950/80 border border-slate-800 text-xs text-slate-200 rounded-xl pl-8 pr-4 py-2.5 focus:outline-none focus:border-indigo-500 font-mono">
         </div>
     </div>
 
-    <!-- Market Table -->
-    <div class="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden">
-        <div class="overflow-x-auto">
-            <table class="w-full text-left text-xs">
-                <thead class="bg-slate-950 border-b border-slate-800">
-                    <tr>
-                        <th class="p-4 text-slate-400 uppercase tracking-wider font-semibold">Pair</th>
-                        <th class="p-4 text-slate-400 uppercase tracking-wider font-semibold">Price</th>
-                        <th class="p-4 text-slate-400 uppercase tracking-wider font-semibold">24h Change</th>
-                        <th class="p-4 text-slate-400 uppercase tracking-wider font-semibold">Trend</th>
-                        <th class="p-4 text-slate-400 uppercase tracking-wider font-semibold">Strength</th>
-                        <th class="p-4 text-slate-400 uppercase tracking-wider font-semibold">RSI</th>
-                        <th class="p-4 text-slate-400 uppercase tracking-wider font-semibold">Signal</th>
-                        <th class="p-4 text-slate-400 uppercase tracking-wider font-semibold">Volatility</th>
-                        <th class="p-4 text-slate-400 uppercase tracking-wider font-semibold hidden lg:table-cell">AI Summary</th>
-                        <th class="p-4 text-slate-400 uppercase tracking-wider font-semibold">Action</th>
-                    </tr>
-                </thead>
-                <tbody id="marketTableBody" class="divide-y divide-slate-800/60">
-                    <tr>
-                        <td colspan="10" class="p-8 text-center text-slate-500">
-                            <div class="flex items-center justify-center gap-3">
-                                <div class="w-5 h-5 border-2 border-indigo-500/20 border-t-indigo-500 rounded-full animate-spin"></div>
-                                <span>Scanning markets...</span>
-                            </div>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
+    <!-- ========================================== -->
+    <!-- 🎴 MARKET SCANNER CARDS GRID (like AI Prediction) -->
+    <!-- ========================================== -->
+    <div id="marketCardsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <!-- Cards will be dynamically inserted here -->
+        <div class="col-span-full bg-slate-900/80 border border-slate-800/80 rounded-2xl p-12 text-center">
+            <i class="fa-solid fa-circle-notch animate-spin text-indigo-400 text-3xl mb-3"></i>
+            <p class="text-sm text-slate-400">Scanning markets across all trading pairs...</p>
         </div>
     </div>
 
     <!-- Last Updated -->
-    <div class="text-center text-[10px] text-slate-500">
+    <div class="text-center text-[10px] text-slate-500 font-mono">
         Last updated: <span id="lastUpdated">-</span>
     </div>
 </div>
@@ -132,12 +133,10 @@
     let autoScanInterval = null;
     let isAutoScanning = false;
 
-    // Navigation function - FIXED
+    // Navigation function
     function viewSignal(symbol) {
         if (symbol && symbol.trim() !== '') {
             window.location.href = '/signal/' + encodeURIComponent(symbol) + '/';
-        } else {
-            console.warn('Invalid symbol:', symbol);
         }
     }
 
@@ -156,59 +155,98 @@
         return cookieValue;
     }
 
+    // Generate the AI contract type from the market signal
+    function generateAIContract(item) {
+        // For volatility indices / synthetic, use DIGIT contracts
+        // For forex/crypto/commodities, use BUY/SELL
+        const symbol = item.symbol.toUpperCase();
+        const isSynthetic = symbol.startsWith('R_') || symbol.startsWith('1HZ') || symbol.startsWith('JD') || symbol === 'STPRNG';
+        
+        if (isSynthetic) {
+            // Digit contracts based on RSI
+            if (item.rsi > 70) return 'DIGITUNDER';
+            if (item.rsi < 30) return 'DIGITOVER';
+            if (item.signal === 'BUY') return 'DIGITEVEN';
+            if (item.signal === 'SELL') return 'DIGITODD';
+            return 'DIGITDIFF';
+        }
+        
+        // For real markets, use direction
+        return item.signal; // BUY or SELL
+    }
+
+    // Get confidence color class
+    function getConfidenceClass(strength) {
+        if (strength >= 80) return 'text-emerald-400';
+        if (strength >= 60) return 'text-indigo-300';
+        if (strength >= 40) return 'text-amber-400';
+        return 'text-slate-400';
+    }
+
+    // Get signal badge class
+    function getSignalBadgeClass(signal) {
+        if (signal === 'BUY') return 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40';
+        if (signal === 'SELL') return 'bg-rose-500/20 text-rose-300 border-rose-500/40';
+        return 'bg-amber-500/20 text-amber-300 border-amber-500/40';
+    }
+
+    // Get status badge class
+    function getStatusBadgeClass(trend) {
+        if (trend === 'Bullish') return 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20';
+        if (trend === 'Bearish') return 'bg-rose-500/10 text-rose-400 border-rose-500/20';
+        return 'bg-amber-500/10 text-amber-400 border-amber-500/20';
+    }
+
     async function scanMarkets() {
         const scanBtn = document.getElementById('scanBtn');
         const status = document.getElementById('scanStatus');
         
         scanBtn.disabled = true;
-        scanBtn.textContent = '⏳ Scanning...';
-        status.textContent = '● SCANNING';
-        status.className = 'text-xs font-mono text-amber-400 bg-amber-500/10 px-3 py-1 rounded-full border border-amber-500/20';
+        scanBtn.innerHTML = '<i class="fa-solid fa-circle-notch animate-spin text-[10px]"></i> Scanning...';
+        status.innerHTML = '<span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span> SCANNING';
+        status.className = 'px-3 py-1 rounded-full text-[11px] font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20 flex items-center gap-2';
 
         try {
             const response = await fetch('/api/market-scan/', {
                 method: 'GET',
-                headers: {
-                    'X-CSRFToken': getCookie('csrftoken')
-                }
+                headers: { 'X-CSRFToken': getCookie('csrftoken') }
             });
 
             const result = await response.json();
 
             if (result.success && result.data) {
                 marketData = result.data;
-                renderMarketData(marketData);
+                renderMarketCards(marketData);
                 updateStats(marketData);
                 updateSentiment(marketData);
                 document.getElementById('totalPairs').textContent = marketData.length;
                 document.getElementById('lastUpdated').textContent = new Date().toLocaleString();
 
-                status.textContent = '● LIVE';
-                status.className = 'text-xs font-mono text-emerald-400 bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-500/20';
+                status.innerHTML = '<span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span> LIVE SCAN';
+                status.className = 'px-3 py-1 rounded-full text-[11px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 flex items-center gap-2';
             } else {
-                status.textContent = '⚠️ ERROR';
-                status.className = 'text-xs font-mono text-red-400 bg-red-500/10 px-3 py-1 rounded-full border border-red-500/20';
+                status.innerHTML = '<span class="w-2 h-2 rounded-full bg-red-400"></span> ERROR';
+                status.className = 'px-3 py-1 rounded-full text-[11px] font-bold bg-red-500/10 text-red-400 border border-red-500/20 flex items-center gap-2';
             }
         } catch (err) {
             console.error('Scan error:', err);
-            status.textContent = '⚠️ ERROR';
-            status.className = 'text-xs font-mono text-red-400 bg-red-500/10 px-3 py-1 rounded-full border border-red-500/20';
+            status.innerHTML = '<span class="w-2 h-2 rounded-full bg-red-400"></span> ERROR';
+            status.className = 'px-3 py-1 rounded-full text-[11px] font-bold bg-red-500/10 text-red-400 border border-red-500/20 flex items-center gap-2';
         } finally {
             scanBtn.disabled = false;
-            scanBtn.textContent = '🔄 Rescan All';
+            scanBtn.innerHTML = '<i class="fa-solid fa-rotate text-[10px]"></i> Rescan All';
         }
     }
 
-    function renderMarketData(data) {
-        const tbody = document.getElementById('marketTableBody');
+    function renderMarketCards(data) {
+        const grid = document.getElementById('marketCardsGrid');
         
         if (!data || data.length === 0) {
-            tbody.innerHTML = `
-                <tr>
-                    <td colspan="10" class="p-8 text-center text-slate-500">
-                        No market data available. Please try again.
-                    </td>
-                </tr>
+            grid.innerHTML = `
+                <div class="col-span-full bg-slate-900/80 border border-slate-800/80 rounded-2xl p-12 text-center">
+                    <i class="fa-solid fa-inbox text-slate-500 text-3xl mb-3"></i>
+                    <p class="text-sm text-slate-400">No market data available. Try rescanning.</p>
+                </div>
             `;
             return;
         }
@@ -227,88 +265,193 @@
         }
 
         if (filteredData.length === 0) {
-            tbody.innerHTML = `
-                <tr>
-                    <td colspan="10" class="p-8 text-center text-slate-500">
-                        No matching pairs found.
-                    </td>
-                </tr>
+            grid.innerHTML = `
+                <div class="col-span-full bg-slate-900/80 border border-slate-800/80 rounded-2xl p-12 text-center">
+                    <i class="fa-solid fa-magnifying-glass text-slate-500 text-3xl mb-3"></i>
+                    <p class="text-sm text-slate-400">No matching pairs found.</p>
+                </div>
             `;
             return;
         }
 
         let html = '';
         filteredData.forEach(item => {
-            const changeColor = item.change_24h >= 0 ? 'text-emerald-400' : 'text-red-400';
-            const trendColor = item.trend === 'Bullish' ? 'text-emerald-400' : 
-                              item.trend === 'Bearish' ? 'text-red-400' : 'text-yellow-400';
-            const strengthColor = item.strength >= 70 ? 'text-emerald-400' :
-                                  item.strength >= 40 ? 'text-yellow-400' : 'text-red-400';
+            const aiContract = generateAIContract(item);
+            const isSynthetic = item.symbol.startsWith('R_') || item.symbol.startsWith('1HZ') || item.symbol.startsWith('JD') || item.symbol === 'STPRNG';
+            const isBullish = item.signal === 'BUY';
+            const isBearish = item.signal === 'SELL';
             
-            const signalColor = item.signal === 'BUY' ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30' :
-                                item.signal === 'SELL' ? 'bg-red-500/20 text-red-400 border-red-500/30' :
-                                'bg-yellow-500/20 text-yellow-400 border-yellow-500/30';
+            const changeColor = item.change_24h >= 0 ? 'text-emerald-400' : 'text-red-400';
+            const confidenceClass = getConfidenceClass(item.strength);
+            const signalBadgeClass = getSignalBadgeClass(item.signal);
+            const statusBadgeClass = getStatusBadgeClass(item.trend);
+            
+            // Price formatting
+            const priceFormatted = item.price > 100 
+                ? item.price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+                : item.price > 1 
+                ? item.price.toFixed(4)
+                : item.price.toFixed(6);
 
-            const volatilityColor = item.volatility > 5 ? 'text-red-400' :
-                                    item.volatility > 2 ? 'text-yellow-400' : 'text-emerald-400';
+            // Confidence label
+            let confidenceLabel = 'Low';
+            if (item.strength >= 85) confidenceLabel = 'Very High';
+            else if (item.strength >= 70) confidenceLabel = 'High';
+            else if (item.strength >= 50) confidenceLabel = 'Medium';
 
-            // Use the viewSignal function for navigation - FIXED
+            // For the icon based on type
+            let iconClass = 'fa-chart-line';
+            let iconColor = 'text-indigo-400';
+            let iconBg = 'bg-indigo-500/10 border-indigo-500/20';
+            
+            if (item.type.toLowerCase() === 'forex') {
+                iconClass = 'fa-money-bill-transfer';
+                iconColor = 'text-blue-400';
+                iconBg = 'bg-blue-500/10 border-blue-500/20';
+            } else if (item.type.toLowerCase() === 'crypto') {
+                iconClass = 'fa-bitcoin-sign';
+                iconColor = 'text-amber-400';
+                iconBg = 'bg-amber-500/10 border-amber-500/20';
+            } else if (item.type.toLowerCase() === 'commodity') {
+                iconClass = 'fa-coins';
+                iconColor = 'text-teal-400';
+                iconBg = 'bg-teal-500/10 border-teal-500/20';
+            } else if (item.type.toLowerCase() === 'index') {
+                iconClass = 'fa-chart-pie';
+                iconColor = 'text-purple-400';
+                iconBg = 'bg-purple-500/10 border-purple-500/20';
+            }
+
             const safeSymbol = encodeURIComponent(item.symbol);
 
             html += `
-                <tr class="scan-row hover:bg-slate-800/30 transition cursor-pointer" 
-                    onclick="viewSignal('${safeSymbol}')">
-                    <td class="p-4">
-                        <div class="flex items-center gap-2">
-                            <span class="font-bold text-white">${item.symbol}</span>
-                            <span class="text-[9px] text-slate-500">${item.type}</span>
+                <div class="bg-slate-900/80 border border-slate-800/80 rounded-2xl p-5 shadow-xl relative overflow-hidden flex flex-col justify-between hover:border-indigo-500/40 transition-all duration-300">
+                    
+                    <!-- Header Row -->
+                    <div>
+                        <div class="flex items-start justify-between">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-xl ${iconBg} border flex items-center justify-center ${iconColor} text-lg">
+                                    <i class="fa-solid ${iconClass}"></i>
+                                </div>
+                                <div>
+                                    <h3 class="text-sm font-bold text-white font-mono">${item.symbol}</h3>
+                                    <p class="text-[11px] text-slate-400 mt-0.5 truncate max-w-[150px]">${item.name} • ${item.type}</p>
+                                </div>
+                            </div>
+                            <span class="px-2.5 py-1 rounded-full text-[10px] font-bold border ${statusBadgeClass}">
+                                ${item.trend}
+                            </span>
                         </div>
-                        <div class="text-[9px] text-slate-400">${item.name}</div>
-                    </td>
-                    <td class="p-4 font-mono font-bold text-white">
-                        ${item.price > 1 ? item.price.toFixed(4) : item.price.toFixed(8)}
-                    </td>
-                    <td class="p-4 font-mono font-bold ${changeColor}">
-                        ${item.change_24h >= 0 ? '+' : ''}${item.change_24h}%
-                    </td>
-                    <td class="p-4 font-bold ${trendColor}">
-                        ${item.trend}
-                    </td>
-                    <td class="p-4 font-mono font-bold ${strengthColor}">
-                        ${item.strength}%
-                    </td>
-                    <td class="p-4 font-mono">
-                        <span class="px-2 py-1 rounded-lg text-[10px] font-bold ${
-                            item.rsi > 70 ? 'bg-red-500/20 text-red-400' :
-                            item.rsi < 30 ? 'bg-emerald-500/20 text-emerald-400' :
-                            'bg-yellow-500/20 text-yellow-400'
-                        }">
-                            ${item.rsi}
-                        </span>
-                    </td>
-                    <td class="p-4">
-                        <span class="px-3 py-1 rounded-full text-[10px] font-bold border ${signalColor}">
-                            ${item.signal}
-                        </span>
-                    </td>
-                    <td class="p-4 font-mono font-bold ${volatilityColor}">
-                        ${item.volatility}%
-                    </td>
-                    <td class="p-4 text-[10px] text-slate-400 max-w-xs truncate hidden lg:table-cell" 
-                        title="${item.ai_summary}">
-                        ${item.ai_summary || 'No analysis available'}
-                    </td>
-                    <td class="p-4">
-                        <button onclick="event.stopPropagation(); viewSignal('${safeSymbol}')" 
-                                class="bg-indigo-600 hover:bg-indigo-500 text-white px-3 py-1.5 rounded-lg text-[10px] transition">
-                            View Setup
+
+                        <!-- Metrics Grid -->
+                        <div class="grid grid-cols-2 gap-3 mt-5">
+                            <div class="bg-slate-950/60 border border-slate-800/80 rounded-xl p-3">
+                                <span class="text-[10px] text-slate-400 font-medium block">Price</span>
+                                <span class="text-sm font-black text-white font-mono mt-0.5 block">$${priceFormatted}</span>
+                                <span class="text-[9px] font-mono ${changeColor} mt-0.5 block">${item.change_24h >= 0 ? '+' : ''}${item.change_24h}%</span>
+                            </div>
+                            <div class="bg-slate-950/60 border border-slate-800/80 rounded-xl p-3">
+                                <span class="text-[10px] text-slate-400 font-medium block">Confidence</span>
+                                <span class="text-sm font-black ${confidenceClass} font-mono mt-0.5 block">${item.strength}%</span>
+                                <span class="text-[9px] font-mono text-slate-500 mt-0.5 block">${confidenceLabel}</span>
+                            </div>
+                        </div>
+
+                        <!-- Extra Row: RSI + Volatility -->
+                        <div class="mt-3 flex items-center justify-between text-xs">
+                            <div class="flex items-center gap-3">
+                                <span class="text-slate-400 text-[10px]">RSI:</span>
+                                <span class="font-mono font-bold text-[11px] ${
+                                    item.rsi > 70 ? 'text-rose-400' :
+                                    item.rsi < 30 ? 'text-emerald-400' :
+                                    'text-slate-200'
+                                }">${item.rsi}</span>
+                            </div>
+                            <div class="flex items-center gap-3">
+                                <span class="text-slate-400 text-[10px]">Vol:</span>
+                                <span class="font-mono font-bold text-[11px] ${
+                                    item.volatility > 5 ? 'text-rose-400' :
+                                    item.volatility > 2 ? 'text-amber-400' :
+                                    'text-emerald-400'
+                                }">${item.volatility}%</span>
+                            </div>
+                        </div>
+
+                        <!-- AI Signal Badge -->
+                        <div class="mt-4">
+                            <div class="w-full py-2 rounded-xl text-xs font-bold border ${signalBadgeClass} flex items-center justify-center gap-2">
+                                <i class="fa-solid ${isBullish ? 'fa-arrow-trend-up' : isBearish ? 'fa-arrow-trend-down' : 'fa-equals'} text-[10px]"></i>
+                                SIGNAL: ${aiContract}
+                            </div>
+                        </div>
+
+                        <!-- AI Summary -->
+                        ${item.ai_summary ? `
+                            <div class="mt-3 p-2.5 bg-slate-950/40 rounded-lg border border-slate-800/60">
+                                <p class="text-[10px] text-slate-400 leading-relaxed line-clamp-2" title="${item.ai_summary}">
+                                    <i class="fa-solid fa-wand-magic-sparkles text-indigo-400 mr-1 text-[9px]"></i>
+                                    ${item.ai_summary}
+                                </p>
+                            </div>
+                        ` : ''}
+                    </div>
+
+                    <!-- Footer Actions -->
+                    <div class="mt-5 pt-3 border-t border-slate-800/80 flex items-center justify-between">
+                        <button onclick="viewSignal('${safeSymbol}')" 
+                                class="text-[11px] text-indigo-400 hover:text-indigo-300 font-bold flex items-center gap-1.5 transition">
+                            <i class="fa-solid fa-eye text-[10px]"></i> View Details
                         </button>
-                    </td>
-                </tr>
+                        <button onclick="executeMarketTrade('${item.symbol}', '${aiContract}', ${item.price})" 
+                                class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-bold text-xs transition shadow-lg shadow-emerald-600/20 flex items-center gap-1.5 cursor-pointer">
+                            <i class="fa-solid fa-play text-[9px]"></i> Execute Trade
+                        </button>
+                    </div>
+                </div>
             `;
         });
 
-        tbody.innerHTML = html;
+        grid.innerHTML = html;
+    }
+
+    function executeMarketTrade(symbol, contractType, currentPrice) {
+        // Navigate to digits trading page with the symbol pre-selected
+        // Or execute directly via WebSocket
+        
+        // Option A: Navigate to trade page
+        sessionStorage.setItem('executeTrade', JSON.stringify({
+            symbol: symbol,
+            contractType: contractType,
+            price: currentPrice,
+            timestamp: Date.now()
+        }));
+        
+        // Show toast
+        showToast(`Opening trade for ${symbol} (${contractType})...`, 'info');
+        
+        // Navigate to digits_trading page
+        setTimeout(() => {
+            window.location.href = '/digits_trading/?execute=' + encodeURIComponent(symbol);
+        }, 500);
+    }
+
+    function showToast(message, type = 'info') {
+        const bgClass = type === 'error' 
+            ? 'bg-rose-900/90 border-rose-500 text-rose-200' 
+            : type === 'success'
+            ? 'bg-emerald-900/90 border-emerald-500 text-emerald-200'
+            : 'bg-indigo-900/90 border-indigo-500 text-indigo-200';
+        
+        const toast = document.createElement("div");
+        toast.className = `fixed bottom-5 right-5 z-50 px-4 py-3 rounded-xl border font-mono text-xs shadow-2xl backdrop-blur-md transition-all duration-300 ${bgClass}`;
+        toast.innerHTML = `<i class="fa-solid ${type === 'error' ? 'fa-triangle-exclamation' : type === 'success' ? 'fa-circle-check' : 'fa-circle-info'} mr-2"></i> ${message}`;
+        document.body.appendChild(toast);
+
+        setTimeout(() => {
+            toast.style.opacity = '0';
+            setTimeout(() => toast.remove(), 300);
+        }, 3500);
     }
 
     function updateStats(data) {
@@ -335,24 +478,24 @@
         const bullishPercentage = (bullish / total) * 100;
         
         let sentiment = 'Neutral';
-        let color = 'bg-yellow-500/20 text-yellow-400';
+        let color = 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30';
         
         if (bullishPercentage > 60) {
             sentiment = 'Bullish';
-            color = 'bg-emerald-500/20 text-emerald-400';
+            color = 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30';
         } else if (bullishPercentage > 55) {
             sentiment = 'Slightly Bullish';
-            color = 'bg-emerald-500/10 text-emerald-300';
+            color = 'bg-emerald-500/10 text-emerald-300 border-emerald-500/20';
         } else if (bullishPercentage < 40) {
             sentiment = 'Bearish';
-            color = 'bg-red-500/20 text-red-400';
+            color = 'bg-rose-500/20 text-rose-400 border-rose-500/30';
         } else if (bullishPercentage < 45) {
             sentiment = 'Slightly Bearish';
-            color = 'bg-red-500/10 text-red-300';
+            color = 'bg-rose-500/10 text-rose-300 border-rose-500/20';
         }
         
         document.getElementById('overallSentiment').textContent = `${sentiment} (${Math.round(bullishPercentage)}%)`;
-        document.getElementById('overallSentiment').className = `text-xs font-bold px-3 py-1 rounded-full ${color}`;
+        document.getElementById('overallSentiment').className = `text-xs font-bold px-3 py-1 rounded-full border ${color}`;
         document.getElementById('sentimentBar').style.width = `${bullishPercentage}%`;
     }
 
@@ -360,15 +503,23 @@
         currentFilter = type;
         
         document.querySelectorAll('.filter-btn').forEach(btn => {
-            btn.className = 'filter-btn px-4 py-2 rounded-xl text-xs font-bold bg-slate-800 text-slate-400 hover:bg-slate-700 transition';
+            btn.className = 'filter-btn px-4 py-2 rounded-xl text-xs font-bold bg-slate-800/80 text-slate-300 hover:bg-slate-800 transition border border-slate-700/60 cursor-pointer flex items-center gap-2';
+            // Remove active class from icon spans too
         });
-        event.target.className = 'filter-btn active px-4 py-2 rounded-xl text-xs font-bold bg-indigo-600 text-white transition';
         
-        renderMarketData(marketData);
+        // Get the clicked button and its icon
+        const clickedBtn = event.currentTarget;
+        const icon = clickedBtn.querySelector('i');
+        const iconClass = icon ? icon.className : '';
+        const textContent = clickedBtn.textContent.trim();
+        
+        clickedBtn.className = 'filter-btn active px-4 py-2 rounded-xl text-xs font-bold bg-emerald-500 text-slate-950 transition shadow cursor-pointer flex items-center gap-2';
+        
+        renderMarketCards(marketData);
     }
 
     function searchMarkets() {
-        renderMarketData(marketData);
+        renderMarketCards(marketData);
     }
 
     function toggleAutoScan() {
@@ -377,12 +528,12 @@
         if (isAutoScanning) {
             clearInterval(autoScanInterval);
             isAutoScanning = false;
-            btn.innerHTML = '<span>▶</span> Auto-Scan';
-            btn.className = 'bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-4 py-2.5 rounded-xl transition shadow-lg shadow-emerald-600/20 flex items-center gap-2 text-xs';
+            btn.innerHTML = '<i class="fa-solid fa-play text-[10px]"></i> Auto-Scan';
+            btn.className = 'px-4 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-xs font-black transition flex items-center gap-2 shadow-lg shadow-emerald-500/20 cursor-pointer';
         } else {
             isAutoScanning = true;
-            btn.innerHTML = '<span>⏹</span> Stop Auto-Scan';
-            btn.className = 'bg-red-600 hover:bg-red-500 text-white font-bold px-4 py-2.5 rounded-xl transition shadow-lg shadow-red-600/20 flex items-center gap-2 text-xs';
+            btn.innerHTML = '<i class="fa-solid fa-stop text-[10px]"></i> Stop Auto-Scan';
+            btn.className = 'px-4 py-2.5 rounded-xl bg-rose-500 hover:bg-rose-400 text-white text-xs font-black transition flex items-center gap-2 shadow-lg shadow-rose-500/20 cursor-pointer';
             
             scanMarkets();
             autoScanInterval = setInterval(scanMarkets, 30000);

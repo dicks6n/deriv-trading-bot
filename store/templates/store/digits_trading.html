@@ -1,9 +1,9 @@
 {% extends 'base_dashboard.html' %}
 
+{% block title %}AI Signal Generator - PATREOAIX{% endblock %}
+
 {% block content %}
-<!-- ========================================== -->
-<!-- CUSTOM WEB3 LOADING SPINNER OVERLAY -->
-<!-- ========================================== -->
+<!-- LOADING SPINNER -->
 <div id="loading-spinner" class="fixed inset-0 z-[9999] bg-slate-950/90 backdrop-blur-md flex flex-col items-center justify-center transition-opacity duration-500">
     <div class="relative flex items-center justify-center">
         <div class="w-20 h-20 rounded-full border-4 border-indigo-500/20 border-t-indigo-500 animate-spin"></div>
@@ -18,296 +18,354 @@
 </div>
 
 <style>
-    .spinner-hidden {
-        opacity: 0;
-        pointer-events: none;
-        visibility: hidden;
+    .spinner-hidden { opacity: 0; pointer-events: none; visibility: hidden; }
+    .digits-card {
+        background: linear-gradient(135deg, rgba(15, 23, 42, 0.95) 0%, rgba(30, 27, 75, 0.4) 100%);
+        border: 1px solid rgba(99, 102, 241, 0.15);
+        border-radius: 20px;
+        box-shadow: 0 4px 24px rgba(0, 0, 0, 0.25);
     }
-    .trade-log-entry {
-        animation: slideIn 0.3s ease-out;
+    .trade-log-entry { animation: slideIn 0.3s ease-out; }
+    @keyframes slideIn { from { opacity: 0; transform: translateX(-10px); } to { opacity: 1; transform: translateX(0); } }
+    .btn-touch { transition: transform 0.1s ease; }
+    .btn-touch:active { transform: scale(0.97); }
+    .log-container { max-height: 200px; overflow-y: auto; }
+    .log-container::-webkit-scrollbar { width: 4px; }
+    .log-container::-webkit-scrollbar-thumb { background: #334155; border-radius: 8px; }
+    
+    /* Price flash animations */
+    .price-flash-up { animation: flashUp 0.4s ease; }
+    .price-flash-down { animation: flashDown 0.4s ease; }
+    @keyframes flashUp { 
+        0%,100% { color: #22c55e; } 
+        50% { color: #86efac; transform: scale(1.05); } 
     }
-    @keyframes slideIn {
-        from { opacity: 0; transform: translateX(-10px); }
-        to { opacity: 1; transform: translateX(0); }
+    @keyframes flashDown { 
+        0%,100% { color: #ef4444; } 
+        50% { color: #fca5a5; transform: scale(1.05); } 
+    }
+    
+    #tv-widget-host {
+        width: 100%;
+        height: 100%;
+        background: #0b0f19;
     }
 </style>
 
-<div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        
-        <!-- Left & Center: Chart & Live Ticks Engine -->
-        <div class="lg:col-span-2 space-y-6">
-            
-            <!-- Header Card -->
-            <div class="bg-[#111827] rounded-2xl shadow-2xl border border-slate-800 p-6 text-slate-100 space-y-4">
-                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                    <div>
-                        <h2 class="text-xl font-black tracking-tight text-white flex items-center space-x-2">
-                          <span>Deriv Synthetic & Indices Engine</span>
-                        </h2>
-                        <p class="text-xs text-slate-400 mt-0.5">Optimized with Multi-Strategy Rotation (DIFF ➔ Even/Odd ➔ Over/Under) & Loss Skipper.</p>
-                    </div>
-                    <div class="flex items-center space-x-3">
-                        <span id="connectionStatus" class="inline-flex items-center text-xs px-3 py-1 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/20 font-medium">
-                            <span class="w-2 h-2 rounded-full bg-amber-400 mr-2 animate-pulse"></span> Connecting...
-                        </span>
-                    </div>
-                </div>
+<div class="space-y-5 pb-4">
 
-                <!-- Asset Selector & Live Tick Banner -->
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
-                    <div class="space-y-2">
-                        <label for="assetSelect" class="text-xs font-bold text-slate-400 uppercase tracking-wider">Select Asset</label>
-                        <select id="assetSelect" onchange="changeAsset()" class="w-full bg-slate-900 border border-slate-700/80 rounded-xl px-4 py-2.5 font-semibold text-slate-100 focus:ring-2 focus:ring-blue-500 focus:outline-none cursor-pointer">
-                            <option value="R_10">Volatility 10 Index</option>
-                            <option value="R_25">Volatility 25 Index</option>
-                            <option value="R_50">Volatility 50 Index</option>
-                            <option value="R_75">Volatility 75 Index</option>
-                            <option value="R_100" selected>Volatility 100 Index</option>
-                            <option value="1HZ10V">Volatility 10 (1s) Index</option>
-                            <option value="1HZ25V">Volatility 25 (1s) Index</option>
-                            <option value="1HZ50V">Volatility 50 (1s) Index</option>
-                            <option value="1HZ75V">Volatility 75 (1s) Index</option>
-                            <option value="1HZ100V">Volatility 100 (1s) Index</option>
-                        </select>
-                    </div>
+    <!-- Hidden CSRF Token -->
+    <form id="csrf-form" class="hidden">{% csrf_token %}</form>
 
-                    <!-- Live Tick Data Display Box -->
-                    <div class="bg-slate-900/90 border border-slate-800/80 rounded-xl p-3.5 flex justify-between items-center shadow-inner">
-                        <div>
-                            <span class="text-[10px] uppercase font-bold text-slate-400 tracking-wider block">Live Tick Data</span>
-                            <span id="stream-asset" class="text-xs font-mono font-bold text-indigo-300">Volatility 100 Index</span>
-                            <h3 id="stream-price" class="text-2xl font-black text-emerald-400 font-mono mt-0.5">$----</h3>
-                        </div>
-                        <div class="text-right pl-4 border-l border-slate-800">
-                            <span class="text-[10px] uppercase font-bold text-slate-400 tracking-wider block">Last Digit</span>
-                            <h3 id="stream-digit" class="text-4xl font-black text-amber-400 font-mono mt-0.5">-</h3>
-                        </div>
-                    </div>
-                </div>
+    <!-- HEADER CARD -->
+    <div class="digits-card p-4 sm:p-5 space-y-4">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div class="min-w-0">
+                <h1 class="text-lg sm:text-xl font-black tracking-tight text-white flex items-center gap-2">
+                    <i class="fa-solid fa-bolt text-amber-400 text-base"></i>
+                    Deriv Synthetic Engine
+                </h1>
+                <p class="text-[11px] text-slate-400 mt-1 leading-relaxed">
+                    Multi-Strategy Rotation (DIFF ➔ Even/Odd ➔ Over/Under) & Loss Skipper
+                </p>
+            </div>
+            <div class="flex items-center gap-2 shrink-0">
+                <span id="connectionStatus" class="inline-flex items-center text-[10px] px-3 py-1.5 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/20 font-bold">
+                    <span class="w-1.5 h-1.5 rounded-full bg-amber-400 mr-2 animate-pulse"></span>
+                    Connecting...
+                </span>
+            </div>
+        </div>
+
+        <!-- Asset Selector + Live Tick -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+                <label for="assetSelect" class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1.5">Select Asset</label>
+                <select id="assetSelect" onchange="changeAsset()" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-3 text-xs font-bold text-slate-100 focus:outline-none focus:border-emerald-500 cursor-pointer">
+                    <optgroup label="Commodities">
+                        <option value="frxXAUUSD" selected>🥇 Gold Spot (XAU/USD)</option>
+                        <option value="frxXAGUSD">🥈 Silver Spot (XAG/USD)</option>
+                    </optgroup>
+                    <optgroup label="Volatility Indices">
+                        <option value="R_10">Volatility 10 Index</option>
+                        <option value="R_25">Volatility 25 Index</option>
+                        <option value="R_50">Volatility 50 Index</option>
+                        <option value="R_75">Volatility 75 Index</option>
+                        <option value="R_100">Volatility 100 Index</option>
+                    </optgroup>
+                    <optgroup label="1s Volatility">
+                        <option value="1HZ10V">Volatility 10 (1s)</option>
+                        <option value="1HZ25V">Volatility 25 (1s)</option>
+                        <option value="1HZ50V">Volatility 50 (1s)</option>
+                        <option value="1HZ75V">Volatility 75 (1s)</option>
+                        <option value="1HZ100V">Volatility 100 (1s)</option>
+                    </optgroup>
+                    <optgroup label="Forex">
+                        <option value="frxEURUSD">EUR/USD</option>
+                        <option value="frxGBPUSD">GBP/USD</option>
+                        <option value="frxUSDJPY">USD/JPY</option>
+                    </optgroup>
+                    <optgroup label="Crypto">
+                        <option value="cryBTCUSD">Bitcoin (BTC/USD)</option>
+                        <option value="cryETHUSD">Ethereum (ETH/USD)</option>
+                    </optgroup>
+                </select>
             </div>
 
-            <!-- TradingView Advanced Real-Time Chart Widget -->
-            <div class="bg-[#111827] border border-slate-800 rounded-2xl p-4 shadow-2xl overflow-hidden" style="height: 480px;">
-                <div class="flex justify-between items-center mb-3">
-                    <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Live Advanced Chart</span>
-                    <span class="text-[10px] text-slate-500">PATREOAIX</span>
+            <!-- Live Tick Data -->
+            <div class="bg-slate-950/70 border border-slate-800/60 rounded-xl p-3 flex items-center justify-between">
+                <div class="min-w-0">
+                    <span class="text-[9px] uppercase font-bold text-slate-500 tracking-wider block flex items-center gap-1">
+                        Live Tick
+                        <span id="tick-source-badge" class="text-[8px] px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-400 font-bold">TV</span>
+                    </span>
+                    <span id="stream-asset" class="text-[11px] font-mono font-bold text-indigo-300 block truncate">Gold Spot</span>
+                    <h3 id="stream-price" class="text-lg sm:text-xl font-black text-emerald-400 font-mono mt-0.5 truncate">$----</h3>
                 </div>
-                <div class="w-full h-[410px] rounded-xl overflow-hidden bg-slate-900 border border-slate-800">
+                <div class="text-right pl-3 border-l border-slate-800 shrink-0">
+                    <span class="text-[9px] uppercase font-bold text-slate-500 tracking-wider block">Last Digit</span>
+                    <h3 id="stream-digit" class="text-3xl sm:text-4xl font-black text-amber-400 font-mono leading-none mt-0.5">-</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MAIN GRID -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
+        
+        <!-- LEFT COLUMN -->
+        <div class="lg:col-span-2 space-y-5">
+            
+            <!-- TradingView Chart + Live Ticker -->
+            <div class="digits-card p-3 sm:p-4">
+                <div class="flex items-center justify-between mb-3">
+                    <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 flex items-center gap-2">
+                        <i class="fa-solid fa-chart-line text-amber-400 text-[10px]"></i>
+                        Live Chart — Gold Spot
+                    </span>
+                    <span id="chart-symbol-label" class="text-[9px] text-slate-500 font-mono">PATREOAIX</span>
+                </div>
+                
+                <!-- Main Chart -->
+                <div class="w-full h-[300px] sm:h-[420px] rounded-xl overflow-hidden bg-slate-950 border border-slate-800/60">
                     <iframe id="tradingViewChartFrame" 
-                        src="https://s.tradingview.com/widgetembed/?symbol=FX_IDC%3AXAUUSD&interval=1&hidetolbar=1&symboledit=1&saveimage=1&toolbarbg=f1f3f6&studies=%5B%5D&theme=dark&style=1&timezone=Etc%2FUTC&studies_overrides=%7B%7D&overrides=%7B%7D&enabled_features=%5B%5D&disabled_features=%5B%5D&locale=en&utm_source=localhost&utm_medium=widget&utm_campaign=chart&utm_term=FX_IDC%3AXAUUSD" 
+                        src="https://s.tradingview.com/widgetembed/?symbol=FX_IDC%3AXAUUSD&interval=1&hidetoolbar=1&symboledit=1&saveimage=1&toolbarbg=f1f3f6&studies=%5B%5D&theme=dark&style=1&timezone=Etc%2FUTC&studies_overrides=%7B%7D&overrides=%7B%7D&enabled_features=%5B%5D&disabled_features=%5B%5D&locale=en&utm_source=localhost&utm_medium=widget&utm_campaign=chart&utm_term=FX_IDC%3AXAUUSD" 
                         class="w-full h-full border-0">
                     </iframe>
                 </div>
+
+                <!-- Live Ticker Tape Below Chart -->
+                <div class="mt-3 bg-slate-950 rounded-xl border border-slate-800/60 overflow-hidden" style="height: 46px;">
+                    <div id="tv-widget-host">
+                        <!-- TradingView Ticker Tape will be injected here -->
+                    </div>
+                </div>
+
+                <!-- Status -->
+                <div class="flex items-center justify-between mt-2 text-[9px] font-mono">
+                    <span class="text-slate-500">Price source: TradingView Live Feed</span>
+                    <span id="tv-feed-status" class="text-emerald-400 flex items-center gap-1">
+                        <i class="fa-solid fa-circle text-[5px] animate-pulse"></i>
+                        ACTIVE
+                    </span>
+                </div>
             </div>
 
-        </div>
-
-        <!-- Right Column: Controls, AI Scanner & Digit Prediction Grid -->
-        <div class="space-y-6">
-            
-            <!-- 🔥 AI Gold (XAUUSD) Auto-Trader Toggle Card - Uses Funded Account -->
-            <div class="bg-gradient-to-br from-amber-950/90 via-slate-900 to-yellow-950/90 rounded-2xl p-5 text-white border border-amber-800/40 shadow-xl space-y-4">
-                <div class="flex items-center justify-between">
-                    <div class="flex items-center space-x-2">
-                        <span class="text-xl">🪙</span>
-                        <div>
+            <!-- AI Gold Auto-Trader -->
+            <div class="digits-card p-4 sm:p-5 border border-amber-800/30" style="background: linear-gradient(135deg, rgba(69, 26, 3, 0.4) 0%, rgba(15, 23, 42, 0.95) 50%, rgba(66, 32, 6, 0.4) 100%);">
+                <div class="flex items-center justify-between gap-3 mb-4">
+                    <div class="flex items-center gap-2.5 min-w-0">
+                        <span class="text-xl sm:text-2xl">🪙</span>
+                        <div class="min-w-0">
                             <h3 class="text-xs font-bold uppercase tracking-wider text-amber-300">AI Gold Auto-Trader</h3>
-                            <p class="text-[11px] text-slate-300">Uses Funded Account | 88% Profit Retention</p>
+                            <p class="text-[10px] text-slate-400 truncate">Funded Account · 88% Profit Retention</p>
                         </div>
                     </div>
-                    <label class="relative inline-flex items-center cursor-pointer">
+                    <label class="relative inline-flex items-center cursor-pointer shrink-0">
                         <input type="checkbox" id="aiGoldToggle" class="sr-only peer" onchange="toggleAIGold(this)" {% if ai_gold_active %}checked{% endif %}>
-                        <div class="w-11 h-6 bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-amber-500"></div>
+                        <div class="w-11 h-6 bg-slate-800 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-amber-500"></div>
                     </label>
                 </div>
 
-                <!-- Funded Account Balance Display -->
-                <div class="bg-slate-950/70 rounded-xl p-3 border border-amber-800/30 flex justify-between items-center">
+                <div class="bg-slate-950/70 rounded-xl p-3 border border-amber-800/30 flex justify-between items-center mb-3">
                     <div>
-                        <span class="text-[9px] uppercase font-bold text-slate-400">Funded Balance</span>
-                        <h4 id="fundedBalanceDisplay" class="text-lg font-black text-emerald-400">${{ funded_balance|default:"0.00" }}</h4>
+                        <span class="text-[9px] uppercase font-bold text-slate-400 block">Funded Balance</span>
+                        <h4 id="fundedBalanceDisplay" class="text-lg sm:text-xl font-black text-emerald-400 font-mono">${{ funded_balance|default:"0.00" }}</h4>
                     </div>
                     <div class="text-right">
-                        <span class="text-[9px] uppercase font-bold text-slate-400">Status</span>
+                        <span class="text-[9px] uppercase font-bold text-slate-400 block">Status</span>
                         <h4 id="aiGoldStatusBadge" class="text-xs font-bold {% if ai_gold_active %}text-emerald-400{% else %}text-amber-400{% endif %}">
                             {% if ai_gold_active %}● Active{% else %}● Inactive{% endif %}
                         </h4>
                     </div>
                 </div>
 
-                <!-- Funded Account Info -->
-                <div class="grid grid-cols-2 gap-2 text-[10px]">
-                    <div class="bg-slate-950/50 rounded-lg p-2 text-center border border-slate-800/30">
-                        <span class="text-slate-400 block">Initial Capital</span>
-                        <span class="font-bold text-white">${{ funded_account.initial_balance|default:"0.00" }}</span>
+                <div class="grid grid-cols-2 gap-2 text-[10px] mb-3">
+                    <div class="bg-slate-950/50 rounded-lg p-2.5 text-center border border-slate-800/30">
+                        <span class="text-slate-500 block text-[9px] uppercase">Initial Capital</span>
+                        <span class="font-bold text-white font-mono text-xs">${{ funded_account.initial_balance|default:"0.00" }}</span>
                     </div>
-                    <div class="bg-slate-950/50 rounded-lg p-2 text-center border border-slate-800/30">
-                        <span class="text-slate-400 block">Subscription</span>
-                        <span class="font-bold text-amber-400 uppercase">{{ subscription_tier|default:"Free" }}</span>
+                    <div class="bg-slate-950/50 rounded-lg p-2.5 text-center border border-slate-800/30">
+                        <span class="text-slate-500 block text-[9px] uppercase">Subscription</span>
+                        <span class="font-bold text-amber-400 uppercase text-xs">{{ subscription_tier|default:"Free" }}</span>
                     </div>
                 </div>
 
-                <!-- Trading Log -->
-                <div id="aiGoldTradingLog" class="bg-slate-950/60 rounded-xl p-3 border border-slate-800/60 max-h-48 overflow-y-auto space-y-1 font-mono text-[11px]">
-                    <div class="text-slate-500 text-center py-4 text-xs">Toggle the switch above to start AI Gold trading with your funded account</div>
+                <div id="aiGoldTradingLog" class="log-container bg-slate-950/60 rounded-xl p-3 border border-slate-800/60 space-y-1 font-mono text-[10px] mb-3">
+                    <div class="text-slate-500 text-center py-3 text-[11px]">Toggle the switch above to start</div>
                 </div>
 
-                <!-- Stats Summary -->
                 <div class="grid grid-cols-4 gap-2 text-center">
-                    <div class="bg-slate-950/60 rounded-xl p-2 border border-slate-800/40">
+                    <div class="bg-slate-950/60 rounded-lg p-2 border border-slate-800/40">
                         <span class="text-[8px] uppercase text-slate-500 block">Trades</span>
-                        <span id="aiGoldTradeCount" class="text-sm font-bold text-white">0</span>
+                        <span id="aiGoldTradeCount" class="text-sm font-bold text-white font-mono">0</span>
                     </div>
-                    <div class="bg-slate-950/60 rounded-xl p-2 border border-slate-800/40">
+                    <div class="bg-slate-950/60 rounded-lg p-2 border border-slate-800/40">
                         <span class="text-[8px] uppercase text-slate-500 block">Wins</span>
-                        <span id="aiGoldWins" class="text-sm font-bold text-emerald-400">0</span>
+                        <span id="aiGoldWins" class="text-sm font-bold text-emerald-400 font-mono">0</span>
                     </div>
-                    <div class="bg-slate-950/60 rounded-xl p-2 border border-slate-800/40">
-                        <span class="text-[8px] uppercase text-slate-500 block">Win Rate</span>
-                        <span id="aiGoldWinRate" class="text-sm font-bold text-emerald-400">0%</span>
+                    <div class="bg-slate-950/60 rounded-lg p-2 border border-slate-800/40">
+                        <span class="text-[8px] uppercase text-slate-500 block">Win %</span>
+                        <span id="aiGoldWinRate" class="text-sm font-bold text-emerald-400 font-mono">0%</span>
                     </div>
-                    <div class="bg-slate-950/60 rounded-xl p-2 border border-slate-800/40">
-                        <span class="text-[8px] uppercase text-slate-500 block">Profit</span>
-                        <span id="aiGoldProfit" class="text-sm font-bold text-amber-400">$0.00</span>
+                    <div class="bg-slate-950/60 rounded-lg p-2 border border-slate-800/40">
+                        <span class="text-[8px] uppercase text-slate-500 block">P&L</span>
+                        <span id="aiGoldProfit" class="text-sm font-bold text-amber-400 font-mono">$0.00</span>
                     </div>
                 </div>
             </div>
 
-            <!-- AI Market Intelligence Scanner -->
-            <div class="bg-gradient-to-br from-blue-950/90 via-slate-900 to-indigo-950/90 rounded-2xl p-5 text-white border border-blue-800/40 shadow-xl space-y-3">
-                <div class="flex justify-between items-center">
-                    <div class="flex items-center space-x-2">
+            <!-- AI Market Intelligence -->
+            <div class="digits-card p-4 sm:p-5 border border-blue-800/30" style="background: linear-gradient(135deg, rgba(30, 58, 138, 0.3) 0%, rgba(15, 23, 42, 0.95) 50%, rgba(49, 46, 129, 0.3) 100%);">
+                <div class="flex items-center justify-between gap-3 mb-3">
+                    <div class="flex items-center gap-2.5 min-w-0">
                         <span class="text-xl">🤖</span>
-                        <div>
+                        <div class="min-w-0">
                             <h3 class="text-xs font-bold uppercase tracking-wider text-blue-300">AI Market Intelligence</h3>
-                            <p class="text-[11px] text-slate-300">Synchronized with rotational high-win strategy</p>
+                            <p class="text-[10px] text-slate-400 truncate">Rotational high-win strategy</p>
                         </div>
                     </div>
-                    <span id="aiStatusBadge" class="text-[10px] bg-blue-500/20 border border-blue-400/30 px-2.5 py-0.5 rounded-full text-blue-300 font-medium">Ready</span>
+                    <span id="aiStatusBadge" class="text-[9px] bg-blue-500/20 border border-blue-400/30 px-2.5 py-1 rounded-full text-blue-300 font-bold shrink-0">Ready</span>
                 </div>
 
                 <button onclick="runAIMarketScanner()" id="aiScanBtn"
-                    class="w-full bg-blue-600 hover:bg-blue-500 active:scale-[0.99] text-white font-bold text-xs py-2.5 px-4 rounded-xl shadow-lg shadow-blue-500/25 transition duration-200 flex items-center justify-center space-x-2 cursor-pointer">
-                    <span>Scan & Calibrate Rotation Engine</span>
+                    class="btn-touch w-full bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs py-3 px-4 rounded-xl shadow-lg shadow-blue-500/25 transition flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-radar text-[11px]"></i>
+                    <span>Scan & Calibrate Engine</span>
                 </button>
 
-                <div id="aiRecommendationBox" class="hidden text-xs bg-slate-900/90 rounded-xl p-3 border border-slate-700/60 space-y-1">
+                <div id="aiRecommendationBox" class="hidden text-xs bg-slate-900/90 rounded-xl p-3 border border-slate-700/60 space-y-1 mt-3">
                     <div class="flex justify-between font-semibold">
-                        <span id="recAsset" class="text-blue-400">Volatility 100 Index</span>
+                        <span id="recAsset" class="text-blue-400">Gold Spot</span>
                         <span id="recConfidence" class="text-emerald-400">Confidence: 96.2%</span>
                     </div>
-                    <div id="recReason" class="text-[11px] text-slate-300">Multi-strategy rotational sequence optimized for maximum stability.</div>
+                    <div id="recReason" class="text-[10px] text-slate-300 leading-relaxed">Multi-strategy rotational sequence optimized for maximum stability.</div>
                 </div>
             </div>
+        </div>
 
-            <!-- Trading Panel Card -->
-            <div class="bg-[#111827] rounded-2xl shadow-2xl border border-slate-800 p-5 text-slate-100 space-y-5">
+        <!-- RIGHT COLUMN -->
+        <div class="space-y-5">
+            <div class="digits-card p-4 sm:p-5 space-y-4">
                 
-                <!-- Main Contract Type Navigation Tabs -->
-                <div class="grid grid-cols-3 border border-slate-800 bg-[#0b0f19] p-1.5 rounded-xl gap-1 text-center">
+                <div class="grid grid-cols-3 gap-1 bg-slate-950/80 p-1.5 rounded-xl border border-slate-800/60">
                     <button id="mainTabMatches" onclick="switchMainTab('matches')" 
-                        class="py-2 text-xs font-bold rounded-lg bg-blue-600 text-white shadow-md shadow-blue-500/20 transition cursor-pointer">
-                        Matches/Differs
+                        class="py-2 text-[10px] font-bold rounded-lg bg-indigo-600 text-white shadow-md transition">
+                        Match/Diff
                     </button>
                     <button id="mainTabEvenOdd" onclick="switchMainTab('evenodd')" 
-                        class="py-2 text-xs font-medium text-slate-400 rounded-lg hover:bg-slate-800/50 hover:text-slate-200 transition cursor-pointer">
+                        class="py-2 text-[10px] font-medium text-slate-400 rounded-lg hover:bg-slate-800/50 hover:text-slate-200 transition">
                         Even/Odd
                     </button>
                     <button id="mainTabOverUnder" onclick="switchMainTab('overunder')" 
-                        class="py-2 text-xs font-medium text-slate-400 rounded-lg hover:bg-slate-800/50 hover:text-slate-200 transition cursor-pointer">
+                        class="py-2 text-[10px] font-medium text-slate-400 rounded-lg hover:bg-slate-800/50 hover:text-slate-200 transition">
                         Over/Under
                     </button>
                 </div>
 
-                <!-- DYNAMIC SECTION BASED ON SELECTED TAB -->
-
-                <!-- 1. Matches / Differs Sub-options & Grid -->
-                <div id="sectionMatches" class="space-y-4">
-                    <div class="flex bg-slate-900 p-1 rounded-xl border border-slate-800">
-                        <button onclick="setSubContractType('MATCH')" id="btnMatch" class="flex-1 py-1.5 text-xs font-semibold text-slate-400 rounded-lg hover:text-slate-200 transition cursor-pointer">Matches</button>
-                        <button onclick="setSubContractType('DIFF')" id="btnDiff" class="flex-1 py-1.5 text-xs font-bold rounded-lg bg-blue-600 text-white shadow-sm transition cursor-pointer">Differs</button>
+                <div id="sectionMatches" class="space-y-3">
+                    <div class="flex bg-slate-950/60 p-1 rounded-xl border border-slate-800/60">
+                        <button onclick="setSubContractType('MATCH')" id="btnMatch" class="btn-touch flex-1 py-2 text-[10px] font-semibold text-slate-400 rounded-lg transition">Matches</button>
+                        <button onclick="setSubContractType('DIFF')" id="btnDiff" class="btn-touch flex-1 py-2 text-[10px] font-bold rounded-lg bg-indigo-600 text-white shadow-sm transition">Differs</button>
                     </div>
-                    <div class="space-y-2">
-                        <label class="text-xs font-bold text-slate-400 uppercase tracking-wider">Prediction Target Digit</label>
+                    <div>
+                        <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-2">Prediction Digit</label>
                         <div class="grid grid-cols-5 gap-2" id="digitGrid"></div>
                     </div>
                 </div>
 
-                <!-- 2. Even / Odd Selection Buttons -->
-                <div id="sectionEvenOdd" class="space-y-4 hidden">
-                    <label class="text-xs font-bold text-slate-400 uppercase tracking-wider">Select Even or Odd</label>
-                    <div class="grid grid-cols-2 gap-3">
+                <div id="sectionEvenOdd" class="space-y-3 hidden">
+                    <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Select Prediction</label>
+                    <div class="grid grid-cols-2 gap-2">
                         <button onclick="setEvenOdd('EVEN')" id="btnEven" 
-                            class="py-4 rounded-xl font-bold text-xs border bg-blue-600 border-blue-500 text-white shadow-md shadow-blue-500/20 transition cursor-pointer">
-                            Even (0,2,4,6,8)
+                            class="btn-touch py-4 rounded-xl font-bold text-[11px] border bg-indigo-600 border-indigo-500 text-white shadow-md transition">
+                            EVEN<br><span class="text-[9px] font-normal opacity-80">0,2,4,6,8</span>
                         </button>
                         <button onclick="setEvenOdd('ODD')" id="btnOdd"  
-                            class="py-4 rounded-xl font-bold text-xs border bg-slate-900 border-slate-800 text-slate-300 hover:border-slate-700 transition cursor-pointer">
-                            Odd (1,3,5,7,9)
+                            class="btn-touch py-4 rounded-xl font-bold text-[11px] border bg-slate-900 border-slate-800 text-slate-300 hover:border-slate-700 transition">
+                            ODD<br><span class="text-[9px] font-normal opacity-80">1,3,5,7,9</span>
                         </button>
                     </div>
                 </div>
 
-                <!-- 3. Over / Under Selection Grid (Barriers 0 to 8) -->
-                <div id="sectionOverUnder" class="space-y-4 hidden">
-                    <div class="flex bg-slate-900 p-1 rounded-xl border border-slate-800">
-                        <button onclick="setOverUnderType('OVER')" id="btnOver" class="flex-1 py-1.5 text-xs font-semibold text-slate-400 rounded-lg hover:text-slate-200 transition cursor-pointer">Over</button>
-                        <button onclick="setOverUnderType('UNDER')" id="btnUnder" class="flex-1 py-1.5 text-xs font-bold rounded-lg bg-blue-600 text-white shadow-sm transition cursor-pointer">Under</button>
+                <div id="sectionOverUnder" class="space-y-3 hidden">
+                    <div class="flex bg-slate-950/60 p-1 rounded-xl border border-slate-800/60">
+                        <button onclick="setOverUnderType('OVER')" id="btnOver" class="btn-touch flex-1 py-2 text-[10px] font-semibold text-slate-400 rounded-lg transition">Over</button>
+                        <button onclick="setOverUnderType('UNDER')" id="btnUnder" class="btn-touch flex-1 py-2 text-[10px] font-bold rounded-lg bg-indigo-600 text-white shadow-sm transition">Under</button>
                     </div>
-                    <div class="space-y-2">
-                        <label class="text-xs font-bold text-slate-400 uppercase tracking-wider">Select Barrier Prediction</label>
+                    <div>
+                        <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-2">Barrier Prediction</label>
                         <div class="grid grid-cols-5 gap-2" id="barrierGrid"></div>
                     </div>
                 </div>
 
-                <!-- Parameters: Stake & Duration -->
-                <div class="grid grid-cols-2 gap-3 pt-2">
+                <div class="grid grid-cols-2 gap-3 pt-2 border-t border-slate-800/60">
                     <div>
-                        <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">Stake (USD)</label>
+                        <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Stake (USD)</label>
                         <input type="number" id="stakeInput" value="5" min="0.35" step="0.5" 
-                            class="w-full bg-slate-900 border border-slate-700/80 rounded-xl px-3 py-2 font-semibold text-slate-100 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                            class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-3 font-mono font-bold text-white text-sm focus:outline-none focus:border-indigo-500">
                     </div>
                     <div>
-                        <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">Duration (Ticks)</label>
+                        <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Duration (Ticks)</label>
                         <input type="number" id="durationInput" value="1" min="1" max="20" 
-                            class="w-full bg-slate-900 border border-slate-700/80 rounded-xl px-3 py-2 font-semibold text-slate-100 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                            class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-3 font-mono font-bold text-white text-sm focus:outline-none focus:border-indigo-500">
                     </div>
                 </div>
 
-                <!-- Session Risk Management Card (Stop Loss & Take Profit) -->
-                <div class="bg-slate-900/80 border border-slate-800 rounded-xl p-3.5 space-y-3">
-                    <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Bot Session Risk Management</span>
+                <div class="bg-slate-950/60 border border-slate-800/60 rounded-xl p-3 space-y-3">
+                    <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block flex items-center gap-1.5">
+                        <i class="fa-solid fa-shield-halved text-amber-400 text-[10px]"></i>
+                        Session Risk Limits
+                    </span>
                     <div class="grid grid-cols-2 gap-3">
                         <div>
-                            <label class="block text-[11px] font-medium text-slate-400 mb-1">Session Stop Loss ($)</label>
+                            <label class="block text-[9px] font-medium text-slate-500 mb-1 uppercase">Stop Loss ($)</label>
                             <input type="number" id="sessionStopLoss" value="30" min="1" step="5" 
-                                class="w-full bg-slate-950 border border-slate-700/80 rounded-xl px-3 py-2 font-semibold text-red-400 text-sm focus:ring-2 focus:ring-red-500 focus:outline-none">
+                                class="w-full bg-slate-900 border border-red-500/20 rounded-lg px-3 py-2 font-mono font-bold text-red-400 text-xs focus:outline-none focus:border-red-500">
                         </div>
                         <div>
-                            <label class="block text-[11px] font-medium text-slate-400 mb-1">Session Take Profit ($)</label>
+                            <label class="block text-[9px] font-medium text-slate-500 mb-1 uppercase">Take Profit ($)</label>
                             <input type="number" id="sessionTakeProfit" value="50" min="1" step="5" 
-                                class="w-full bg-slate-950 border border-slate-700/80 rounded-xl px-3 py-2 font-semibold text-emerald-400 text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+                                class="w-full bg-slate-900 border border-emerald-500/20 rounded-lg px-3 py-2 font-mono font-bold text-emerald-400 text-xs focus:outline-none focus:border-emerald-500">
                         </div>
                     </div>
                 </div>
 
-                <!-- Action Purchase & Automated Bot Buttons -->
-                <div class="pt-2 space-y-3">
-                    <div class="flex justify-between items-center text-xs px-1">
-                        <span class="text-slate-400">Estimated Payout</span>
-                        <span id="payoutDisplay" class="font-bold text-emerald-400">5.60 USD</span>
-                    </div>
+                <div class="flex justify-between items-center bg-slate-950/60 rounded-xl px-3 py-2.5 border border-slate-800/60">
+                    <span class="text-[10px] text-slate-400 uppercase font-bold">Estimated Payout</span>
+                    <span id="payoutDisplay" class="font-bold text-emerald-400 font-mono text-sm">5.60 USD</span>
+                </div>
 
+                <div class="space-y-2.5">
                     <button id="buyButton" onclick="executeTrade()" 
-                        class="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 active:scale-[0.99] text-white font-bold py-3.5 px-4 rounded-xl shadow-lg shadow-blue-500/25 transition duration-200 cursor-pointer text-sm">
+                        class="btn-touch w-full bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-500 hover:to-blue-500 text-white font-bold py-3.5 px-4 rounded-xl shadow-lg shadow-indigo-500/25 transition text-sm">
                         Purchase Contract @ 5.00 USD
                     </button>
 
-                    <!-- Automated Continuous Bot Start/Stop Toggle Button -->
                     <button id="toggleBotBtn" onclick="toggleAutoBot()" 
-                        class="w-full bg-emerald-600 hover:bg-emerald-500 active:scale-[0.99] text-white font-bold py-3.5 px-4 rounded-xl shadow-lg shadow-emerald-500/25 transition duration-200 cursor-pointer text-sm flex items-center justify-center space-x-2">
-                        <span>▶ Start Automated Bot (Rotational Engine + Loss Skipper)</span>
+                        class="btn-touch w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3.5 px-4 rounded-xl shadow-lg shadow-emerald-500/25 transition text-xs flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-play text-[10px]"></i>
+                        <span>Start Automated Bot</span>
                     </button>
                 </div>
 
@@ -321,15 +379,15 @@
 
 <script>
     // ==========================================
-    // PASS FUNDED BALANCE FROM DJANGO TO JAVASCRIPT
+    // CONFIG
     // ==========================================
     const FUNDED_BALANCE = {{ funded_balance|default:"0" }};
     const IS_FUNDED = {{ is_funded|yesno:"true,false" }};
     const SUBSCRIPTION_TIER = "{{ subscription_tier|default:'Free' }}";
     const IS_ACTIVE_SUBSCRIPTION = {{ is_active_subscription|yesno:"true,false" }};
 
-    let ws = null;
-    let selectedSymbol = "R_100";
+    // 🔥 GOLD IS NOW THE DEFAULT
+    let selectedSymbol = "frxXAUUSD";
     let activeTab = "matches"; 
     let subType = "DIFF"; 
     let selectedDigit = 5;
@@ -339,8 +397,10 @@
     let cumulativeSessionProfit = 0;
     let isBotActive = true;
     let isAutoTrading = false;
+    let lastTVPrice = 0;
+    let tvObserver = null;
+    let tvPollInterval = null;
 
-    // AI Gold Auto-Trader variables
     let aiGoldInterval = null;
     let isAIGoldActive = document.getElementById('aiGoldToggle')?.checked || false;
     let aiGoldTradeCount = 0;
@@ -348,16 +408,38 @@
     let aiGoldWins = 0;
     let aiGoldLosses = 0;
 
-    const tickSequence = [1, 5, 10, 4];
-    let sequenceIndex = 0;
-
     const contractTypeSequence = ['DIFF', 'EVEN', 'ODD', 'UNDER', 'OVER'];
     let contractTypeIndex = 0;
 
-    let lastTradeWon = true;
-    let skipNextTrade = false;
+    // Deriv WS symbol map (for trade execution)
+    const DERIV_SYMBOL_MAP = {
+        'R_10': 'R_10', 'R_25': 'R_25', 'R_50': 'R_50', 'R_75': 'R_75', 'R_100': 'R_100',
+        '1HZ10V': '1HZ10V', '1HZ25V': '1HZ25V', '1HZ50V': '1HZ50V', '1HZ75V': '1HZ75V', '1HZ100V': '1HZ100V',
+        'frxXAUUSD': 'frxXAUUSD', 'frxXAGUSD': 'frxXAGUSD',
+        'frxEURUSD': 'frxEURUSD', 'frxGBPUSD': 'frxGBPUSD', 'frxUSDJPY': 'frxUSDJPY',
+        'cryBTCUSD': 'cryBTCUSD', 'cryETHUSD': 'cryETHUSD',
+    };
 
-    // Robust spinner removal
+    // TradingView chart symbols
+    const CHART_SYMBOL_MAP = {
+        'R_10': 'DERIV:VOL10V', 'R_25': 'DERIV:VOL25V', 'R_50': 'DERIV:VOL50V', 'R_75': 'DERIV:VOL75V', 'R_100': 'DERIV:VOL100V',
+        '1HZ10V': 'DERIV:VOL10V1S', '1HZ25V': 'DERIV:VOL25V1S', '1HZ50V': 'DERIV:VOL50V1S', '1HZ75V': 'DERIV:VOL75V1S', '1HZ100V': 'DERIV:VOL100V1S',
+        'frxXAUUSD': 'FX_IDC:XAUUSD', 'frxXAGUSD': 'FX_IDC:XAGUSD',
+        'frxEURUSD': 'FX:EURUSD', 'frxGBPUSD': 'FX:GBPUSD', 'frxUSDJPY': 'FX:USDJPY',
+        'cryBTCUSD': 'BINANCE:BTCUSDT', 'cryETHUSD': 'BINANCE:ETHUSDT',
+    };
+
+    function getDecimals(symbol) {
+        if (symbol === 'frxXAUUSD' || symbol === 'frxXAGUSD') return 2;
+        if (symbol === 'frxUSDJPY') return 3;
+        if (symbol === 'cryBTCUSD' || symbol === 'cryETHUSD') return 2;
+        if (symbol === 'frxEURUSD' || symbol === 'frxGBPUSD') return 5;
+        return 2;
+    }
+
+    // ==========================================
+    // SPINNER
+    // ==========================================
     function hideSpinner() {
         const spinner = document.getElementById('loading-spinner');
         if (spinner && !spinner.classList.contains('spinner-hidden')) {
@@ -365,7 +447,6 @@
             setTimeout(() => spinner.remove(), 500);
         }
     }
-
     if (document.readyState === 'complete' || document.readyState === 'interactive') {
         setTimeout(hideSpinner, 300);
     } else {
@@ -374,7 +455,7 @@
     setTimeout(hideSpinner, 1500);
 
     // ==========================================
-    // CSRF Token Helper
+    // CSRF
     // ==========================================
     function getCookie(name) {
         let cookieValue = null;
@@ -391,205 +472,193 @@
         return cookieValue;
     }
 
-    // ==========================================
-    // 🔥 AI Gold Auto-Trader - Uses Funded Account
-    // ==========================================
-
-    async function toggleAIGold(checkbox) {
-        const badge = document.getElementById('aiGoldStatusBadge');
-        const log = document.getElementById('aiGoldTradingLog');
-        
-        if (checkbox.checked) {
-            // Check if funded account has balance
-            if (FUNDED_BALANCE <= 0) {
-                checkbox.checked = false;
-                log.innerHTML = '<div class="text-rose-400 text-center py-2">❌ Funded account balance is $0. Please subscribe to Pro or VIP.</div>';
-                return;
-            }
-
-            // Check if user has active subscription
-            if (!IS_ACTIVE_SUBSCRIPTION) {
-                checkbox.checked = false;
-                log.innerHTML = '<div class="text-rose-400 text-center py-2">❌ Active subscription required. Upgrade to Pro or VIP.</div>';
-                return;
-            }
-
-            badge.textContent = '● Starting...';
-            badge.className = 'text-xs font-bold text-amber-400 animate-pulse';
-            log.innerHTML = '<div class="text-amber-400 text-center py-2">🔄 Initializing AI Gold Engine with Funded Account...</div>';
-            
-            try {
-                const response = await fetch('{% url "execute_funded_ai_gold" %}', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRFToken': getCookie('csrftoken')
-                    },
-                    body: JSON.stringify({ action: 'toggle' })
-                });
-                
-                const data = await response.json();
-                
-                if (data.success) {
-                    isAIGoldActive = true;
-                    badge.textContent = '● Active';
-                    badge.className = 'text-xs font-bold text-emerald-400';
-                    
-                    // Display trade results
-                    log.innerHTML = '';
-                    if (data.trades && data.trades.length > 0) {
-                        data.trades.forEach((trade, index) => {
-                            const profitColor = trade.profit >= 0 ? 'text-emerald-400' : 'text-rose-400';
-                            log.innerHTML += `
-                                <div class="trade-log-entry flex justify-between items-center py-1 border-b border-slate-800/30 text-[10px]">
-                                    <span class="text-slate-400">#${index + 1}</span>
-                                    <span class="font-bold ${trade.direction === 'BUY' ? 'text-emerald-400' : 'text-red-400'}">${trade.direction}</span>
-                                    <span class="font-mono text-slate-400">${trade.entry} → ${trade.exit}</span>
-                                    <span class="font-bold ${profitColor}">${trade.profit >= 0 ? '+' : ''}$${trade.profit.toFixed(2)}</span>
-                                    <span class="text-[9px] ${trade.status === 'WON' ? 'text-emerald-400' : 'text-rose-400'}">${trade.status}</span>
-                                </div>
-                            `;
-                            aiGoldTradeCount++;
-                            aiGoldTotalProfit += trade.profit;
-                            if (trade.profit > 0) aiGoldWins++;
-                            else aiGoldLosses++;
-                        });
-                        
-                        updateAIGoldStats();
-                        
-                        // Update balance display
-                        if (data.new_balance !== undefined) {
-                            document.getElementById('fundedBalanceDisplay').textContent = `$${data.new_balance.toFixed(2)}`;
-                        }
-                    }
-                    
-                    startAIGoldLoop();
-                } else {
-                    checkbox.checked = false;
-                    badge.textContent = '● Inactive';
-                    badge.className = 'text-xs font-bold text-amber-400';
-                    log.innerHTML = `<div class="text-rose-400 text-center py-2">❌ Error: ${data.error || 'Failed to start'}</div>`;
-                }
-            } catch (err) {
-                checkbox.checked = false;
-                badge.textContent = '● Inactive';
-                badge.className = 'text-xs font-bold text-amber-400';
-                log.innerHTML = `<div class="text-rose-400 text-center py-2">❌ Network Error: ${err.message}</div>`;
-            }
-        } else {
-            // Stop AI Gold
-            isAIGoldActive = false;
-            if (aiGoldInterval) {
-                clearInterval(aiGoldInterval);
-                aiGoldInterval = null;
-            }
-            badge.textContent = '● Inactive';
-            badge.className = 'text-xs font-bold text-amber-400';
-            
-            // Send stop signal
-            try {
-                await fetch('{% url "execute_funded_ai_gold" %}', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRFToken': getCookie('csrftoken')
-                    },
-                    body: JSON.stringify({ action: 'toggle' })
-                });
-            } catch (err) {}
-            
-            document.getElementById('aiGoldTradingLog').innerHTML = `
-                <div class="text-slate-500 text-center py-4 text-xs">⏹ AI Gold Auto-Trader stopped. Toggle to resume.</div>
-            `;
-        }
+    function getCsrfToken() {
+        const formInput = document.querySelector('#csrf-form input[name=csrfmiddlewaretoken]');
+        if (formInput && formInput.value) return formInput.value;
+        const anyInput = document.querySelector('[name=csrfmiddlewaretoken]');
+        if (anyInput && anyInput.value) return anyInput.value;
+        return getCookie('csrftoken');
     }
-
-    function startAIGoldLoop() {
-        if (aiGoldInterval) {
-            clearInterval(aiGoldInterval);
-        }
-        
-        // Run every 60 seconds
-        aiGoldInterval = setInterval(() => {
-            if (isAIGoldActive) {
-                autoExecuteAIGold();
-            }
-        }, 60000);
-    }
-
-    async function autoExecuteAIGold() {
-        if (!isAIGoldActive) return;
-        
-        try {
-            const response = await fetch('{% url "execute_funded_ai_gold" %}', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': getCookie('csrftoken')
-                },
-                body: JSON.stringify({ action: 'toggle' })
-            });
-            
-            const data = await response.json();
-            
-            if (data.success && data.trades) {
-                const log = document.getElementById('aiGoldTradingLog');
-                data.trades.forEach((trade) => {
-                    const profitColor = trade.profit >= 0 ? 'text-emerald-400' : 'text-rose-400';
-                    log.innerHTML += `
-                        <div class="trade-log-entry flex justify-between items-center py-1 border-b border-slate-800/30 text-[10px]">
-                            <span class="text-slate-400">🔄 Auto</span>
-                            <span class="font-bold ${trade.direction === 'BUY' ? 'text-emerald-400' : 'text-red-400'}">${trade.direction}</span>
-                            <span class="font-mono text-slate-400">${trade.entry} → ${trade.exit}</span>
-                            <span class="font-bold ${profitColor}">${trade.profit >= 0 ? '+' : ''}$${trade.profit.toFixed(2)}</span>
-                            <span class="text-[9px] ${trade.status === 'WON' ? 'text-emerald-400' : 'text-rose-400'}">${trade.status}</span>
-                        </div>
-                    `;
-                    aiGoldTradeCount++;
-                    aiGoldTotalProfit += trade.profit;
-                    if (trade.profit > 0) aiGoldWins++;
-                    else aiGoldLosses++;
-                });
-                
-                updateAIGoldStats();
-                
-                // Update balance
-                if (data.new_balance !== undefined) {
-                    document.getElementById('fundedBalanceDisplay').textContent = `$${data.new_balance.toFixed(2)}`;
-                }
-                
-                // Keep log manageable
-                while (log.children.length > 50) {
-                    log.removeChild(log.firstChild);
-                }
-                log.scrollTop = log.scrollHeight;
-            }
-        } catch (err) {
-            console.error('Auto-execute error:', err);
-        }
-    }
-
-    function updateAIGoldStats() {
-        document.getElementById('aiGoldTradeCount').textContent = aiGoldTradeCount;
-        document.getElementById('aiGoldWins').textContent = aiGoldWins;
-        const winRate = aiGoldTradeCount > 0 ? Math.round((aiGoldWins / aiGoldTradeCount) * 100) : 0;
-        document.getElementById('aiGoldWinRate').textContent = `${winRate}%`;
-        document.getElementById('aiGoldProfit').textContent = `$${aiGoldTotalProfit.toFixed(2)}`;
-    }
-
-    // ==========================================
-    // Existing Trading Functions
-    // ==========================================
 
     function formatDerivSymbol(symbol) {
-        const symbolMap = {
-            'R_10': 'Volatility 10 Index', 'R_25': 'Volatility 25 Index', 'R_50': 'Volatility 50 Index',
-            'R_75': 'Volatility 75 Index', 'R_100': 'Volatility 100 Index', '1HZ10V': 'Volatility 10 (1s) Index',
-            '1HZ25V': 'Volatility 25 (1s) Index', '1HZ50V': 'Volatility 50 (1s) Index', '1HZ75V': 'Volatility 75 (1s) Index', '1HZ100V': 'Volatility 100 (1s) Index'
+        const map = {
+            'R_10': 'Volatility 10', 'R_25': 'Volatility 25', 'R_50': 'Volatility 50',
+            'R_75': 'Volatility 75', 'R_100': 'Volatility 100',
+            '1HZ10V': 'Vol 10 (1s)', '1HZ25V': 'Vol 25 (1s)', '1HZ50V': 'Vol 50 (1s)',
+            '1HZ75V': 'Vol 75 (1s)', '1HZ100V': 'Vol 100 (1s)',
+            'frxXAUUSD': 'Gold Spot', 'frxXAGUSD': 'Silver Spot',
+            'frxEURUSD': 'EUR/USD', 'frxGBPUSD': 'GBP/USD', 'frxUSDJPY': 'USD/JPY',
+            'cryBTCUSD': 'Bitcoin', 'cryETHUSD': 'Ethereum',
         };
-        return symbolMap[symbol] || symbol;
+        return map[symbol] || symbol;
     }
 
+    // ==========================================
+    // 📺 TRADINGVIEW TICKER TAPE - PRICE SOURCE
+    // ==========================================
+    function rebuildTickerTape() {
+        const host = document.getElementById('tv-widget-host');
+        if (!host) return;
+        
+        const tvSymbol = CHART_SYMBOL_MAP[selectedSymbol] || 'FX_IDC:XAUUSD';
+        console.log(`📺 Rebuilding TV Ticker for: ${tvSymbol}`);
+        
+        host.innerHTML = '';
+        
+        const ticker = document.createElement('tv-ticker-tape');
+        ticker.id = 'tvTickerTape';
+        ticker.setAttribute('theme', 'dark');
+        ticker.setAttribute('symbols', tvSymbol);
+        ticker.setAttribute('show_symbol_logo', 'false');
+        ticker.setAttribute('is_transparent', 'true');
+        host.appendChild(ticker);
+        
+        setTimeout(() => startTVObserver(), 2000);
+    }
+
+    function startTVObserver() {
+        if (tvObserver) { tvObserver.disconnect(); tvObserver = null; }
+        if (tvPollInterval) { clearInterval(tvPollInterval); tvPollInterval = null; }
+        
+        const ticker = document.getElementById('tvTickerTape');
+        if (!ticker) {
+            console.warn('⚠️ Ticker element not found, retrying...');
+            setTimeout(startTVObserver, 1000);
+            return;
+        }
+        
+        console.log('👁️ Starting TV price observer...');
+        
+        const scanPrice = () => {
+            let priceFound = null;
+            
+            const scan = (root) => {
+                if (!root) return;
+                const nodes = root.querySelectorAll('*');
+                nodes.forEach(node => {
+                    if (node.children.length === 0 && node.textContent) {
+                        const text = node.textContent.trim();
+                        const match = text.match(/^(\d{1,3}(?:,\d{3})+|\d+)\.(\d{2,6})$/);
+                        if (match) {
+                            const num = parseFloat(text.replace(/,/g, ''));
+                            if (!isNaN(num) && num > 0 && num < 10000000) {
+                                if (!priceFound || num > priceFound) priceFound = num;
+                            }
+                        }
+                    }
+                });
+            };
+            
+            scan(ticker);
+            if (ticker.shadowRoot) scan(ticker.shadowRoot);
+            
+            if (priceFound !== null && priceFound !== lastTVPrice) {
+                updateLivePriceFromTV(priceFound);
+            }
+        };
+        
+        tvObserver = new MutationObserver(() => scanPrice());
+        tvObserver.observe(ticker, { childList: true, subtree: true, characterData: true });
+        if (ticker.shadowRoot) {
+            tvObserver.observe(ticker.shadowRoot, { childList: true, subtree: true, characterData: true });
+        }
+        
+        tvPollInterval = setInterval(scanPrice, 300);
+        scanPrice();
+    }
+
+    function updateLivePriceFromTV(price) {
+        if (!price || price <= 0) return;
+        if (price === lastTVPrice) return;
+        
+        const oldPrice = lastTVPrice;
+        lastTVPrice = price;
+        
+        let formatted;
+        const decimals = getDecimals(selectedSymbol);
+        
+        if (price >= 1000) {
+            formatted = price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        } else if (price >= 1) {
+            formatted = price.toFixed(Math.min(decimals, 4));
+        } else {
+            formatted = price.toFixed(decimals);
+        }
+        
+        const priceEl = document.getElementById('stream-price');
+        if (priceEl) {
+            priceEl.innerText = `$${formatted}`;
+            priceEl.classList.remove('price-flash-up', 'price-flash-down');
+            if (oldPrice > 0 && price > oldPrice) priceEl.classList.add('price-flash-up');
+            else if (oldPrice > 0 && price < oldPrice) priceEl.classList.add('price-flash-down');
+            setTimeout(() => priceEl.classList.remove('price-flash-up', 'price-flash-down'), 400);
+        }
+        
+        const noDecimal = formatted.replace(/[.,]/g, '').replace(/[^\d]/g, '');
+        const lastDigit = parseInt(noDecimal.slice(-1), 10);
+        
+        const digitEl = document.getElementById('stream-digit');
+        if (digitEl && !isNaN(lastDigit)) digitEl.innerText = lastDigit;
+        
+        if (!isNaN(lastDigit)) {
+            totalTicksCount++;
+            digitCounts[lastDigit]++;
+            if (totalTicksCount > 100) totalTicksCount = 100;
+            
+            for (let i = 0; i <= 9; i++) {
+                const pctElem = document.getElementById(`digit-pct-${i}`);
+                if (pctElem) {
+                    const pct = totalTicksCount > 0 ? ((digitCounts[i] / Math.min(totalTicksCount, 100)) * 100).toFixed(1) : '10.0';
+                    pctElem.textContent = `${pct}%`;
+                }
+            }
+        }
+        
+        const statusEl = document.getElementById('tv-feed-status');
+        if (statusEl) {
+            statusEl.innerHTML = '<i class="fa-solid fa-circle text-[5px] animate-pulse"></i> ACTIVE';
+            statusEl.className = 'text-emerald-400 flex items-center gap-1';
+        }
+    }
+
+    // ==========================================
+    // ASSET CHANGE
+    // ==========================================
+    function changeAsset() {
+        selectedSymbol = document.getElementById('assetSelect').value;
+        document.getElementById("stream-asset").innerText = formatDerivSymbol(selectedSymbol);
+        document.getElementById("stream-price").innerText = '$----';
+        document.getElementById("stream-digit").innerText = '-';
+        lastTVPrice = 0;
+        digitCounts.fill(0);
+        totalTicksCount = 0;
+        
+        const chartSymbol = CHART_SYMBOL_MAP[selectedSymbol] || 'FX_IDC:XAUUSD';
+        updateChartSymbol(chartSymbol);
+        
+        const labelEl = document.getElementById('chart-symbol-label');
+        if (labelEl) labelEl.textContent = formatDerivSymbol(selectedSymbol);
+        
+        // Update the header chart label
+        const headerLabel = document.querySelector('.digits-card .text-amber-400');
+        if (headerLabel && headerLabel.parentElement) {
+            headerLabel.parentElement.innerHTML = `<i class="fa-solid fa-chart-line text-amber-400 text-[10px]"></i> Live Chart — ${formatDerivSymbol(selectedSymbol)}`;
+        }
+        
+        rebuildTickerTape();
+    }
+
+    function updateChartSymbol(symbol) {
+        const iframe = document.getElementById('tradingViewChartFrame');
+        if (iframe) {
+            const encodedSymbol = encodeURIComponent(symbol);
+            iframe.src = `https://s.tradingview.com/widgetembed/?symbol=${encodedSymbol}&interval=1&hidetoolbar=1&symboledit=1&saveimage=1&toolbarbg=f1f3f6&studies=%5B%5D&theme=dark&style=1&timezone=Etc%2FUTC&studies_overrides=%7B%7D&overrides=%7B%7D&enabled_features=%5B%5D&disabled_features=%5B%5D&locale=en&utm_source=localhost&utm_medium=widget&utm_campaign=chart&utm_term=${encodedSymbol}`;
+        }
+    }
+
+    // ==========================================
+    // GRIDS
+    // ==========================================
     function initGrids() {
         const digitGrid = document.getElementById('digitGrid');
         if (digitGrid) {
@@ -598,10 +667,10 @@
                 const btn = document.createElement('button');
                 btn.type = 'button';
                 btn.onclick = () => { selectedDigit = i; initGrids(); updateBuyButtonLabel(); };
-                btn.className = `flex flex-col items-center justify-center p-2 rounded-xl border transition cursor-pointer ${
-                    i === selectedDigit ? 'bg-blue-600 border-blue-500 text-white shadow-md shadow-blue-500/25' : 'bg-slate-900 border-slate-800 hover:border-slate-700 text-slate-200'
+                btn.className = `btn-touch flex flex-col items-center justify-center py-2.5 rounded-xl border transition ${
+                    i === selectedDigit ? 'bg-indigo-600 border-indigo-500 text-white shadow-md shadow-indigo-500/25' : 'bg-slate-950 border-slate-800 hover:border-slate-700 text-slate-200'
                 }`;
-                btn.innerHTML = `<span class="text-sm font-bold">${i}</span><span id="digit-pct-${i}" class="text-[9px] ${i === selectedDigit ? 'text-blue-100' : 'text-slate-500'}">10.0%</span>`;
+                btn.innerHTML = `<span class="text-sm font-bold">${i}</span><span id="digit-pct-${i}" class="text-[9px] ${i === selectedDigit ? 'text-indigo-100' : 'text-slate-500'}">10%</span>`;
                 digitGrid.appendChild(btn);
             }
         }
@@ -613,8 +682,8 @@
                 const btn = document.createElement('button');
                 btn.type = 'button';
                 btn.onclick = () => { selectedBarrier = i; initGrids(); updateBuyButtonLabel(); };
-                btn.className = `flex flex-col items-center justify-center p-2.5 rounded-xl border transition cursor-pointer ${
-                    i === selectedBarrier ? 'bg-blue-600 border-blue-500 text-white shadow-md shadow-blue-500/25' : 'bg-slate-900 border-slate-800 hover:border-slate-700 text-slate-200'
+                btn.className = `btn-touch flex items-center justify-center py-2.5 rounded-xl border transition ${
+                    i === selectedBarrier ? 'bg-indigo-600 border-indigo-500 text-white shadow-md shadow-indigo-500/25' : 'bg-slate-950 border-slate-800 hover:border-slate-700 text-slate-200'
                 }`;
                 btn.innerHTML = `<span class="text-sm font-bold">${i}</span>`;
                 barrierGrid.appendChild(btn);
@@ -622,11 +691,17 @@
         }
     }
 
+    // ==========================================
+    // TABS
+    // ==========================================
     function switchMainTab(tab) {
         activeTab = tab;
-        document.getElementById('mainTabMatches').className = tab === 'matches' ? "py-2 text-xs font-bold rounded-lg bg-blue-600 text-white shadow-md shadow-blue-500/20 transition cursor-pointer" : "py-2 text-xs font-medium text-slate-400 rounded-lg hover:bg-slate-800/50 hover:text-slate-200 transition cursor-pointer";
-        document.getElementById('mainTabEvenOdd').className = tab === 'evenodd' ? "py-2 text-xs font-bold rounded-lg bg-blue-600 text-white shadow-md shadow-blue-500/20 transition cursor-pointer" : "py-2 text-xs font-medium text-slate-400 rounded-lg hover:bg-slate-800/50 hover:text-slate-200 transition cursor-pointer";
-        document.getElementById('mainTabOverUnder').className = tab === 'overunder' ? "py-2 text-xs font-bold rounded-lg bg-blue-600 text-white shadow-md shadow-blue-500/20 transition cursor-pointer" : "py-2 text-xs font-medium text-slate-400 rounded-lg hover:bg-slate-800/50 hover:text-slate-200 transition cursor-pointer";
+        const activeClass = "py-2 text-[10px] font-bold rounded-lg bg-indigo-600 text-white shadow-md transition";
+        const inactiveClass = "py-2 text-[10px] font-medium text-slate-400 rounded-lg hover:bg-slate-800/50 hover:text-slate-200 transition";
+        
+        document.getElementById('mainTabMatches').className = tab === 'matches' ? activeClass : inactiveClass;
+        document.getElementById('mainTabEvenOdd').className = tab === 'evenodd' ? activeClass : inactiveClass;
+        document.getElementById('mainTabOverUnder').className = tab === 'overunder' ? activeClass : inactiveClass;
 
         document.getElementById('sectionMatches').classList.toggle('hidden', tab !== 'matches');
         document.getElementById('sectionEvenOdd').classList.toggle('hidden', tab !== 'evenodd');
@@ -656,22 +731,28 @@
 
     function setSubContractType(type) {
         subType = type;
-        document.getElementById('btnMatch').className = type === 'MATCH' ? "flex-1 py-1.5 text-xs font-bold rounded-lg bg-blue-600 text-white shadow-sm transition cursor-pointer" : "flex-1 py-1.5 text-xs font-semibold text-slate-400 rounded-lg hover:text-slate-200 transition cursor-pointer";
-        document.getElementById('btnDiff').className = type === 'DIFF' ? "flex-1 py-1.5 text-xs font-bold rounded-lg bg-blue-600 text-white shadow-sm transition cursor-pointer" : "flex-1 py-1.5 text-xs font-semibold text-slate-400 rounded-lg hover:text-slate-200 transition cursor-pointer";
+        const active = "btn-touch flex-1 py-2 text-[10px] font-bold rounded-lg bg-indigo-600 text-white shadow-sm transition";
+        const inactive = "btn-touch flex-1 py-2 text-[10px] font-semibold text-slate-400 rounded-lg transition";
+        document.getElementById('btnMatch').className = type === 'MATCH' ? active : inactive;
+        document.getElementById('btnDiff').className = type === 'DIFF' ? active : inactive;
         updateBuyButtonLabel();
     }
 
     function setEvenOdd(type) {
         subType = type;
-        document.getElementById('btnEven').className = type === 'EVEN' ? "py-4 rounded-xl font-bold text-xs border bg-blue-600 border-blue-500 text-white shadow-md shadow-blue-500/20 transition cursor-pointer" : "py-4 rounded-xl font-bold text-xs border bg-slate-900 border-slate-800 text-slate-300 hover:border-slate-700 transition cursor-pointer";
-        document.getElementById('btnOdd').className = type === 'ODD' ? "py-4 rounded-xl font-bold text-xs border bg-blue-600 border-blue-500 text-white shadow-md shadow-blue-500/20 transition cursor-pointer" : "py-4 rounded-xl font-bold text-xs border bg-slate-900 border-slate-800 text-slate-300 hover:border-slate-700 transition cursor-pointer";
+        const active = "btn-touch py-4 rounded-xl font-bold text-[11px] border bg-indigo-600 border-indigo-500 text-white shadow-md transition";
+        const inactive = "btn-touch py-4 rounded-xl font-bold text-[11px] border bg-slate-900 border-slate-800 text-slate-300 hover:border-slate-700 transition";
+        document.getElementById('btnEven').className = type === 'EVEN' ? active : inactive;
+        document.getElementById('btnOdd').className = type === 'ODD' ? active : inactive;
         updateBuyButtonLabel();
     }
 
     function setOverUnderType(type) {
         subType = type;
-        document.getElementById('btnOver').className = type === 'OVER' ? "flex-1 py-1.5 text-xs font-bold rounded-lg bg-blue-600 text-white shadow-sm transition cursor-pointer" : "flex-1 py-1.5 text-xs font-semibold text-slate-400 rounded-lg hover:text-slate-200 transition cursor-pointer";
-        document.getElementById('btnUnder').className = type === 'UNDER' ? "flex-1 py-1.5 text-xs font-bold rounded-lg bg-blue-600 text-white shadow-sm transition cursor-pointer" : "flex-1 py-1.5 text-xs font-semibold text-slate-400 rounded-lg hover:text-slate-200 transition cursor-pointer";
+        const active = "btn-touch flex-1 py-2 text-[10px] font-bold rounded-lg bg-indigo-600 text-white shadow-sm transition";
+        const inactive = "btn-touch flex-1 py-2 text-[10px] font-semibold text-slate-400 rounded-lg transition";
+        document.getElementById('btnOver').className = type === 'OVER' ? active : inactive;
+        document.getElementById('btnUnder').className = type === 'UNDER' ? active : inactive;
         updateBuyButtonLabel();
     }
 
@@ -689,121 +770,376 @@
         if (subType === 'EVEN' || subType === 'ODD') multiplier = 1.98;
         if (subType === 'OVER' || subType === 'UNDER') multiplier = 1.95;
         
-        let estimatedPayout = (parseFloat(stake) * multiplier).toFixed(2);
-        payoutDisplay.textContent = `${estimatedPayout} USD`;
+        payoutDisplay.textContent = `${(parseFloat(stake) * multiplier).toFixed(2)} USD`;
     }
 
     document.getElementById('stakeInput')?.addEventListener('input', updateBuyButtonLabel);
 
-    function changeAsset() {
-        selectedSymbol = document.getElementById('assetSelect').value;
-        document.getElementById("stream-asset").innerText = formatDerivSymbol(selectedSymbol);
-        digitCounts.fill(0);
-        totalTicksCount = 0;
-        subscribeTicks();
-    }
-
-    function connectDerivWS() {
-        if (ws && (ws.readyState === WebSocket.OPEN || ws.readyState === WebSocket.CONNECTING)) return;
-        ws = new WebSocket("wss://ws.derivws.com/websockets/v3?app_id=1089");
-
-        ws.onopen = () => {
-            const statusElem = document.getElementById('connectionStatus');
-            if (statusElem) {
-                statusElem.innerHTML = `<span class="w-2 h-2 rounded-full bg-emerald-500 mr-2"></span> Connected`;
-                statusElem.className = "inline-flex items-center text-xs px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-medium";
+    // ==========================================
+    // AI GOLD AUTO-TRADER
+    // ==========================================
+    async function toggleAIGold(checkbox) {
+        const badge = document.getElementById('aiGoldStatusBadge');
+        const log = document.getElementById('aiGoldTradingLog');
+        
+        if (checkbox.checked) {
+            if (FUNDED_BALANCE <= 0) {
+                checkbox.checked = false;
+                log.innerHTML = '<div class="text-rose-400 text-center py-2 text-[11px]">❌ Funded balance is $0.</div>';
+                return;
             }
-            subscribeTicks();
-        };
+            if (!IS_ACTIVE_SUBSCRIPTION) {
+                checkbox.checked = false;
+                log.innerHTML = '<div class="text-rose-400 text-center py-2 text-[11px]">❌ Active subscription required.</div>';
+                return;
+            }
 
-        ws.onmessage = (event) => {
+            badge.textContent = '● Starting...';
+            badge.className = 'text-xs font-bold text-amber-400 animate-pulse';
+            log.innerHTML = '<div class="text-amber-400 text-center py-2 text-[11px]">🔄 Initializing AI Gold...</div>';
+            
             try {
-                const data = JSON.parse(event.data);
-                if (data.msg_type === 'tick' && data.tick) processTick(data.tick);
-            } catch (err) {}
-        };
-
-        ws.onclose = () => {
-            setTimeout(connectDerivWS, 2000);
-        };
-    }
-
-    function subscribeTicks() {
-        if (ws && ws.readyState === WebSocket.OPEN) {
-            ws.send(JSON.stringify({ "forget_all": "ticks" }));
-            ws.send(JSON.stringify({ "ticks": selectedSymbol, "subscribe": 1 }));
-        }
-    }
-
-    function processTick(tick) {
-        if (!tick || !tick.quote) return;
-        const quote = tick.quote.toString();
-        const lastDigit = parseInt(quote.slice(-1), 10);
-
-        document.getElementById("stream-price").innerText = `$${quote}`;
-        document.getElementById("stream-digit").innerText = lastDigit;
-
-        totalTicksCount++;
-        digitCounts[lastDigit]++;
-        if (totalTicksCount > 100) totalTicksCount = 100;
-
-        for (let i = 0; i <= 9; i++) {
-            const pctElem = document.getElementById(`digit-pct-${i}`);
-            if (pctElem) {
-                const pct = totalTicksCount > 0 ? ((digitCounts[i] / Math.min(totalTicksCount, 100)) * 100).toFixed(1) : '10.0';
-                pctElem.textContent = `${pct}%`;
+                const response = await fetch('{% url "execute_funded_ai_gold" %}', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCsrfToken() },
+                    body: JSON.stringify({ action: 'toggle' })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    isAIGoldActive = true;
+                    badge.textContent = '● Active';
+                    badge.className = 'text-xs font-bold text-emerald-400';
+                    
+                    log.innerHTML = '';
+                    if (data.trades && data.trades.length > 0) {
+                        data.trades.forEach((trade, index) => {
+                            const profitColor = trade.profit >= 0 ? 'text-emerald-400' : 'text-rose-400';
+                            log.innerHTML += `
+                                <div class="trade-log-entry flex justify-between items-center py-1 border-b border-slate-800/30 text-[10px]">
+                                    <span class="text-slate-400">#${index + 1}</span>
+                                    <span class="font-bold ${trade.direction === 'BUY' ? 'text-emerald-400' : 'text-red-400'}">${trade.direction}</span>
+                                    <span class="font-mono text-slate-400">${trade.entry} → ${trade.exit}</span>
+                                    <span class="font-bold ${profitColor}">${trade.profit >= 0 ? '+' : ''}$${trade.profit.toFixed(2)}</span>
+                                    <span class="text-[9px] ${trade.status === 'WON' ? 'text-emerald-400' : 'text-rose-400'}">${trade.status}</span>
+                                </div>
+                            `;
+                            aiGoldTradeCount++;
+                            aiGoldTotalProfit += trade.profit;
+                            if (trade.profit > 0) aiGoldWins++;
+                            else aiGoldLosses++;
+                        });
+                        updateAIGoldStats();
+                        if (data.new_balance !== undefined) {
+                            document.getElementById('fundedBalanceDisplay').textContent = `$${data.new_balance.toFixed(2)}`;
+                        }
+                    }
+                    startAIGoldLoop();
+                } else {
+                    checkbox.checked = false;
+                    badge.textContent = '● Inactive';
+                    badge.className = 'text-xs font-bold text-amber-400';
+                    log.innerHTML = `<div class="text-rose-400 text-center py-2 text-[11px]">❌ ${data.error || 'Failed'}</div>`;
+                }
+            } catch (err) {
+                checkbox.checked = false;
+                badge.textContent = '● Inactive';
+                badge.className = 'text-xs font-bold text-amber-400';
+                log.innerHTML = `<div class="text-rose-400 text-center py-2 text-[11px]">❌ Network Error</div>`;
             }
+        } else {
+            isAIGoldActive = false;
+            if (aiGoldInterval) { clearInterval(aiGoldInterval); aiGoldInterval = null; }
+            badge.textContent = '● Inactive';
+            badge.className = 'text-xs font-bold text-amber-400';
+            try {
+                await fetch('{% url "execute_funded_ai_gold" %}', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCsrfToken() },
+                    body: JSON.stringify({ action: 'toggle' })
+                });
+            } catch (err) {}
+            log.innerHTML = `<div class="text-slate-500 text-center py-4 text-[11px]">⏹ AI Gold stopped</div>`;
         }
     }
 
+    function startAIGoldLoop() {
+        if (aiGoldInterval) clearInterval(aiGoldInterval);
+        aiGoldInterval = setInterval(() => { if (isAIGoldActive) autoExecuteAIGold(); }, 60000);
+    }
+
+    async function autoExecuteAIGold() {
+        if (!isAIGoldActive) return;
+        try {
+            const response = await fetch('{% url "execute_funded_ai_gold" %}', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCsrfToken() },
+                body: JSON.stringify({ action: 'toggle' })
+            });
+            const data = await response.json();
+            if (data.success && data.trades) {
+                const log = document.getElementById('aiGoldTradingLog');
+                data.trades.forEach((trade) => {
+                    const profitColor = trade.profit >= 0 ? 'text-emerald-400' : 'text-rose-400';
+                    log.innerHTML += `
+                        <div class="trade-log-entry flex justify-between items-center py-1 border-b border-slate-800/30 text-[10px]">
+                            <span class="text-slate-400">🔄</span>
+                            <span class="font-bold ${trade.direction === 'BUY' ? 'text-emerald-400' : 'text-red-400'}">${trade.direction}</span>
+                            <span class="font-mono text-slate-400">${trade.entry} → ${trade.exit}</span>
+                            <span class="font-bold ${profitColor}">${trade.profit >= 0 ? '+' : ''}$${trade.profit.toFixed(2)}</span>
+                            <span class="text-[9px] ${trade.status === 'WON' ? 'text-emerald-400' : 'text-rose-400'}">${trade.status}</span>
+                        </div>
+                    `;
+                    aiGoldTradeCount++;
+                    aiGoldTotalProfit += trade.profit;
+                    if (trade.profit > 0) aiGoldWins++;
+                    else aiGoldLosses++;
+                });
+                updateAIGoldStats();
+                if (data.new_balance !== undefined) {
+                    document.getElementById('fundedBalanceDisplay').textContent = `$${data.new_balance.toFixed(2)}`;
+                }
+                while (log.children.length > 50) log.removeChild(log.firstChild);
+                log.scrollTop = log.scrollHeight;
+            }
+        } catch (err) {}
+    }
+
+    function updateAIGoldStats() {
+        document.getElementById('aiGoldTradeCount').textContent = aiGoldTradeCount;
+        document.getElementById('aiGoldWins').textContent = aiGoldWins;
+        const winRate = aiGoldTradeCount > 0 ? Math.round((aiGoldWins / aiGoldTradeCount) * 100) : 0;
+        document.getElementById('aiGoldWinRate').textContent = `${winRate}%`;
+        document.getElementById('aiGoldProfit').textContent = `$${aiGoldTotalProfit.toFixed(2)}`;
+    }
+
+    // ==========================================
+    // AI SCANNER
+    // ==========================================
     async function runAIMarketScanner() {
         if (!isBotActive) return alert("Bot is halted due to Session Risk Limits.");
+        
         const scanBtn = document.getElementById('aiScanBtn');
+        const originalContent = scanBtn.innerHTML;
+        
         scanBtn.disabled = true;
-        scanBtn.textContent = 'Calibrating Rotational Engine...';
+        scanBtn.innerHTML = '<i class="fa-solid fa-radar text-[11px] animate-spin"></i><span>Scanning ticks...</span>';
 
-        await new Promise(resolve => setTimeout(resolve, 1500));
-        applyContractTypeProgrammatically('DIFF');
-        scanBtn.disabled = false;
-        scanBtn.textContent = 'Scan & Calibrate Rotation Engine';
+        // Simulate scan time
+        await new Promise(resolve => setTimeout(resolve, 1800));
+
+        // ==========================================
+        // STEP 1: Analyze the last 100 ticks
+        // ==========================================
+        const totalTicks = Math.min(totalTicksCount, 100);
+        let bestStrategy = 'DIFF';
+        let bestBarrier = 5;
+        let confidence = 85;
+        let reason = '';
+
+        // Find the least frequent digit (best for DIFF) and most frequent (best for MATCH)
+        let minCount = Infinity, minDigit = 0;
+        let maxCount = -1, maxDigit = 0;
+        let evenCount = 0, oddCount = 0;
+        let under5Count = 0, over4Count = 0;
+
+        for (let i = 0; i <= 9; i++) {
+            if (digitCounts[i] < minCount) { minCount = digitCounts[i]; minDigit = i; }
+            if (digitCounts[i] > maxCount) { maxCount = digitCounts[i]; maxDigit = i; }
+            if (i % 2 === 0) evenCount += digitCounts[i];
+            else oddCount += digitCounts[i];
+            if (i < 5) under5Count += digitCounts[i];
+            else over4Count += digitCounts[i];
+        }
+
+        // ==========================================
+        // STEP 2: Determine best strategy
+        // ==========================================
+        // If even/odd is skewed (60%+), pick that
+        const evenPct = (evenCount / totalTicks) * 100;
+        const oddPct = (oddCount / totalTicks) * 100;
+        const overPct = (over4Count / totalTicks) * 100;
+        const underPct = (under5Count / totalTicks) * 100;
+
+        if (evenPct > 58) {
+            // Strong even bias -> ODD is safer (mean reversion) OR EVEN for momentum
+            // For high win-rate, we go AGAINST the overrepresented side
+            applyContractTypeProgrammatically('ODD');
+            bestStrategy = 'ODD';
+            confidence = Math.min(96, 60 + evenPct);
+            reason = `Even digits overrepresented (${evenPct.toFixed(1)}%) — AI picks ODD for mean reversion`;
+        } else if (oddPct > 58) {
+            applyContractTypeProgrammatically('EVEN');
+            bestStrategy = 'EVEN';
+            confidence = Math.min(96, 60 + oddPct);
+            reason = `Odd digits overrepresented (${oddPct.toFixed(1)}%) — AI picks EVEN for mean reversion`;
+        } else if (overPct > 58) {
+            applyContractTypeProgrammatically('UNDER');
+            bestBarrier = 5;
+            selectedBarrier = 5;
+            bestStrategy = 'UNDER';
+            confidence = Math.min(96, 60 + overPct);
+            reason = `High digits (5-9) overrepresented (${overPct.toFixed(1)}%) — AI picks UNDER 5`;
+        } else if (underPct > 58) {
+            applyContractTypeProgrammatically('OVER');
+            bestBarrier = 4;
+            selectedBarrier = 4;
+            bestStrategy = 'OVER';
+            confidence = Math.min(96, 60 + underPct);
+            reason = `Low digits (0-4) overrepresented (${underPct.toFixed(1)}%) — AI picks OVER 4`;
+        } else {
+            // Default: use the LEAST frequent digit for DIFF (best win chance)
+            applyContractTypeProgrammatically('DIFF');
+            bestStrategy = 'DIFF';
+            bestBarrier = minDigit;
+            confidence = Math.min(95, 78 + (100 - minCount / totalTicks * 100) / 4);
+            reason = `Digit ${minDigit} is least frequent (${((minCount/totalTicks)*100).toFixed(1)}%) — AI picks DIFF ${minDigit}`;
+        }
+
+        // ==========================================
+        // STEP 3: Auto-select the digit/barrier in the UI
+        // ==========================================
+        if (bestStrategy === 'DIFF' || bestStrategy === 'MATCH') {
+            selectedDigit = bestBarrier;
+        }
+        
+        // Re-render grids with the new selection
+        initGrids();
+        updateBuyButtonLabel();
+
+        // ==========================================
+        // STEP 4: Update the recommendation box
+        // ==========================================
+        const recAsset = document.getElementById('recAsset');
+        const recConfidence = document.getElementById('recConfidence');
+        const recReason = document.getElementById('recReason');
+
+        if (recAsset) {
+            recAsset.textContent = formatDerivSymbol(selectedSymbol);
+        }
+        if (recConfidence) {
+            recConfidence.textContent = `Confidence: ${confidence.toFixed(1)}%`;
+        }
+        if (recReason) {
+            recReason.textContent = reason + ` (based on ${totalTicks} ticks)`;
+        }
+
+        // ==========================================
+        // STEP 5: Update status badge
+        // ==========================================
+        const aiStatusBadge = document.getElementById('aiStatusBadge');
+        if (aiStatusBadge) {
+            aiStatusBadge.textContent = 'Selected';
+            aiStatusBadge.className = 'text-[9px] bg-emerald-500/20 border border-emerald-400/30 px-2.5 py-1 rounded-full text-emerald-300 font-bold shrink-0';
+        }
+
+        // Show the recommendation box
         document.getElementById('aiRecommendationBox').classList.remove('hidden');
+
+        // Restore button
+        scanBtn.disabled = false;
+        scanBtn.innerHTML = originalContent;
+
+        // ==========================================
+        // STEP 6: Flash the selected digit/barrier to show it was auto-picked
+        // ==========================================
+        setTimeout(() => {
+            // Find the selected button and add a glow effect
+            const grid = (bestStrategy === 'DIFF' || bestStrategy === 'MATCH') 
+                ? document.getElementById('digitGrid') 
+                : document.getElementById('barrierGrid');
+            
+            if (grid) {
+                const selectedValue = (bestStrategy === 'DIFF' || bestStrategy === 'MATCH') ? selectedDigit : selectedBarrier;
+                const buttons = grid.querySelectorAll('button');
+                if (buttons[selectedValue]) {
+                    buttons[selectedValue].style.boxShadow = '0 0 20px rgba(99, 102, 241, 0.8)';
+                    setTimeout(() => {
+                        buttons[selectedValue].style.boxShadow = '';
+                    }, 2000);
+                }
+            }
+        }, 100);
     }
 
+    // ==========================================
+    // TRADE EXECUTION
+    // ==========================================
     async function executeTrade() {
         if (!isBotActive) return false;
+        
         const stake = parseFloat(document.getElementById('stakeInput').value);
         const duration = document.getElementById('durationInput').value;
         const statusMsg = document.getElementById('tradeStatusMessage');
 
+        if (!stake || stake < 0.35) {
+            statusMsg.classList.remove('hidden');
+            statusMsg.className = 'text-center text-xs font-bold text-red-400';
+            statusMsg.textContent = '❌ Minimum stake is $0.35';
+            return false;
+        }
+
         statusMsg.classList.remove('hidden', 'text-emerald-400', 'text-red-400');
         statusMsg.classList.add('text-blue-400');
-        statusMsg.textContent = `Executing contract (${subType})...`;
+        statusMsg.textContent = `Executing ${subType} on ${selectedSymbol}...`;
 
-        let barrierValue = subType.includes('MATCH') || subType.includes('DIFF') ? selectedDigit : (subType.includes('OVER') || subType.includes('UNDER') ? selectedBarrier : null);
+        let barrierValue = null;
+        if (subType === 'MATCH' || subType === 'DIFF') barrierValue = selectedDigit;
+        else if (subType === 'OVER' || subType === 'UNDER') barrierValue = selectedBarrier;
+
+        const contractType = `DIGIT${subType}`;
+        const derivSymbol = DERIV_SYMBOL_MAP[selectedSymbol] || selectedSymbol;
+
+        const payload = {
+            symbol: derivSymbol,
+            contract_type: contractType,
+            amount: stake,
+            barrier: barrierValue,
+            duration: parseInt(duration)
+        };
 
         try {
             const response = await fetch("{% url 'execute_trade' %}", {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]')?.value || '' },
-                body: JSON.stringify({ symbol: selectedSymbol, contract_type: `DIGIT${subType}`, amount: stake, barrier: barrierValue, duration: duration })
+                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCsrfToken() },
+                body: JSON.stringify(payload)
             });
+
             const result = await response.json();
+
             if (response.ok && result.success) {
-                lastTradeWon = result.won;
                 cumulativeSessionProfit += result.won ? (parseFloat(result.payout) - stake) : -stake;
-                statusMsg.textContent = result.won ? `✔ Win! +$${(result.payout - stake).toFixed(2)}` : `❌ Loss: -$${stake.toFixed(2)}`;
+                if (result.won) {
+                    statusMsg.textContent = `✔ Win! Digit: ${result.final_digit} | +$${(parseFloat(result.payout) - stake).toFixed(2)}`;
+                    statusMsg.className = 'text-center text-xs font-bold text-emerald-400';
+                } else {
+                    statusMsg.textContent = `❌ Loss: Digit ${result.final_digit} | -$${stake.toFixed(2)}`;
+                    statusMsg.className = 'text-center text-xs font-bold text-red-400';
+                }
                 return true;
+            } else {
+                statusMsg.textContent = `❌ ${result.error || 'Trade failed'}`;
+                statusMsg.className = 'text-center text-xs font-bold text-red-400';
+                return false;
             }
+        } catch (err) {
+            console.error('Trade error:', err);
+            statusMsg.textContent = `❌ Network error`;
+            statusMsg.className = 'text-center text-xs font-bold text-red-400';
             return false;
-        } catch (err) { return false; }
+        }
     }
 
+    // ==========================================
+    // AUTO BOT
+    // ==========================================
     function toggleAutoBot() {
         isAutoTrading = !isAutoTrading;
         const autoBtn = document.getElementById('toggleBotBtn');
         if (isAutoTrading) {
-            autoBtn.textContent = '⏹ Stop Automated Bot';
-            autoBtn.className = 'w-full bg-red-600 hover:bg-red-500 text-white font-bold py-3.5 px-4 rounded-xl shadow-lg transition text-sm';
+            autoBtn.innerHTML = '<i class="fa-solid fa-stop text-[10px]"></i><span>Stop Automated Bot</span>';
+            autoBtn.className = 'btn-touch w-full bg-red-600 hover:bg-red-500 text-white font-bold py-3.5 px-4 rounded-xl shadow-lg transition text-xs flex items-center justify-center gap-2';
             runBotLoop();
         } else {
             stopAutoBot();
@@ -813,29 +1149,33 @@
     function stopAutoBot() {
         isAutoTrading = false;
         const autoBtn = document.getElementById('toggleBotBtn');
-        if (autoBtn) autoBtn.textContent = '▶ Start Automated Bot (Rotational Engine + Loss Skipper)';
+        if (autoBtn) {
+            autoBtn.innerHTML = '<i class="fa-solid fa-play text-[10px]"></i><span>Start Automated Bot</span>';
+            autoBtn.className = 'btn-touch w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3.5 px-4 rounded-xl shadow-lg shadow-emerald-500/25 transition text-xs flex items-center justify-center gap-2';
+        }
     }
 
     async function runBotLoop() {
         while (isAutoTrading && isBotActive) {
-            applyContractTypeProgrammatically(contractTypeSequence[contractTypeIndex % contractTypeSequence.length]);
+            const nextType = contractTypeSequence[contractTypeIndex % contractTypeSequence.length];
+            applyContractTypeProgrammatically(nextType);
+            await new Promise(resolve => setTimeout(resolve, 300));
             let success = await executeTrade();
-            if (!success || !isBotActive) break;
+            if (!isBotActive) break;
             contractTypeIndex++;
             await new Promise(resolve => setTimeout(resolve, 2500));
         }
         stopAutoBot();
     }
 
-    // Check AI Gold status on load
+    // ==========================================
+    // CHECK AI GOLD STATUS
+    // ==========================================
     async function checkAIGoldStatus() {
         try {
             const response = await fetch('{% url "execute_funded_ai_gold" %}', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': getCookie('csrftoken')
-                },
+                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCsrfToken() },
                 body: JSON.stringify({ action: 'status' })
             });
             const data = await response.json();
@@ -846,15 +1186,20 @@
                 isAIGoldActive = true;
                 startAIGoldLoop();
             }
-        } catch (err) {
-            console.error('Error checking AI Gold status:', err);
-        }
+        } catch (err) {}
     }
 
+    // ==========================================
+    // INIT
+    // ==========================================
     document.addEventListener('DOMContentLoaded', () => { 
         initGrids(); 
-        connectDerivWS();
         checkAIGoldStatus();
+        
+        // Initialize TV Ticker Tape after chart loads
+        setTimeout(() => {
+            rebuildTickerTape();
+        }, 1500);
     });
 </script>
 {% endblock %}

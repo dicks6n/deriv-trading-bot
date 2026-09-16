@@ -3,181 +3,347 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#020617">
     <title>Login - PATREOAIX</title>
-    <!-- Tailwind CSS & FontAwesome -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+        
+        * {
+            font-family: 'Inter', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        /* ✅ FIX: Enable scrolling properly */
+        html {
+            height: 100%;
+            overflow-y: auto;
+            overflow-x: hidden;
+            -webkit-overflow-scrolling: touch;
+        }
+        
+        body {
+            min-height: 100vh;
+            overflow-x: hidden;
+            overflow-y: auto;
+            position: relative;
+        }
+        
+        /* Hide horizontal scrollbar only */
+        body::-webkit-scrollbar {
+            width: 6px;
+        }
+        body::-webkit-scrollbar-track {
+            background: #020617;
+        }
+        body::-webkit-scrollbar-thumb {
+            background: rgba(99, 102, 241, 0.3);
+            border-radius: 9999px;
+        }
+        body::-webkit-scrollbar-thumb:hover {
+            background: rgba(99, 102, 241, 0.5);
+        }
+        
+        .font-mono { font-family: 'JetBrains Mono', monospace; }
+        
+        .auth-card {
+            background: linear-gradient(135deg, rgba(15, 23, 42, 0.98) 0%, rgba(30, 27, 75, 0.5) 100%);
+            border: 1px solid rgba(99, 102, 241, 0.15);
+            border-radius: 24px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
+        }
+        
+        .input-field {
+            width: 100%;
+            background: rgba(2, 6, 23, 0.9);
+            border: 1px solid rgba(99, 102, 241, 0.2);
+            border-radius: 12px;
+            padding: 14px 16px 14px 42px;
+            font-size: 13px;
+            color: #ffffff;
+            font-family: 'JetBrains Mono', monospace;
+            transition: all 0.2s ease;
+        }
+        
+        .input-field:focus {
+            outline: none;
+            border-color: rgba(99, 102, 241, 0.6);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        }
+        
+        .input-field::placeholder { color: #64748b; }
+        
+        .input-icon {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #64748b;
+            font-size: 13px;
+            pointer-events: none;
+        }
+        
+        .glow-emerald { box-shadow: 0 0 30px rgba(16, 185, 129, 0.15); }
+        .glow-indigo { box-shadow: 0 0 30px rgba(99, 102, 241, 0.15); }
+        
+        .btn-touch {
+            transition: transform 0.1s ease, background-color 0.2s ease;
+        }
+        .btn-touch:active { transform: scale(0.98); }
+        
+        @keyframes float1 {
+            0%, 100% { transform: translate(0, 0); }
+            50% { transform: translate(20px, -20px); }
+        }
+        @keyframes float2 {
+            0%, 100% { transform: translate(0, 0); }
+            50% { transform: translate(-20px, 20px); }
+        }
+        .float-1 { animation: float1 8s ease-in-out infinite; }
+        .float-2 { animation: float2 8s ease-in-out infinite; }
+        
+        /* ✅ FIX: Ambient orbs - use absolute instead of fixed so they scroll with content */
+        .ambient-orb-1 {
+            position: absolute;
+            top: -50px;
+            left: -100px;
+            width: 400px;
+            height: 400px;
+            background: rgba(99, 102, 241, 0.1);
+            border-radius: 50%;
+            filter: blur(80px);
+            pointer-events: none;
+            z-index: 0;
+        }
+        .ambient-orb-2 {
+            position: absolute;
+            bottom: -100px;
+            right: -100px;
+            width: 400px;
+            height: 400px;
+            background: rgba(16, 185, 129, 0.1);
+            border-radius: 50%;
+            filter: blur(80px);
+            pointer-events: none;
+            z-index: 0;
+        }
+    </style>
 </head>
-<body class="bg-[#090d16] text-slate-100 font-sans min-h-screen flex flex-col justify-between">
 
-    <!-- Top Header Navigation -->
-    <header class="border-b border-slate-800/80 bg-[#0d1322] px-6 py-4 flex items-center justify-between sticky top-0 z-50">
-        <a href="/" class="flex items-center gap-3">
-            <div class="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 font-bold text-lg">
-                <i class="fa-solid fa-brain"></i>
-            </div>
-            <div>
-                <h1 class="font-bold text-lg leading-tight tracking-wide text-white">PATREOAIX</h1>
-                <p class="text-xs text-slate-400">AI Prediction Engine</p>
-            </div>
-        </a>
+<body class="bg-[#020617] text-slate-100 font-sans relative">
 
-        <div class="flex items-center gap-3 text-xs">
-            <span class="text-slate-400 hidden sm:inline">Don't have an account?</span>
-            <a href="{% url 'account_signup' %}" class="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold transition border border-slate-700">
-                Sign Up
+    <!-- Ambient Background Orbs (absolute, scroll with content) -->
+    <div class="ambient-orb-1 float-1"></div>
+    <div class="ambient-orb-2 float-2"></div>
+
+    <!-- Main Layout Wrapper -->
+    <div class="min-h-screen flex flex-col relative z-10">
+
+        <!-- Top Header Navigation -->
+        <header class="border-b border-slate-800/80 bg-[#0d1322]/90 backdrop-blur-md px-4 sm:px-6 py-3.5 flex items-center justify-between sticky top-0 z-50">
+            <a href="/" class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-indigo-600 flex items-center justify-center text-white text-lg shadow-lg shadow-emerald-500/20">
+                    <i class="fa-solid fa-chart-line"></i>
+                </div>
+                <div>
+                    <h1 class="font-black text-base sm:text-lg leading-tight tracking-wide text-white">
+                        PATREO<span class="text-emerald-400">AIX</span>
+                    </h1>
+                    <p class="text-[10px] text-slate-400 font-mono uppercase tracking-widest -mt-0.5">Pro Trading AI</p>
+                </div>
             </a>
-        </div>
-    </header>
 
-    <!-- Main Content Area -->
-    <main class="flex-1 flex items-center justify-center p-6">
-        <div class="w-full max-w-md">
+            <div class="flex items-center gap-3 text-xs">
+                <span class="text-slate-400 hidden sm:inline">Don't have an account?</span>
+                <a href="{% url 'signup' %}" class="px-3.5 py-2 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-slate-200 font-bold transition border border-slate-700 flex items-center gap-1.5">
+                    <i class="fa-solid fa-user-plus text-[10px]"></i>
+                    <span>Sign Up</span>
+                </a>
+            </div>
+        </header>
 
-            <!-- Ambient Background Glow -->
-            <div class="relative">
-                <div class="absolute -top-10 -left-10 w-40 h-40 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none"></div>
-                <div class="absolute -bottom-10 -right-10 w-40 h-40 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none"></div>
+        <!-- Main Content Area -->
+        <main class="flex-1 flex items-center justify-center p-4 sm:p-6 py-8 relative z-10">
+            <div class="w-full max-w-md">
 
-                <!-- PATREOAIX Styled Login Card -->
-                <div class="bg-[#0d1322] border border-slate-800 rounded-2xl p-8 shadow-2xl relative z-10">
+                <!-- Login Card -->
+                <div class="auth-card p-6 sm:p-8 relative">
                     
+                    <!-- Header -->
                     <div class="text-center mb-6">
-                        <div class="w-14 h-14 mx-auto rounded-2xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400 text-2xl mb-3">
+                        <div class="w-16 h-16 mx-auto rounded-2xl bg-gradient-to-br from-indigo-500/20 to-purple-500/20 border border-indigo-500/30 flex items-center justify-center text-indigo-400 text-2xl mb-4 glow-indigo">
                             <i class="fa-solid fa-shield-halved"></i>
                         </div>
-                        <h2 class="text-2xl font-bold text-white tracking-wide">Welcome Back</h2>
-                        <p class="text-xs text-slate-400 mt-1">Sign in with your password or secure email OTP</p>
+                        <h2 class="text-2xl font-black text-white tracking-tight">Welcome Back</h2>
+                        <p class="text-xs text-slate-400 mt-1.5">Sign in to access your AI trading dashboard</p>
                     </div>
 
-                    <!-- Login Mode Switch Tabs: Password vs Email OTP -->
-                    <div class="flex p-1 bg-[#090d16] border border-slate-800 rounded-xl mb-6">
-                        <button type="button" id="tab-password-btn" onclick="switchAuthMode('password')" class="flex-1 py-2 text-xs font-bold rounded-lg transition bg-indigo-600 text-white shadow-sm flex items-center justify-center gap-2">
-                            <i class="fa-solid fa-lock text-[11px]"></i> Password
+                    <!-- Login Mode Switch Tabs -->
+                    <div class="flex p-1 bg-slate-950/60 border border-slate-800 rounded-xl mb-6">
+                        <button type="button" id="tab-password-btn" onclick="switchAuthMode('password')" class="flex-1 py-2.5 text-xs font-bold rounded-lg transition bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg shadow-indigo-600/20 flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-lock text-[10px]"></i> Password
                         </button>
-                        <button type="button" id="tab-otp-btn" onclick="switchAuthMode('otp')" class="flex-1 py-2 text-xs font-bold rounded-lg transition text-slate-400 hover:text-white flex items-center justify-center gap-2">
-                            <i class="fa-solid fa-envelope-circle-check text-[11px]"></i> Email OTP
+                        <button type="button" id="tab-otp-btn" onclick="switchAuthMode('otp')" class="flex-1 py-2.5 text-xs font-bold rounded-lg transition text-slate-400 hover:text-white flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-envelope-circle-check text-[10px]"></i> Email OTP
                         </button>
                     </div>
 
-                    <!-- Django Messages / Errors -->
+                    <!-- Django Messages -->
                     {% if messages %}
                         {% for message in messages %}
-                        <div class="mb-5 p-3.5 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-300 text-xs flex items-center gap-2.5 font-medium">
-                            <i class="fa-solid fa-circle-info text-sm"></i>
+                        <div class="mb-5 p-3.5 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-300 text-xs flex items-start gap-2.5 font-medium">
+                            <i class="fa-solid fa-circle-info text-sm mt-0.5 shrink-0"></i>
                             <span>{{ message }}</span>
                         </div>
                         {% endfor %}
                     {% endif %}
 
                     {% if form.errors or error %}
-                    <div class="mb-5 p-3.5 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-400 text-xs flex items-center gap-2.5 font-medium">
-                        <i class="fa-solid fa-circle-exclamation text-sm"></i>
+                    <div class="mb-5 p-3.5 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-400 text-xs flex items-start gap-2.5 font-medium">
+                        <i class="fa-solid fa-circle-exclamation text-sm mt-0.5 shrink-0"></i>
                         <span>Please check your credentials or code and try again.</span>
                     </div>
                     {% endif %}
 
-                    <!-- MODE 1: Standard Password Login Form -->
+                    <!-- MODE 1: Password Login -->
                     <form id="form-password" method="POST" action="{% url 'login' %}" class="space-y-4">
                         {% csrf_token %}
                         <div>
-                            <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Username or Email</label>
+                            <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">
+                                <i class="fa-solid fa-user text-[9px] mr-1.5 text-indigo-400"></i>
+                                Username or Email
+                            </label>
                             <div class="relative">
-                                <span class="absolute inset-y-0 left-0 flex items-center pl-3.5 text-slate-500">
-                                    <i class="fa-solid fa-user text-xs"></i>
-                                </span>
+                                <span class="input-icon"><i class="fa-solid fa-user"></i></span>
                                 <input type="text" 
                                        name="login" 
-                                       class="w-full bg-[#090d16] border border-slate-800 rounded-xl py-3 pl-10 pr-4 text-xs text-slate-100 placeholder-slate-600 focus:outline-none focus:border-indigo-500 transition font-mono" 
+                                       class="input-field" 
                                        placeholder="Enter your username or email" 
                                        required>
                             </div>
                         </div>
 
                         <div>
-                            <div class="flex items-center justify-between mb-1.5">
-                                <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">Password</label>
-                                <a href="{% url 'account_reset_password' %}" class="text-[10px] font-bold text-indigo-400 hover:text-indigo-300 transition">Forgot password?</a>
+                            <div class="flex items-center justify-between mb-2">
+                                <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                                    <i class="fa-solid fa-lock text-[9px] mr-1.5 text-indigo-400"></i>
+                                    Password
+                                </label>
+                                <a href="{% url 'account_reset_password' %}" class="text-[10px] font-bold text-indigo-400 hover:text-indigo-300 transition">Forgot?</a>
                             </div>
                             <div class="relative">
-                                <span class="absolute inset-y-0 left-0 flex items-center pl-3.5 text-slate-500">
-                                    <i class="fa-solid fa-lock text-xs"></i>
-                                </span>
+                                <span class="input-icon"><i class="fa-solid fa-lock"></i></span>
                                 <input type="password" 
                                        name="password" 
-                                       class="w-full bg-[#090d16] border border-slate-800 rounded-xl py-3 pl-10 pr-4 text-xs text-slate-100 placeholder-slate-600 focus:outline-none focus:border-indigo-500 transition font-mono" 
+                                       id="login-password"
+                                       class="input-field pr-10" 
                                        placeholder="Enter your password" 
                                        required>
+                                <button type="button" onclick="togglePasswordVisibility('login-password', this)" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white transition p-1">
+                                    <i class="fa-solid fa-eye text-xs"></i>
+                                </button>
                             </div>
                         </div>
 
+                        <div class="flex items-center justify-between pt-1">
+                            <label class="flex items-center gap-2 cursor-pointer">
+                                <input type="checkbox" name="remember_me" class="rounded border-slate-700 bg-slate-950 text-indigo-600 focus:ring-0 focus:ring-offset-0">
+                                <span class="text-[11px] text-slate-400">Remember me</span>
+                            </label>
+                        </div>
+
                         <button type="submit" 
-                                class="w-full py-3 px-4 mt-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs transition shadow-lg shadow-indigo-600/20 flex items-center justify-center gap-2">
-                            <i class="fa-solid fa-right-to-bracket"></i> Sign In to Account
+                                class="btn-touch w-full py-3.5 px-4 mt-4 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-black text-sm transition shadow-lg shadow-indigo-600/30 flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-right-to-bracket text-xs"></i>
+                            <span>Sign In to Account</span>
                         </button>
                     </form>
 
-                    <!-- MODE 2: Email OTP Login Request Form -->
+                    <!-- MODE 2: Email OTP -->
                     <form id="form-otp" method="POST" action="{% url 'request_email_otp' %}" class="space-y-4 hidden">
                         {% csrf_token %}
                         <div>
-                            <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Registered Email Address</label>
+                            <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">
+                                <i class="fa-solid fa-envelope text-[9px] mr-1.5 text-emerald-400"></i>
+                                Registered Email Address
+                            </label>
                             <div class="relative">
-                                <span class="absolute inset-y-0 left-0 flex items-center pl-3.5 text-slate-500">
-                                    <i class="fa-solid fa-envelope text-xs"></i>
-                                </span>
+                                <span class="input-icon"><i class="fa-solid fa-envelope"></i></span>
                                 <input type="email" 
                                        name="email" 
-                                       class="w-full bg-[#090d16] border border-slate-800 rounded-xl py-3 pl-10 pr-4 text-xs text-slate-100 placeholder-slate-600 focus:outline-none focus:border-indigo-500 transition font-mono" 
+                                       class="input-field" 
                                        placeholder="your@email.com" 
                                        required>
                             </div>
-                            <p class="text-[10px] text-slate-500 mt-1.5">We will generate and email a secure 6-digit login code to you.</p>
+                            <p class="text-[10px] text-slate-500 mt-2 leading-relaxed flex items-start gap-1.5">
+                                <i class="fa-solid fa-circle-info text-emerald-400 text-[10px] mt-0.5 shrink-0"></i>
+                                <span>We'll email you a secure 6-digit login code. No password needed.</span>
+                            </p>
                         </div>
 
                         <button type="submit" 
-                                class="w-full py-3 px-4 mt-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs transition shadow-lg shadow-emerald-600/20 flex items-center justify-center gap-2">
-                            <i class="fa-solid fa-paper-plane"></i> Send Verification Code
+                                class="btn-touch w-full py-3.5 px-4 mt-4 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-black text-sm transition shadow-lg shadow-emerald-600/30 flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-paper-plane text-xs"></i>
+                            <span>Send Verification Code</span>
                         </button>
                     </form>
 
                     <!-- Divider -->
                     <div class="relative my-6 text-center">
-                        <span class="bg-[#0d1322] px-3 text-[10px] text-slate-500 uppercase font-bold relative z-10">or continue with</span>
+                        <span class="bg-slate-900/60 px-3 text-[10px] text-slate-500 uppercase font-bold tracking-wider relative z-10">or continue with</span>
                         <div class="absolute inset-0 flex items-center"><div class="w-full border-t border-slate-800"></div></div>
                     </div>
 
-                    <!-- Social Login Options -->
-                    <div class="flex items-center justify-center gap-3">
-                        <a href="{% url 'google_login' %}" class="w-10 h-10 rounded-xl bg-[#090d16] border border-slate-800 hover:border-slate-700 text-slate-300 hover:text-white transition flex items-center justify-center text-sm">
-                            <i class="fa-brands fa-google"></i>
+                    <!-- Social Login -->
+                    <div class="grid grid-cols-2 gap-3">
+                        <a href="{% url 'google_login' %}" class="btn-touch flex items-center justify-center gap-2 py-3 rounded-xl bg-slate-950/60 border border-slate-800 hover:border-slate-700 text-slate-300 hover:text-white transition text-xs font-bold">
+                            <i class="fa-brands fa-google text-base"></i>
+                            <span>Google</span>
                         </a>
-                        <a href="{% url 'apple_login' %}" class="w-10 h-10 rounded-xl bg-[#090d16] border border-slate-800 hover:border-slate-700 text-slate-300 hover:text-white transition flex items-center justify-center text-sm">
-                            <i class="fa-brands fa-apple"></i>
+                        <a href="{% url 'apple_login' %}" class="btn-touch flex items-center justify-center gap-2 py-3 rounded-xl bg-slate-950/60 border border-slate-800 hover:border-slate-700 text-slate-300 hover:text-white transition text-xs font-bold">
+                            <i class="fa-brands fa-apple text-base"></i>
+                            <span>Apple</span>
                         </a>
                     </div>
 
-                    <!-- Card Footer Link -->
+                    <!-- Footer Link -->
                     <div class="mt-6 pt-5 border-t border-slate-800/80 text-center">
                         <p class="text-xs text-slate-400">
                             New to PATREOAIX? 
-                            <a href="{% url 'account_signup' %}" class="font-bold text-emerald-400 hover:text-emerald-300 transition">Create an account</a>
+                            <a href="{% url 'signup' %}" class="font-bold text-emerald-400 hover:text-emerald-300 transition">Create an account</a>
                         </p>
                     </div>
+                </div>
 
+                <!-- Trust Badges -->
+                <div class="mt-6 flex items-center justify-center gap-4 text-[10px] text-slate-500 font-mono flex-wrap">
+                    <span class="flex items-center gap-1.5">
+                        <i class="fa-solid fa-shield-halved text-emerald-400"></i>
+                        256-bit SSL
+                    </span>
+                    <span class="w-1 h-1 rounded-full bg-slate-700"></span>
+                    <span class="flex items-center gap-1.5">
+                        <i class="fa-solid fa-lock text-indigo-400"></i>
+                        Secured
+                    </span>
+                    <span class="w-1 h-1 rounded-full bg-slate-700"></span>
+                    <span class="flex items-center gap-1.5">
+                        <i class="fa-solid fa-bolt text-amber-400"></i>
+                        Instant Access
+                    </span>
                 </div>
             </div>
+        </main>
 
-        </div>
-    </main>
+        <!-- Footer -->
+        <footer class="border-t border-slate-800/80 bg-[#0d1322]/90 backdrop-blur-md px-6 py-4 text-center text-[10px] text-slate-500 font-mono">
+            © 2026 PATREOAIX · AI Prediction Engine · All rights reserved
+        </footer>
+    </div>
 
-    <!-- Page Footer -->
-    <footer class="border-t border-slate-800/80 bg-[#0d1322] px-6 py-4 text-center text-xs text-slate-500">
-        &copy; PATREOAIX AI Prediction Engine. All rights reserved.
-    </footer>
-
-    <!-- Interactive Script to switch between Password and OTP Login Forms -->
     <script>
         function switchAuthMode(mode) {
             const passBtn = document.getElementById('tab-password-btn');
@@ -185,16 +351,32 @@
             const formPass = document.getElementById('form-password');
             const formOtp = document.getElementById('form-otp');
 
+            const activeClass = "flex-1 py-2.5 text-xs font-bold rounded-lg transition bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg shadow-indigo-600/20 flex items-center justify-center gap-2";
+            const inactiveClass = "flex-1 py-2.5 text-xs font-bold rounded-lg transition text-slate-400 hover:text-white flex items-center justify-center gap-2";
+
             if (mode === 'password') {
-                passBtn.className = "flex-1 py-2 text-xs font-bold rounded-lg transition bg-indigo-600 text-white shadow-sm flex items-center justify-center gap-2";
-                otpBtn.className = "flex-1 py-2 text-xs font-bold rounded-lg transition text-slate-400 hover:text-white flex items-center justify-center gap-2";
+                passBtn.className = activeClass;
+                otpBtn.className = inactiveClass;
                 formPass.classList.remove('hidden');
                 formOtp.classList.add('hidden');
             } else {
-                otpBtn.className = "flex-1 py-2 text-xs font-bold rounded-lg transition bg-indigo-600 text-white shadow-sm flex items-center justify-center gap-2";
-                passBtn.className = "flex-1 py-2 text-xs font-bold rounded-lg transition text-slate-400 hover:text-white flex items-center justify-center gap-2";
+                otpBtn.className = activeClass;
+                passBtn.className = inactiveClass;
                 formOtp.classList.remove('hidden');
                 formPass.classList.add('hidden');
+            }
+        }
+
+        function togglePasswordVisibility(inputId, btn) {
+            const input = document.getElementById(inputId);
+            const icon = btn.querySelector('i');
+            
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.className = 'fa-solid fa-eye-slash text-xs';
+            } else {
+                input.type = 'password';
+                icon.className = 'fa-solid fa-eye text-xs';
             }
         }
     </script>
